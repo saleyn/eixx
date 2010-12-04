@@ -82,9 +82,6 @@ Here's a example use of the ei++ library:
         // on node "abc@myhost"
 
         node->send(mbox.self(), a_con->remote_node(), atom("test"), t4);
-
-        // Asynchronously receive a message with a deadline in 10s:
-        mbox->async_receive(&on_message, 10000);
     }
 
     int main() {
@@ -95,6 +92,9 @@ Here's a example use of the ei++ library:
         otp_mailbox* mbox = node.create_mailbox("main");
 
         node.connect(&on_connect, "abc@myhost");
+
+        // Asynchronously receive a message with a deadline in 10s:
+        mbox->async_receive(&on_message, 10000);
 
         node.run();
     }

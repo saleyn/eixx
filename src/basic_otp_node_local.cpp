@@ -59,6 +59,13 @@ basic_otp_node_local::basic_otp_node_local(
     const std::string& a_nodename, const std::string& a_cookie)
     throw (std::runtime_error, err_bad_argument)
 {
+    set_nodename(a_nodename, a_cookie);
+}
+
+void basic_otp_node_local::set_nodename(
+    const std::string& a_nodename, const std::string& a_cookie)
+    throw (std::runtime_error, err_bad_argument)
+{
     m_cookie = a_cookie.empty() ? s_default_cookie : a_cookie;
 
     if (m_cookie.size() > EI_MAX_COOKIE_SIZE)

@@ -138,6 +138,12 @@ public:
 
     virtual ~basic_otp_node() { close(); }
 
+    /// Change name of current node
+    void set_nodename(const atom& a_nodename, const std::string& a_cookie = "") {
+        close();
+        basic_otp_node_local::set_nodename(a_nodename.to_string(), a_cookie);
+    }
+
     /// Get current verboseness level
     verbose_type verbose() const { return m_verboseness; }
 
@@ -287,6 +293,12 @@ public:
 	 */
     void send_rpc(const epid<Alloc>& a_from, const atom& a_to_node,
                   const atom& a_mod, const atom& a_fun, const list<Alloc>& args,
+                  const epid<Alloc>* gleader = NULL)
+        throw (err_bad_argument, err_no_process, err_connection);
+
+    /// Execute an equivalent of rpc:cast(...). Doesn't return any value.
+    void send_rpc_cast(const epid<Alloc>& a_from, const atom& a_to_node,
+                   const atom& a_mod, const atom& a_fun, const list<Alloc>& args,
                   const epid<Alloc>* gleader = NULL)
         throw (err_bad_argument, err_no_process, err_connection);
 

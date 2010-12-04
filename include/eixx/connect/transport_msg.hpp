@@ -332,24 +332,41 @@ public:
         set(ERL_MONITOR_P_EXIT, l_cntrl, NULL);
     }
 
-    /// Send RPC request. Result will be delivered to the mailbox of the \a a_from pid.
+    /// Send RPC call request.
+    /// Result will be delivered to the mailbox of the \a a_from pid.
     /// The RPC consists of two parts, send and receive.
     /// Here is the send part: <tt>{ PidFrom, { call, Mod, Fun, Args, user }}</tt>
     void set_send_rpc(const epid<Alloc>& a_from,
         const atom& mod, const atom& fun, const list<Alloc>& args,
-        const epid<Alloc>* gleader = NULL, const Alloc& a_alloc = Alloc())
+        const epid<Alloc>* a_gleader = NULL, const Alloc& a_alloc = Alloc())
     {
-        static eterm<Alloc> call(atom("call"));
-        static eterm<Alloc> user(atom("user"));
-        static atom  rex ("rex");
+        static atom s_cmd("call");
+        static eterm<Alloc> s_user(atom("user"));
+        eterm<Alloc> gleader(a_gleader == NULL ? s_user : eterm<Alloc>(*a_gleader));
+        const tuple<Alloc>& inner_tuple =
+            tuple<Alloc>::make(s_cmd, mod, fun, args, gleader, a_alloc);
+
+        set_send_rpc_internal(a_from, inner_tuple, a_alloc);
+    }
+
+    /// Send RPC cast request.
+    /// The result of this RPC cast is discarded.
+    /// Here is the send part:
+    ///   <tt>{PidFrom, {'$gen_cast', {cast, Mod, Fun, Args, user}}}</tt>
+    void set_send_rpc_cast(const epid<Alloc>& a_from,
+        const atom& mod, const atom& fun, const list<Alloc>& args,
+        const epid<Alloc>* a_gleader = NULL, const Alloc& a_alloc = Alloc())
+    {
+        static atom s_gen_cast("$gen_cast");
+        static atom s_cmd("cast");
+        static eterm<Alloc> s_user(atom("user"));
+        eterm<Alloc> gleader(a_gleader == NULL ? s_user : eterm<Alloc>(*a_gleader));
 
         const tuple<Alloc>& inner_tuple =
-            gleader ? tuple<Alloc>::make(call, mod, fun, args, *gleader, a_alloc)
-                    : tuple<Alloc>::make(call, mod, fun, args, user,     a_alloc);
+            tuple<Alloc>::make(s_gen_cast,
+                tuple<Alloc>::make(s_cmd, mod, fun, args, gleader, a_alloc), a_alloc);
 
-        const tuple<Alloc>& rpc = tuple<Alloc>::make(a_from, inner_tuple, a_alloc);
-
-        set_reg_send(a_from, rex, eterm<Alloc>(rpc), a_alloc);
+        set_send_rpc_internal(a_from, inner_tuple, a_alloc);
     }
 
     std::ostream& dump(std::ostream& out) const {
@@ -395,6 +412,17 @@ private:
         const tuple<Alloc>& l_cntrl = tuple<Alloc>::make(a_type, a_from, a_to, a_ref, a_alloc);
         set(a_type, l_cntrl, NULL);
     }
+
+    void set_send_rpc_internal(const epid<Alloc>& a_from, const tuple<Alloc>& a_cmd, 
+        const Alloc& a_alloc = Alloc())
+    {
+        static atom rex("rex");
+
+        const tuple<Alloc>& rpc = tuple<Alloc>::make(a_from, a_cmd, a_alloc);
+
+        set_reg_send(a_from, rex, eterm<Alloc>(rpc), a_alloc);
+    }
+
 };
 
 template <typename Alloc>

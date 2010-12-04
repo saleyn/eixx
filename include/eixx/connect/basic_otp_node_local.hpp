@@ -57,6 +57,10 @@ public:
 
     virtual ~basic_otp_node_local() {}
 
+    /// Change the nodename of current node.
+    void set_nodename(const std::string& a_nodename, const std::string& a_cookie = "")
+        throw (std::runtime_error, err_bad_argument);
+
     /// Get node name in the form <tt>node@host</tt>.
     const atom& nodename()  const { return m_nodename; }
 

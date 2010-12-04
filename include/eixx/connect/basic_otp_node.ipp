@@ -216,6 +216,19 @@ send_rpc(const epid<Alloc>& a_from,
 
 template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
+send_rpc_cast(const epid<Alloc>& a_from,
+         const atom& a_node, const atom& a_mod, const atom& a_fun,
+         const list<Alloc>& args, const epid<Alloc>* gleader)
+    throw (err_bad_argument, err_no_process, err_connection)
+{
+    static const atom rex("rex");
+    transport_msg<Alloc> tm;
+    tm.set_send_rpc_cast(a_from, a_mod, a_fun, args, gleader, m_allocator);
+    send(a_node, rex, tm);
+}
+
+template <typename Alloc, typename Mutex>
+void inline basic_otp_node<Alloc, Mutex>::
 send_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
           const eterm<Alloc>& a_reason)
     throw (err_no_process, err_connection)
