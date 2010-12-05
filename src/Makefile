@@ -11,7 +11,7 @@ TARGETS  = pri_test test_node
 all: $(TARGETS)
 
 test_node: test_node.cpp atom.cpp basic_otp_node_local.cpp \
-		    $(wildcard ../include/ei++/connect/*.?pp)
+		    $(wildcard ../include/eixx/connect/*.?pp)
 	g++ -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) -o $@ $(wordlist 1,3,$^) $(CPPFLAGS) $(LDFLAGS) \
 	-lboost_system -lboost_thread -L$(BOOST_ROOT)/lib 
 
@@ -23,5 +23,5 @@ clean:
 	rm -f $(TARGETS)
 
 tar:
-	DIR=$$PWD && cd .. && tar jcf ei++.tbz ei++/include ei++/Makefile ei++/src/ && \
-	mv ei++.tbz $$DIR
+	DIR=$$PWD && cd .. && tar jcf eixx.tbz eixx/include eixx/Makefile eixx/src/ && \
+	mv eixx.tbz $$DIR
