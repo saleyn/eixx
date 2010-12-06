@@ -3,7 +3,7 @@ BOOST_ROOT=/opt/boost
 ERL_INTERFACE=$(ERL_ROOT)/lib/erlang/lib/erl_interface-3.7
 CPPFLAGS = $(if $(tr1),-std=c++0x) -I./include -isystem $(BOOST_ROOT)/include \
 			-isystem $(ERL_INTERFACE)/include -isystem $(ERL_INTERFACE)/src
-LDFLAGS  = -L$(ERL_INTERFACE)/lib -L$(BOOST_ROOT)/lib -lboost_system -lei
+LDFLAGS  = -L$(ERL_INTERFACE)/lib -L$(BOOST_ROOT)/lib -L./lib -lboost_system -lei
 
 TARGETS  = test_perf test_eterm src/test_node
 
