@@ -108,7 +108,7 @@ class basic_otp_node: public basic_otp_node_local {
     uint32_t m_serial;
     uint32_t m_refid[3];
 
-    boost::asio::io_service                     m_io_service;
+    boost::asio::io_service&                    m_io_service;
     Mutex                                       m_lock;
     basic_otp_mailbox_registry<Alloc, Mutex>    m_mailboxes;
     conn_hash_map                               m_connections;
@@ -118,6 +118,7 @@ class basic_otp_node: public basic_otp_node_local {
 public:
     /**
      * Create a new node, using given cookie
+     * @param a_io_svc is the I/O service to use.
      * @param a_nodename node identifier with the protocol, alivename,
      *  hostname and port. ex: "ei:mynode@host.somewhere.com:3128"
      * @param a_cookie cookie to use
@@ -130,7 +131,8 @@ public:
      * @throws err_connection if there is a network problem
      * @throws eterm_exception if there is an error in transport creation
      */
-    basic_otp_node(const atom& a_nodename,
+    basic_otp_node(boost::asio::io_service& a_io_svc,
+                   const atom& a_nodename,
                    const std::string& a_cookie = "",
                    const Alloc& a_alloc = Alloc(),
                    int8_t a_creation = -1)
@@ -151,9 +153,11 @@ public:
     /// printouts.
     void verbose(verbose_type a_type) { m_verboseness = a_type; }
 
-    void run() {
-        m_io_service.run();
-    }
+    /// Get the service object used by this node.
+    boost::asio::io_service& io_service() { return m_io_service; }
+
+    void run()  { m_io_service.run();  }
+    void stop() { m_io_service.stop(); }
 
     void close() {
         for(typename conn_hash_map::iterator
@@ -199,9 +203,6 @@ public:
     /// Get a mailbox registered by a given epid.
     basic_otp_mailbox<Alloc, Mutex>*
     get_mailbox(const epid<Alloc>& a_pid)   const { return m_mailboxes.get(a_pid); }
-
-    /// Get the service object used by this node.
-    boost::asio::io_service& io_service() { return m_io_service; }
 
     /// Create a new unique pid
     epid<Alloc> create_pid();

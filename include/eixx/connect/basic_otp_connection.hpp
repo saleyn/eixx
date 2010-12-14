@@ -147,7 +147,10 @@ public:
 
     void send(const transport_msg<Alloc>& a_msg) throw (err_connection) {
         if (!m_transport)
-            throw err_connection("Not connected to node", remote_node());
+            if (m_abort)
+                return;
+            else
+                throw err_connection("Not connected to node", remote_node());
         m_transport->send(a_msg);
     }
 

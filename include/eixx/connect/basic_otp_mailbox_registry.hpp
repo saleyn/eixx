@@ -83,10 +83,9 @@ public:
             m_by_name.clear();
             typename std::map<epid<Alloc>, mailbox_ptr>::iterator
                 it = m_by_pid.begin(), end = m_by_pid.end();
-            while (it != end) {
+            for(; it != end; ++it)
                 delete it->second;
-                m_by_pid.erase(it++);
-            }
+            m_by_pid.clear();
         }
     }
 

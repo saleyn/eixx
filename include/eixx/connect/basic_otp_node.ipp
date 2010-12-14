@@ -39,10 +39,12 @@ namespace connect {
 // enode_local
 template <typename Alloc, typename Mutex>
 basic_otp_node<Alloc, Mutex>::basic_otp_node(
+    boost::asio::io_service& a_io_svc,
     const atom& a_nodename, const std::string& a_cookie,
     const Alloc& a_alloc, int8_t a_creation)
     throw (err_bad_argument, err_connection, eterm_exception)
     : basic_otp_node_local(a_nodename.to_string(), a_cookie)
+    , m_io_service(a_io_svc)
     , m_creation((a_creation < 0 ? time(NULL) : (int)a_creation) & 0x03)  // Creation counter
     , m_pid_count(1)
     , m_port_count(1)
