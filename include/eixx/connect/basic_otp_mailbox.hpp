@@ -123,10 +123,10 @@ public:
     {}
 
     ~basic_otp_mailbox() {
-        m_node.close_mailbox(this);
+        close();
     }
 
-    void close(const eterm<Alloc>& a_reason) {
+    void close(const eterm<Alloc>& a_reason = atom("normal")) {
         break_links(a_reason);
     }
 
@@ -279,10 +279,10 @@ void basic_otp_mailbox<Alloc, Mutex>::break_links(const eterm<Alloc>& a_reason)
 {
     for (typename std::set<epid<Alloc> >::const_iterator
             it=m_links.begin(), end = m_links.end(); it != end; ++it)
-        m_node.send_exit(self(), *it, a_reason);
+        try { m_node.send_exit(self(), *it, a_reason); } catch(...) {}
     for (typename std::map<ref<Alloc>, epid<Alloc> >::const_iterator
             it = m_monitors.begin(), end = m_monitors.end(); it != end; ++it)
-        m_node.send_monitor_exit(self(), it->second, it->first, a_reason);
+        try { m_node.send_monitor_exit(self(), it->second, it->first, a_reason); } catch(...) {}
     if (!m_links.empty())    m_links.clear();
     if (!m_monitors.empty()) m_monitors.clear();
 }
@@ -300,10 +300,14 @@ template <typename Alloc, typename Mutex>
 void basic_otp_mailbox<Alloc, Mutex>::async_receive(receive_handler_type h, long msec_timeout)
     throw (std::runtime_error)
 {
+    m_deadline_timer.cancel();
+
     // expires_at() == boost::posix_time::not_a_date_time
+    /*
     if (m_deadline_timer.expires_at() != boost::asio::deadline_timer_ex::time_type())
         throw eterm_exception(
             "Another receive() is already scheduled for mailbox", self());
+    */
 
     if (msec_timeout < 0)
         m_deadline_timer.async_wait(

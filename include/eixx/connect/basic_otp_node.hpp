@@ -110,6 +110,7 @@ class basic_otp_node: public basic_otp_node_local {
 
     boost::asio::io_service&                    m_io_service;
     Mutex                                       m_lock;
+    Mutex                                       m_inc_lock;
     basic_otp_mailbox_registry<Alloc, Mutex>    m_mailboxes;
     conn_hash_map                               m_connections;
     Alloc                                       m_allocator;
@@ -160,10 +161,10 @@ public:
     void stop() { m_io_service.stop(); }
 
     void close() {
+        m_mailboxes.clear();
         for(typename conn_hash_map::iterator
             it = m_connections.begin(), end = m_connections.end(); it != end; ++it)
             it->second->disconnect();
-        m_mailboxes.clear();
         m_connections.clear();
     }
 
@@ -182,10 +183,11 @@ public:
         return m_mailboxes.create_mailbox(a_reg_name, p_svc);
     }
 
-    void close_mailbox(basic_otp_mailbox<Alloc, Mutex>* a_mbox) {
+    void close_mailbox(basic_otp_mailbox<Alloc, Mutex>*& a_mbox) {
         if (a_mbox) {
             m_mailboxes.erase(a_mbox);
-            a_mbox->break_links("normal");
+            delete a_mbox;
+            a_mbox = NULL;
         }
     }
 

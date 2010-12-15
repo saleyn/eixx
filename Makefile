@@ -5,9 +5,9 @@ CPPFLAGS = $(if $(tr1),-std=c++0x) -I./include -isystem $(BOOST_ROOT)/include \
 			-isystem $(ERL_INTERFACE)/include -isystem $(ERL_INTERFACE)/src
 LDFLAGS  = -L$(ERL_INTERFACE)/lib -L$(BOOST_ROOT)/lib -L./lib -lboost_system -lei
 
-TARGETS  = test_perf test_eterm src/test_node
+TARGETS  = test_perf test_eterm src/test_node lib/libeixx.so
 
-all: lib/libeixx.so $(TARGETS)
+all: $(TARGETS)
 
 test_eterm_SOURCES = test/test_eterm.cpp test/test_eterm_encode.cpp \
 					 test/test_eterm_format.cpp test/test_eterm_match.cpp \
@@ -25,7 +25,7 @@ test_eterm: $(test_eterm_SOURCES) src/atom.cpp \
     	-o $@ $(test_eterm_SOURCES) $(CPPFLAGS) $(LDFLAGS) \
 	-DBOOST_TEST_DYN_LINK -lboost_unit_test_framework -leixx -L.
 
-$(filter-out test_eterm src/test_node,$(TARGETS)) : % : test/%.cpp $(wildcard include/eixx/*.?pp) $(wildcard include/eixx/impl/*.?pp)
+test_perf: test/test_perf.cpp $(wildcard include/eixx/*.?pp) $(wildcard include/eixx/impl/*.?pp)
 	g++ -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) -o $@ $< src/atom.cpp $(CPPFLAGS) $(LDFLAGS)
 
 src/test_node:

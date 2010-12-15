@@ -39,7 +39,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/algorithm/string.hpp>
-#include <eixx/connect/common.hpp>
+#include <eixx/util/common.hpp>
 #include <eixx/connect/verbose.hpp>
 #include <eixx/marshal/string.hpp>
 

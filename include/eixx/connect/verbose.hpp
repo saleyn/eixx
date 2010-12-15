@@ -17,7 +17,9 @@ namespace connect {
 // Verboseness level
 enum verbose_type {
       VERBOSE_NONE
+    , VERBOSE_TEST
     , VERBOSE_DEBUG
+    , VERBOSE_INFO
     , VERBOSE_MESSAGE
     , VERBOSE_WIRE
     , VERBOSE_TRACE

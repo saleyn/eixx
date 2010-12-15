@@ -33,8 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_ETERM_BASE_HPP_
 
 #include <boost/noncopyable.hpp>
-#include <boost/interprocess/detail/atomic.hpp>
 #include <eixx/marshal/defaults.hpp>
+#include <eixx/util/common.hpp>
 #include <iostream>
 
 namespace EIXX_NAMESPACE {
@@ -76,29 +76,6 @@ namespace marshal {
     };
 
     namespace bid = boost::interprocess::detail;
-
-    /// Wrapper for basic atomic operations over an integer.
-    template <typename T>
-    struct atomic {
-        atomic(T a = 0): m_value(a) {
-            // For now we just support 32bit signed and unsigned ints
-            BOOST_STATIC_ASSERT(sizeof(T) == 4);
-        }
-        T operator++ ()                 { return bid::atomic_inc32(&m_value)+1; }
-        T operator-- ()                 { return bid::atomic_dec32(&m_value)-1; }
-        T operator++ (int)              { return bid::atomic_inc32(&m_value); }
-        operator T () const             { return m_value; }
-        void operator= (const T& rhs)   { xchg(rhs); }
-        void operator+= (const T& a)    { bid::atomic_add32(&m_value, a); }
-
-        void xchg(const T& a)           { bid::atomic_write32(&m_value, a); }
-
-        T cas(const T& a_old, const T& a_new) {
-            return bid::atomic_cas32(&m_value, a_new, a_old);
-        }
-    private:
-        uint32_t m_value;
-    };
 
     /// \brief Reference-counted blob of memory to store the object of type T.
     template<typename T, typename Alloc>

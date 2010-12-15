@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_TRANSPORT_MSG_HPP_
 
 #include <eixx/marshal/eterm.hpp>
-#include <eixx/connect/common.hpp>
+#include <eixx/util/common.hpp>
 #include <ei.h>
 
 namespace EIXX_NAMESPACE {
@@ -344,7 +344,9 @@ public:
         static eterm<Alloc> s_user(atom("user"));
         eterm<Alloc> gleader(a_gleader == NULL ? s_user : eterm<Alloc>(*a_gleader));
         const tuple<Alloc>& inner_tuple =
-            tuple<Alloc>::make(s_cmd, mod, fun, args, gleader, a_alloc);
+            tuple<Alloc>::make(a_from,
+                tuple<Alloc>::make(s_cmd, mod, fun, args, gleader, a_alloc),
+                a_alloc);
 
         set_send_rpc_internal(a_from, inner_tuple, a_alloc);
     }
@@ -417,10 +419,7 @@ private:
         const Alloc& a_alloc = Alloc())
     {
         static atom rex("rex");
-
-        const tuple<Alloc>& rpc = tuple<Alloc>::make(a_from, a_cmd, a_alloc);
-
-        set_reg_send(a_from, rex, eterm<Alloc>(rpc), a_alloc);
+        set_reg_send(a_from, rex, eterm<Alloc>(a_cmd), a_alloc);
     }
 
 };

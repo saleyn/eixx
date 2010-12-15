@@ -98,7 +98,7 @@ struct atomic {
         return bid::atomic_cas32(&m_value, a_new, a_old); 
     }
 private:
-    T m_value;
+    uint32_t m_value;
 };
 
 /// Return the index of a_string in the a_list using a_default index if 

@@ -188,8 +188,10 @@ void list<Alloc>::push_back(const eterm<Alloc>& a)
     if (unlikely(!m_blob)) {
         m_blob = new blob_t(sizeof(header_t) + sizeof(cons_t), this->get_allocator());
         header_t* hd = header();
+        hd->initialized = false;
         hd->tail = hd->head;
         hd->size = 1;
+        hd->alloc_size = 1;
         cons_t* p = hd->tail;
         p->node.set(a);
         p->next = NULL;
@@ -219,7 +221,7 @@ bool list<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
         return false;
 
     Alloc alloc = this->get_allocator();
-    list<Alloc> l_new(alloc);
+    list<Alloc> l_new(l_header->size, alloc);
 
     for (const cons_t* p=l_header->head; p; p = p->next) {
         eterm<Alloc> l_ele;

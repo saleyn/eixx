@@ -36,7 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_const.hpp>
-#include <boost/smart_ptr/detail/atomic_count.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <eixx/marshal/defaults.hpp> // Must be included before any <eixx/impl/*>

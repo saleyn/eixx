@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <eixx/connect/test_helper.hpp>
+#include <boost/interprocess/detail/atomic.hpp>
 
 namespace EIXX_NAMESPACE {
 namespace connect {
@@ -62,18 +63,18 @@ basic_otp_node<Alloc, Mutex>::basic_otp_node(
 
 template <typename Alloc, typename Mutex>
 epid<Alloc> basic_otp_node<Alloc, Mutex>::create_pid() {
-    epid<Alloc> p(m_nodename.c_str(), m_pid_count++, m_serial, 
-                  m_creation, m_allocator);
+    lock_guard<Mutex> guard(m_inc_lock);
+    epid<Alloc> p(m_nodename, m_pid_count++, m_serial, m_creation, m_allocator);
     if (m_pid_count > 0x7fff) {
         m_pid_count = 0;
         m_serial = ++m_serial & 0x1fff; /* 13 bits */
     }
-
     return p;
 }
 
 template <typename Alloc, typename Mutex>
 port<Alloc> basic_otp_node<Alloc, Mutex>::create_port() {
+    lock_guard<Mutex> guard(m_inc_lock);
     port<Alloc> p(m_nodename, m_port_count++, m_creation, m_allocator);
 
     if (m_port_count > 0x0fffffff) /* 28 bits */
@@ -84,6 +85,7 @@ port<Alloc> basic_otp_node<Alloc, Mutex>::create_port() {
 
 template <typename Alloc, typename Mutex>
 ref<Alloc> basic_otp_node<Alloc, Mutex>::create_ref() {
+    lock_guard<Mutex> guard(m_inc_lock);
     ref<Alloc> r(m_nodename, m_refid, m_creation, m_allocator);
 
     // increment ref ids (3 ints: 18 + 32 + 32 bits)

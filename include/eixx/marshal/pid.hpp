@@ -90,8 +90,6 @@ class epid {
     void decode(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
         throw (err_decode_exception, err_bad_argument);
 
-    uint64_t id_internal() const { return m_blob->data()->u.i & 0x7FFFFFFF; }
-
     epid() {}
 
 public:
@@ -160,6 +158,8 @@ public:
      **/
     int creation() const { return m_blob->data()->u.s.creation; }
 
+    uint32_t id_internal() const { return m_blob->data()->u.i & 0x7FFFFFFF; }
+
     bool operator== (const epid<Alloc>& rhs) const {
         return id_internal() == rhs.id_internal() && node() == rhs.node();
     }
@@ -179,7 +179,8 @@ public:
     void encode(char* buf, int& idx, size_t size) const;
 
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
-        return out << "#Pid<" << node() << "." << id() << "." << serial() << ">";
+        return out << "#Pid<" << node() 
+                   << '.' << id() << '.' << serial() << '.' << creation() << ">";
     }
 
 };

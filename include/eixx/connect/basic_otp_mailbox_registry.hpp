@@ -63,79 +63,23 @@ public:
     }
 
     mailbox_ptr create_mailbox(
-        const atom& a_name = atom(), boost::asio::io_service* a_svc=NULL)
-    {
-        lock_guard<Mutex> guard(m_lock);
-        if (!a_name.empty() && m_by_name.find(a_name) != m_by_name.end())
-            return NULL;   // Already registered!
+        const atom& a_name = atom(), boost::asio::io_service* a_svc=NULL);
 
-        epid<Alloc> l_pid = m_owner_node.create_pid();
-        mailbox_ptr mbox = new mailbox_type(m_owner_node, l_pid, a_name, a_svc);
-        if (!a_name.empty())
-            m_by_name.insert(std::pair<atom, mailbox_ptr>(a_name, mbox));
-        m_by_pid.insert(std::pair<epid<Alloc>, mailbox_ptr>(l_pid, mbox));
-        return mbox;
-    }
+    void clear();
 
-    void clear() {
-        if (!m_by_name.empty() || !m_by_pid.empty()) {
-            lock_guard<Mutex> guard(m_lock);
-            m_by_name.clear();
-            typename std::map<epid<Alloc>, mailbox_ptr>::iterator
-                it = m_by_pid.begin(), end = m_by_pid.end();
-            for(; it != end; ++it)
-                delete it->second;
-            m_by_pid.clear();
-        }
-    }
-
-    bool add(const atom& a_name, mailbox_ptr a_mbox) {
-        if (a_name.empty())
-            throw err_bad_argument("Empty registering name!");
-        if (!a_mbox->name().empty())
-            throw err_bad_argument("Mailbox already registered as", a_mbox->name());
-        lock_guard<Mutex> guard(m_lock);
-        if (m_by_name.find(a_name) != m_by_name.end())
-            return false;
-        m_by_name.insert(std::pair<atom, mailbox_ptr>(a_name, a_mbox));
-        a_mbox->name(a_name);
-        return true;
-    }
+    bool add(const atom& a_name, mailbox_ptr a_mbox);
 
     /// Unregister a name so that no mailbox is any longer associated with \a a_name.
-    bool unregister(const atom& a_name) {
-        if (!a_name.empty())
-            return false;
-        lock_guard<Mutex> guard(m_lock);
-        typename std::map<atom, mailbox_ptr>::iterator it = m_by_name.find(a_name);
-        if (it == m_by_name.end())
-            return;
-        it->second.name("");
-        m_by_name.erase(it);
-    }
+    bool unregister(const atom& a_name);
 
     /// Remove \a a_mbox mailbox from the registry
-    void erase(mailbox_ptr a_mbox) {
-        if (!a_mbox)
-            return;
-        lock_guard<Mutex> guard(m_lock);
-        m_by_pid.erase(a_mbox->self());
-        if (!a_mbox->name().empty())
-            m_by_name.erase(a_mbox->name());
-        a_mbox->name("");
-    }
+    void erase(mailbox_ptr a_mbox);
 
     /**
      * Look up a mailbox based on its name or pid.
      */
     mailbox_ptr
-    get(const eterm<Alloc>& a_proc) const throw (err_bad_argument, err_no_process) {
-        switch (a_proc.type()) {
-            case ATOM:  return get(a_proc.to_atom());
-            case PID:   return get(a_proc.to_pid());
-            default:    throw err_bad_argument("Unknown process identifier", a_proc);
-        }
-    }
+    get(const eterm<Alloc>& a_proc) const throw (err_bad_argument, err_no_process);
 
     /**
      * Look up a mailbox based on its name. If the mailbox has gone out
@@ -143,13 +87,7 @@ public:
      * don't find it again.
      */
     mailbox_ptr
-    get(const atom& a_name) const throw(err_no_process) {
-        lock_guard<Mutex> guard(m_lock);
-        typename std::map<atom, mailbox_ptr>::iterator it = m_by_name.find(a_name);
-        if (it != m_by_name.end())
-            return it->second;
-        throw err_no_process("Process not registered", a_name);
-    }
+    get(const atom& a_name) const throw(err_no_process);
 
     /**
      * Look up a mailbox based on its pid. If the mailbox has gone out
@@ -157,33 +95,162 @@ public:
      * don't find it again.
      */
     mailbox_ptr
-    get(const epid<Alloc>& a_pid) const throw(err_no_process) {
-        lock_guard<Mutex> guard(m_lock);
-        typename std::map<epid<Alloc>, mailbox_ptr>::iterator it = m_by_pid.find(a_pid);
-        if (it != m_by_pid.end())
-            return it->second;
-        throw err_no_process("Process not found", a_pid);
-    }
+    get(const epid<Alloc>& a_pid) const throw(err_no_process);
 
-    void names(std::list<atom>& list) {
-        lock_guard<Mutex> guard(m_lock);
-        for(typename std::map<atom, mailbox_ptr>::const_iterator
-            it = m_by_name.begin(), end = m_by_name.end(); it != end; ++it)
-            list.push_back(it->first);
-    }
+    void names(std::list<atom>& list);
 
-    void pids(std::list<epid<Alloc> >& list) {
-        lock_guard<Mutex> guard(m_lock);
-        for(typename std::map<epid<Alloc>, mailbox_ptr>::const_iterator
-            it = m_by_pid.begin(), end = m_by_pid.eend(); it != end; ++it)
-            list.push_back(it->first);
-    }
+    void pids(std::list<epid<Alloc> >& list);
 };
 
 //------------------------------------------------------------------------------
 // otp_mailbox_registry implementation
 //------------------------------------------------------------------------------
 
+
+template <typename Alloc, typename Mutex>
+typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
+basic_otp_mailbox_registry<Alloc, Mutex>::create_mailbox(
+    const atom& a_name, boost::asio::io_service* a_svc)
+{
+    lock_guard<Mutex> guard(m_lock);
+    if (!a_name.empty()) {
+        typename std::map<atom, mailbox_ptr>::iterator it = m_by_name.find(a_name);
+        if (it != m_by_name.end())
+            return it->second;   // Already registered!
+    }
+
+    epid<Alloc> l_pid = m_owner_node.create_pid();
+    mailbox_ptr mbox = new mailbox_type(m_owner_node, l_pid, a_name, a_svc);
+    if (!a_name.empty())
+        m_by_name.insert(std::pair<atom, mailbox_ptr>(a_name, mbox));
+    m_by_pid.insert(std::pair<epid<Alloc>, mailbox_ptr>(l_pid, mbox));
+    return mbox;
+}
+
+template <typename Alloc, typename Mutex>
+void basic_otp_mailbox_registry<Alloc, Mutex>::clear()
+{
+    if (!m_by_name.empty() || !m_by_pid.empty()) {
+        lock_guard<Mutex> guard(m_lock);
+        m_by_name.clear();
+        typename std::map<epid<Alloc>, mailbox_ptr>::iterator it;
+        for(it = m_by_pid.begin(); it != m_by_pid.end(); ++it) {
+            mailbox_ptr p = it->second;
+            p->close();
+            //delete p;
+        }
+        m_by_pid.clear();
+    }
+}
+
+template <typename Alloc, typename Mutex>
+bool basic_otp_mailbox_registry<Alloc, Mutex>::add(const atom& a_name, mailbox_ptr a_mbox)
+{
+    if (a_name.empty())
+        throw err_bad_argument("Empty registering name!");
+    if (!a_mbox->name().empty())
+        throw err_bad_argument("Mailbox already registered as", a_mbox->name());
+    lock_guard<Mutex> guard(m_lock);
+    if (m_by_name.find(a_name) != m_by_name.end())
+        return false;
+    m_by_name.insert(std::pair<atom, mailbox_ptr>(a_name, a_mbox));
+    a_mbox->name(a_name);
+    return true;
+}
+
+/// Unregister a name so that no mailbox is any longer associated with \a a_name.
+template <typename Alloc, typename Mutex>
+bool basic_otp_mailbox_registry<Alloc, Mutex>::unregister(const atom& a_name)
+{
+    if (!a_name.empty())
+        return false;
+    lock_guard<Mutex> guard(m_lock);
+    typename std::map<atom, mailbox_ptr>::iterator it = m_by_name.find(a_name);
+    if (it == m_by_name.end())
+        return;
+    it->second.name("");
+    m_by_name.erase(it);
+}
+
+/// Remove \a a_mbox mailbox from the registry
+template <typename Alloc, typename Mutex>
+void basic_otp_mailbox_registry<Alloc, Mutex>::erase(mailbox_ptr a_mbox)
+{
+    if (!a_mbox)
+        return;
+    lock_guard<Mutex> guard(m_lock);
+    m_by_pid.erase(a_mbox->self());
+    if (!a_mbox->name().empty())
+        m_by_name.erase(a_mbox->name());
+    a_mbox->name("");
+}
+
+/**
+ * Look up a mailbox based on its name or pid.
+ */
+template <typename Alloc, typename Mutex>
+typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
+basic_otp_mailbox_registry<Alloc, Mutex>::get(const eterm<Alloc>& a_proc) const
+    throw (err_bad_argument, err_no_process)
+{
+    switch (a_proc.type()) {
+        case ATOM:  return get(a_proc.to_atom());
+        case PID:   return get(a_proc.to_pid());
+        default:    throw err_bad_argument("Unknown process identifier", a_proc);
+    }
+}
+
+/**
+ * Look up a mailbox based on its name. If the mailbox has gone out
+ * of scope we also remove the reference from the hashtable so we
+ * don't find it again.
+ */
+template <typename Alloc, typename Mutex>
+typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
+basic_otp_mailbox_registry<Alloc, Mutex>::get(const atom& a_name) const
+    throw(err_no_process)
+{
+    lock_guard<Mutex> guard(m_lock);
+    typename std::map<atom, mailbox_ptr>::iterator it = m_by_name.find(a_name);
+    if (it != m_by_name.end())
+        return it->second;
+    throw err_no_process("Process not registered", a_name);
+}
+
+/**
+ * Look up a mailbox based on its pid. If the mailbox has gone out
+ * of scope we also remove the reference from the hashtable so we
+ * don't find it again.
+ */
+template <typename Alloc, typename Mutex>
+typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
+basic_otp_mailbox_registry<Alloc, Mutex>::get(const epid<Alloc>& a_pid) const
+    throw(err_no_process)
+{
+    lock_guard<Mutex> guard(m_lock);
+    typename std::map<epid<Alloc>, mailbox_ptr>::iterator it = m_by_pid.find(a_pid);
+    if (it != m_by_pid.end())
+        return it->second;
+    throw err_no_process("Process not found", a_pid);
+}
+
+template <typename Alloc, typename Mutex>
+void basic_otp_mailbox_registry<Alloc, Mutex>::names(std::list<atom>& list)
+{
+    lock_guard<Mutex> guard(m_lock);
+    for(typename std::map<atom, mailbox_ptr>::const_iterator
+        it = m_by_name.begin(), end = m_by_name.end(); it != end; ++it)
+        list.push_back(it->first);
+}
+
+template <typename Alloc, typename Mutex>
+void basic_otp_mailbox_registry<Alloc, Mutex>::pids(std::list<epid<Alloc> >& list)
+{
+    lock_guard<Mutex> guard(m_lock);
+    for(typename std::map<epid<Alloc>, mailbox_ptr>::const_iterator
+        it = m_by_pid.begin(), end = m_by_pid.eend(); it != end; ++it)
+        list.push_back(it->first);
+}
 
 } // namespace connect
 } // namespace EIXX_NAMESPACE
