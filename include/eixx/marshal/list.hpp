@@ -87,7 +87,7 @@ private:
                 // If there were any allocations after the original 
                 // construction of the list head descriptor, deallocate
                 // all the following cons.
-                if (l_header->alloc_size > 0) 
+                if (l_header->alloc_size > 0 && l_header->size > l_header->alloc_size) 
                     for (cons_t* p = (l_header->head + l_header->alloc_size - 1)->next; p; ++p)
                         this->get_t_allocator().deallocate(p, sizeof(cons_t));
             }

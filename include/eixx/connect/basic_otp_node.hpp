@@ -267,7 +267,17 @@ public:
         throw (err_bad_argument, err_no_process, err_connection);
 
     /// Send a message \a a_msg from \a a_from pid to \a a_to pid.
+    /// @param a_to is a remote process.
+    /// @param a_msg is the message to send.
     void send(const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
+        throw (err_no_process, err_connection);
+
+    /// Send a message \a a_msg to the remote process \a a_to on node \a a_node.
+    /// The remote process \a a_to need not belong to node \a a_node.
+    /// @param a_node is the node to send the message to.
+    /// @param a_to is a remote process.
+    /// @param a_msg is the message to send.
+    void send(const atom& a_node, const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
         throw (err_no_process, err_connection);
 
     /// Send a message \a a_msg to the local process registered as \a a_to.

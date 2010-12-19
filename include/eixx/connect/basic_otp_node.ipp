@@ -187,6 +187,16 @@ void inline basic_otp_node<Alloc, Mutex>::send(
 
 template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::send(
+    const atom& a_node, const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
+    throw (err_no_process, err_connection)
+{
+    transport_msg<Alloc> tm;
+    tm.set_send(a_to, a_msg, m_allocator);
+    send(a_node, a_to, tm);
+}
+
+template <typename Alloc, typename Mutex>
+void inline basic_otp_node<Alloc, Mutex>::send(
     const epid<Alloc>& a_from, const atom& a_to, const eterm<Alloc>& a_msg)
     throw (err_no_process, err_connection)
 {

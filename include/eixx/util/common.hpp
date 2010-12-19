@@ -63,7 +63,7 @@ T inline power(T a, size_t b) {
 
 int __inline__ log2(unsigned long n, uint8_t base = 2) {
     BOOST_ASSERT(n > 0);
-    return n == 1 ? 0 : log2(n/base, base); 
+    return n == 1 ? 0 : 1+log2(n/base, base); 
 }
 
 static __inline__ unsigned long bit_scan_forward(unsigned long v)
