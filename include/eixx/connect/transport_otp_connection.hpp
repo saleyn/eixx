@@ -130,7 +130,7 @@ protected:
 
     char*  rd_ptr()                 { return m_rd_ptr; }
     size_t rd_length()              { return m_rd_end - m_rd_ptr; }
-    size_t rd_size()                { return m_rd_buf.size() - rd_length(); }
+    size_t rd_size()                { return m_rd_buf.capacity() - rd_length(); }
     /// Verboseness
     verbose_type verbose()    const { return m_handler->verbose(); }
 

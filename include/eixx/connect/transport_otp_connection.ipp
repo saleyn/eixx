@@ -262,7 +262,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         m_rd_ptr = &m_rd_buf[0];
         m_rd_end = m_rd_ptr;
         m_packet_size = s_header_size;
-    } else {
+    } else if ((m_rd_ptr - (&*m_rd_buf.begin() + s_header_size)) > 0) {
         // Crunch the buffer by copying leftover bytes to the beginning of the buffer.
         const size_t len = m_rd_end - m_rd_ptr;
         char* begin = &m_rd_buf[0];
