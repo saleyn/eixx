@@ -204,6 +204,16 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
                   << ", pkt_sz=" << m_packet_size << ", ec="
                   << err.value() << ')' << std::endl;
 
+    /*
+    if (unlikely(verbose() >= VERBOSE_WIRE))
+        std::cout << "Bytes read=" << bytes_transferred
+                  << ", header=" << (m_got_header ? "true" : "false")
+                  << ", rd_buf.size=" << m_rd_buf.capacity()
+                  << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
+                  << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
+                  << std::endl;
+    */
+
     if (unlikely(m_connection_aborted)) {
         if (verbose() >= VERBOSE_TRACE)
             std::cout << "Connection aborted - "
@@ -227,7 +237,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         BOOST_ASSERT(bytes_transferred >= s_header_size);
         bytes_transferred -= s_header_size;
         m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
-        if (m_packet_size > m_rd_buf.size()-s_header_size) {
+        if (m_packet_size > m_rd_buf.capacity()-s_header_size) {
             m_rd_buf.reserve(m_packet_size + s_header_size);
             m_rd_ptr = &*m_rd_buf.begin();
         }
@@ -235,9 +245,24 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         m_rd_end     = m_rd_ptr + bytes_transferred;
         m_got_header = true;
     }
+
+    long need_bytes = m_packet_size - rd_length();
+
     // Process all messages in the buffer
-    while ((m_rd_ptr + m_packet_size) <= m_rd_end) {
+    while (m_packet_size > 0 && need_bytes <= 0) {
         m_in_msg_count++;
+
+        /*
+        if (unlikely(verbose() >= VERBOSE_WIRE))
+            std::cout << " MsgCnt=" << m_in_msg_count
+                      << ", pkt_size=" << m_packet_size << ", need=" << need_bytes
+                      << ", rd_buf.size=" << m_rd_buf.capacity()
+                      << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
+                      << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
+                      << ", rd_size=" << rd_size()
+                      << std::endl;
+        */
+
         try {
             if (verbose() >= VERBOSE_WIRE)
                 marshal::to_binary_string(
@@ -257,11 +282,15 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
             break;
         m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
         m_rd_ptr     += s_header_size;
+        need_bytes    = m_packet_size - rd_length();
     }
+    bool crunched = false;
+
     if (m_rd_ptr == m_rd_end) {
         m_rd_ptr = &m_rd_buf[0];
         m_rd_end = m_rd_ptr;
         m_packet_size = s_header_size;
+        need_bytes    = m_packet_size;
     } else if ((m_rd_ptr - (&*m_rd_buf.begin() + s_header_size)) > 0) {
         // Crunch the buffer by copying leftover bytes to the beginning of the buffer.
         const size_t len = m_rd_end - m_rd_ptr;
@@ -269,20 +298,23 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         memcpy(begin, m_rd_ptr, len);
         m_rd_ptr = begin;
         m_rd_end = begin + len;
+        crunched = true;
     }
 
-    if (unlikely(verbose() >= VERBOSE_TRACE))
+    /*
+    if (unlikely(verbose() >= VERBOSE_WIRE))
         std::cout << "Scheduling connection::async_read(offset=" 
                   << (m_rd_end-&m_rd_buf[0])
                   << ", sz=" << rd_size() << ", transf_at_least=" 
-                  << m_packet_size << ", got_header="
-                  << (m_got_header ? "true" : "false")
+                  << m_packet_size << ", need=" << need_bytes
+                  << ", got_header=" << (m_got_header ? "true" : "false")
+                  << ", crunched=" << (crunched ? "true" : "false")
                   << ", aborted=" << (m_connection_aborted ? "true" : "false") << ')'
                   << std::endl;
-
+    */
     boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_size());
     async_read(
-        buffers, boost::asio::transfer_at_least(m_packet_size),
+        buffers, boost::asio::transfer_at_least(need_bytes),
         boost::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(), 
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
