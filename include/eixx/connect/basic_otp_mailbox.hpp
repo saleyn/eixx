@@ -127,6 +127,7 @@ public:
     }
 
     void close(const eterm<Alloc>& a_reason = atom("normal")) {
+        m_node.close_mailbox(this);
         break_links(a_reason);
     }
 

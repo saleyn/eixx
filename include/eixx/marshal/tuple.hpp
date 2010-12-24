@@ -240,6 +240,74 @@ public:
         return tuple<Alloc>(l, a);
     }
 
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+    static tuple<Alloc> make(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
+        const Alloc& a = Alloc()) {
+        eterm<Alloc> l[] = { eterm<Alloc>::cast(t1),
+                             eterm<Alloc>::cast(t2),
+                             eterm<Alloc>::cast(t3),
+                             eterm<Alloc>::cast(t4),
+                             eterm<Alloc>::cast(t5),
+                             eterm<Alloc>::cast(t6),
+                             eterm<Alloc>::cast(t7) };
+        return tuple<Alloc>(l, a);
+    }
+
+    template <class T1, class T2, class T3, class T4,
+              class T5, class T6, class T7, class T8>
+    static tuple<Alloc> make(T1 t1, T2 t2, T3 t3, T4 t4,
+                             T5 t5, T6 t6, T7 t7, T8 t8,
+        const Alloc& a = Alloc()) {
+        eterm<Alloc> l[] = { eterm<Alloc>::cast(t1),
+                             eterm<Alloc>::cast(t2),
+                             eterm<Alloc>::cast(t3),
+                             eterm<Alloc>::cast(t4),
+                             eterm<Alloc>::cast(t5),
+                             eterm<Alloc>::cast(t6),
+                             eterm<Alloc>::cast(t7),
+                             eterm<Alloc>::cast(t8) };
+        return tuple<Alloc>(l, a);
+    }
+
+    template <class T1, class T2, class T3, class T4,
+              class T5, class T6, class T7, class T8,
+              class T9>
+    static tuple<Alloc> make(T1 t1, T2 t2, T3 t3, T4 t4,
+                             T5 t5, T6 t6, T7 t7, T8 t8,
+                             T9 t9,
+        const Alloc& a = Alloc()) {
+        eterm<Alloc> l[] = { eterm<Alloc>::cast(t1),
+                             eterm<Alloc>::cast(t2),
+                             eterm<Alloc>::cast(t3),
+                             eterm<Alloc>::cast(t4),
+                             eterm<Alloc>::cast(t5),
+                             eterm<Alloc>::cast(t6),
+                             eterm<Alloc>::cast(t7),
+                             eterm<Alloc>::cast(t8),
+                             eterm<Alloc>::cast(t9) };
+        return tuple<Alloc>(l, a);
+    }
+
+    template <class T1, class T2, class T3, class T4,
+              class T5, class T6, class T7, class T8,
+              class T9, class T10>
+    static tuple<Alloc> make(T1 t1, T2 t2, T3 t3, T4 t4,
+                             T5 t5, T6 t6, T7 t7, T8 t8,
+                             T9 t9, T10 t10,
+        const Alloc& a = Alloc()) {
+        eterm<Alloc> l[] = { eterm<Alloc>::cast(t1),
+                             eterm<Alloc>::cast(t2),
+                             eterm<Alloc>::cast(t3),
+                             eterm<Alloc>::cast(t4),
+                             eterm<Alloc>::cast(t5),
+                             eterm<Alloc>::cast(t6),
+                             eterm<Alloc>::cast(t7),
+                             eterm<Alloc>::cast(t8),
+                             eterm<Alloc>::cast(t9),
+                             eterm<Alloc>::cast(t10) };
+        return tuple<Alloc>(l, a);
+    }
+
 };
 
 } // namespace marshal

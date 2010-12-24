@@ -75,8 +75,14 @@ class epid {
     blob<pid_blob, Alloc>* m_blob;
 
     void release() {
-        if (m_blob)
+        if (m_blob) {
+            #ifdef EIXX_DEBUG
+            std::cerr << "Releasing pid " << *this
+                      << " [addr=" << this << ", blob=" << m_blob
+                      << ", rc=" << m_blob->use_count() << ']' << std::endl;
+            #endif
             m_blob->release();
+        }
     }
 
     // Must only be called from constructor!
@@ -85,6 +91,10 @@ class epid {
     {
         m_blob = new blob<pid_blob, Alloc>(1, alloc);
         new (m_blob->data()) pid_blob(node, id, serial, creation);
+        #ifdef EIXX_DEBUG
+        std::cerr << "Initialized pid " << *this
+                  << " [addr=" << this << ", blob=" << m_blob << ']' << std::endl;
+        #endif
     }
 
     void decode(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
@@ -128,11 +138,25 @@ public:
         decode(buf, idx, size, a_alloc);
     }
 
-    epid(const epid& rhs) : m_blob(rhs.m_blob) { m_blob->inc_rc(); }
+    epid(const epid& rhs) : m_blob(rhs.m_blob) {
+        m_blob->inc_rc();
+        #ifdef EIXX_DEBUG
+        std::cerr << "Copied pid " << *this
+                  << " [addr=" << this << ", blob=" << m_blob
+                  << ", rc=" << m_blob->use_count() << ']' << std::endl;
+        #endif
+    }
 
     ~epid() { release(); }
 
-    void operator= (const epid& rhs) { release(); m_blob = rhs.m_blob; m_blob->inc_rc(); }
+    void operator= (const epid& rhs) {
+        release(); m_blob = rhs.m_blob; m_blob->inc_rc();
+        #ifdef EIXX_DEBUG
+        std::cerr << "Copied pid " << *this
+                  << " [addr=" << this << ", blob=" << m_blob
+                  << ", rc=" << m_blob->use_count() << ']' << std::endl;
+        #endif
+    }
 
     /**
      * Get the node name from the PID.

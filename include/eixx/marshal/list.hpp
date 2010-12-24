@@ -276,6 +276,33 @@ public:
                              eterm<Alloc>::cast(t6) };
         return list<Alloc>(l, a);
     }
+
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7>
+    static list<Alloc> make(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7,
+        const Alloc& a = Alloc()) {
+        eterm<Alloc> l[] = { eterm<Alloc>::cast(t1),
+                             eterm<Alloc>::cast(t2),
+                             eterm<Alloc>::cast(t3),
+                             eterm<Alloc>::cast(t4),
+                             eterm<Alloc>::cast(t5),
+                             eterm<Alloc>::cast(t6),
+                             eterm<Alloc>::cast(t7) };
+        return list<Alloc>(l, a);
+    }
+
+    template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+    static list<Alloc> make(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8,
+        const Alloc& a = Alloc()) {
+        eterm<Alloc> l[] = { eterm<Alloc>::cast(t1),
+                             eterm<Alloc>::cast(t2),
+                             eterm<Alloc>::cast(t3),
+                             eterm<Alloc>::cast(t4),
+                             eterm<Alloc>::cast(t5),
+                             eterm<Alloc>::cast(t6),
+                             eterm<Alloc>::cast(t7),
+                             eterm<Alloc>::cast(t8) };
+        return list<Alloc>(l, a);
+    }
 };
 
 template <typename Alloc>

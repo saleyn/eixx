@@ -12,11 +12,13 @@ all: $(TARGETS)
 
 test_node: test_node.cpp atom.cpp basic_otp_node_local.cpp \
 		    $(wildcard ../include/eixx/connect/*.?pp)
-	g++ -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) -o $@ $(wordlist 1,3,$^) $(CPPFLAGS) $(LDFLAGS) \
+	g++ -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0 -ggdb -D_GLIBCXX_DEBUG) \
+	-o $@ $(wordlist 1,3,$^) $(CPPFLAGS) $(LDFLAGS) \
 	-lboost_system -lboost_thread -L$(BOOST_ROOT)/lib 
 
 pri_test: pattern_match_handler.cpp
-	g++ -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) -o $@ $< $(CPPFLAGS) $(LDFLAGS) \
+	g++ -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0 -ggdb -D_GLIBCXX_DEBUG) \
+	-o $@ $< $(CPPFLAGS) $(LDFLAGS) \
 	-lboost_system -lboost_date_time -lboost_thread -L$(BOOST_ROOT)/lib 
 
 clean:

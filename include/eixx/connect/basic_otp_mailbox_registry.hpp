@@ -100,6 +100,11 @@ public:
     void names(std::list<atom>& list);
 
     void pids(std::list<epid<Alloc> >& list);
+
+    /**
+     * This method is not thread-safe - use for debugging!
+     */
+    size_t count() const { return m_by_pid.size(); }
 };
 
 //------------------------------------------------------------------------------

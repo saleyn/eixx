@@ -117,6 +117,8 @@ class basic_otp_node: public basic_otp_node_local {
     verbose_type                                m_verboseness;
 
 public:
+    typedef basic_otp_mailbox_registry<Alloc, Mutex> mailbox_registry_t;
+
     /**
      * Create a new node, using given cookie
      * @param a_io_svc is the I/O service to use.
@@ -183,11 +185,9 @@ public:
         return m_mailboxes.create_mailbox(a_reg_name, p_svc);
     }
 
-    void close_mailbox(basic_otp_mailbox<Alloc, Mutex>*& a_mbox) {
+    void close_mailbox(basic_otp_mailbox<Alloc, Mutex>* a_mbox) {
         if (a_mbox) {
             m_mailboxes.erase(a_mbox);
-            delete a_mbox;
-            a_mbox = NULL;
         }
     }
 
@@ -205,6 +205,8 @@ public:
     /// Get a mailbox registered by a given epid.
     basic_otp_mailbox<Alloc, Mutex>*
     get_mailbox(const epid<Alloc>& a_pid)   const { return m_mailboxes.get(a_pid); }
+
+    const mailbox_registry_t& registry() const { return m_mailboxes; }
 
     /// Create a new unique pid
     epid<Alloc> create_pid();

@@ -401,7 +401,7 @@ private:
             set(a_trace_type, l_cntrl, NULL);
         } else {
             const tuple<Alloc>& l_cntrl =
-                tuple<Alloc>::make(a_type, a_from, a_to, *token, a_reason, a_alloc);
+                tuple<Alloc>::make(a_type, a_from, a_to, a_reason, a_alloc);
             set(a_type, l_cntrl, NULL);
         }
     }
