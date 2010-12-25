@@ -132,6 +132,8 @@ namespace detail {
             return lit == lend ? -1 : lit->second;
         }
     public:
+        /// Returns the default atom table maximum size. The value can be
+        /// changed by setting the EI_ATOM_TABLE_SIZE environment variable. 
         static size_t default_size() {
             const char* p = getenv("EI_ATOM_TABLE_SIZE");
             int n = p ? atoi(p) : s_default_max_atoms;
@@ -179,7 +181,7 @@ namespace detail {
             if (a_atom.size() == 0)
                 return 0;
             if (a_atom.size() > MAXATOMLEN)
-                throw std::runtime_error("Atom size is too long!");
+                throw err_bad_argument("Atom size is too long!");
             size_t bucket = m_index.bucket(a_atom.c_str());
             int n = find_value(bucket, a_atom.c_str());
             if (n >= 0)

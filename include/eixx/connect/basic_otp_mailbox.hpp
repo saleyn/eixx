@@ -126,8 +126,11 @@ public:
         close();
     }
 
-    void close(const eterm<Alloc>& a_reason = atom("normal")) {
-        m_node.close_mailbox(this);
+    /// @param a_reg_remove when true the mailbox's pid is removed from registry.
+    ///          Only pass false when invoking from the registry on destruction.
+    void close(const eterm<Alloc>& a_reason = atom("normal"), bool a_reg_remove = true) {
+        if (a_reg_remove)
+            m_node.close_mailbox(this);
         break_links(a_reason);
     }
 

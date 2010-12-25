@@ -40,6 +40,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/algorithm/string.hpp>
 #include <eixx/util/common.hpp>
+#include <eixx/util/string_util.hpp>
 #include <eixx/connect/verbose.hpp>
 #include <eixx/marshal/string.hpp>
 
@@ -106,7 +107,7 @@ protected:
         , m_allocator(a_alloc)
         , m_got_header(false), m_packet_size(s_header_size)
         , m_in_msg_count(0), m_out_msg_count(0)
-        , m_rd_buf(4096), m_rd_ptr(&*m_rd_buf.begin()), m_rd_end(&*m_rd_buf.begin())
+        , m_rd_buf(16*1024), m_rd_ptr(&m_rd_buf[0]), m_rd_end(&m_rd_buf[0])
         , m_available_queue(0)
         , m_is_writing(false)
         , m_connection_aborted(false)
@@ -130,7 +131,7 @@ protected:
 
     char*  rd_ptr()                 { return m_rd_ptr; }
     size_t rd_length()              { return m_rd_end - m_rd_ptr; }
-    size_t rd_size()                { return m_rd_buf.capacity() - rd_length(); }
+    size_t rd_capacity()            { return m_rd_buf.capacity() - rd_length(); }
     /// Verboseness
     verbose_type verbose()    const { return m_handler->verbose(); }
 
@@ -151,8 +152,8 @@ protected:
             if (unlikely(verbose() >= VERBOSE_WIRE))
                 for(cb_t::const_iterator it=buffers.begin(); it != buffers.end(); ++it)
                     std::cout << "  async_write " << boost::asio::buffer_size(*it) << " bytes: " 
-                        << marshal::to_binary_string(boost::asio::buffer_cast<const char*>(*it),
-                                                     boost::asio::buffer_size(*it)) << std::endl;
+                        << to_binary_string(boost::asio::buffer_cast<const char*>(*it),
+                                            boost::asio::buffer_size(*it)) << std::endl;
             async_write(buffers, boost::asio::transfer_all(), 
                 boost::bind(&connection<Handler, Alloc>::handle_write, this->shared_from_this(),
                     boost::asio::placeholders::error));
@@ -197,7 +198,7 @@ protected:
         if (unlikely(verbose() >= VERBOSE_MESSAGE))
             std::cout << "client -> agent: " << a_msg.to_string() << std::endl;
         if (unlikely(verbose() >= VERBOSE_WIRE))
-            marshal::to_binary_string(std::cout << "client -> agent: ", data, sz) << std::endl;
+            to_binary_string(std::cout << "client -> agent: ", data, sz) << std::endl;
 
         boost::asio::const_buffer b(data, sz);
         m_io_service.post(
@@ -239,7 +240,7 @@ protected:
         m_connection_aborted = false;
         m_handler->on_connect(this);
 
-        const boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_size());
+        const boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_capacity());
         async_read(
             buffers,
             boost::asio::transfer_at_least(s_header_size),

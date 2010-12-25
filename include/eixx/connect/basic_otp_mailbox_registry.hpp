@@ -136,13 +136,13 @@ template <typename Alloc, typename Mutex>
 void basic_otp_mailbox_registry<Alloc, Mutex>::clear()
 {
     if (!m_by_name.empty() || !m_by_pid.empty()) {
+        static const atom s_am_normal("normal");
         lock_guard<Mutex> guard(m_lock);
         m_by_name.clear();
         typename std::map<epid<Alloc>, mailbox_ptr>::iterator it;
         for(it = m_by_pid.begin(); it != m_by_pid.end(); ++it) {
             mailbox_ptr p = it->second;
-            p->close();
-            //delete p;
+            p->close(s_am_normal, false);
         }
         m_by_pid.clear();
     }

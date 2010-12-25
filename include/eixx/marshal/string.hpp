@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_STRING_HPP_
 
 #include <string.h>
+#include <eixx/marshal/defaults.hpp>
+#include <eixx/util/string_util.hpp>
 #include <eixx/marshal/alloc_base.hpp>
 #include <eixx/marshal/endian.hpp>
 #include <eixx/eterm_exception.hpp>
@@ -161,28 +163,6 @@ public:
     }
 };
 
-/// Print the content of a buffer to \a out stream in the form:
-/// \verbatim <<I1, I2, ..., In>> \endverbatim where <tt>Ik</tt> is
-/// unsigned integer less than 256.
-static std::ostream& to_binary_string(std::ostream& out, const char* buf, size_t sz) {
-    out << "<<";
-    const char* begin = buf, *end = buf + sz;
-    for(const char* p = begin; p != end; ++p) {
-        out << (p == begin ? "" : ",") << (int)*(unsigned char*)p;
-    }
-    out << ">>";
-    return out;
-}
-
-/// Convert the content of a buffer to a binary string in the form:
-/// \verbatim <<I1, I2, ..., In>> \endverbatim where <tt>Ik</tt> is
-/// unsigned integer less than 256.
-static std::string to_binary_string(const char* a, size_t sz) {
-    std::stringstream oss;
-    to_binary_string(oss, a, sz);
-    return oss.str();
-}
-
 template <typename Alloc>
 static std::string to_binary_string(const string<Alloc>& a) {
     return to_binary_string(a.c_str(), a.size());
@@ -258,9 +238,6 @@ namespace std {
     bool operator== (const EIXX_NAMESPACE::marshal::string<Alloc>& lhs, const std::string& rhs) {
         return rhs == rhs.c_str();
     }
-
-    template <int N>
-    std::string to_string(const uint8_t (&s)[N]) { return std::string((const char*)s, N); }
 
     template <typename Alloc>
     bool operator== (const EIXX_NAMESPACE::marshal::string<Alloc>& lhs, const char* rhs) {

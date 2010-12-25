@@ -129,7 +129,7 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
 
         if (this->handler()->verbose() >= VERBOSE_TRACE)
             std::cout << "-> sending epmd port req for '" << alivename << "': "
-                      << marshal::to_binary_string(m_buf_epmd, len+2) << std::endl;
+                      << to_binary_string(m_buf_epmd, len+2) << std::endl;
 
         m_state = CS_WAIT_EPMD_WRITE_DONE;
         boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_epmd, len+2),
@@ -314,7 +314,7 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
 
     if (this->handler()->verbose() >= VERBOSE_TRACE)
         std::cout << "-> sending name " << siz << " bytes:" 
-                  << marshal::to_binary_string(m_buf_node, siz) << std::endl;
+                  << to_binary_string(m_buf_node, siz) << std::endl;
 
     m_state = CS_WAIT_WRITE_CHALLENGE_DONE;
     boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_node, siz),
@@ -505,7 +505,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
 
     if (this->handler()->verbose() >= VERBOSE_TRACE)
         std::cout << "-> sending challenge reply " << siz << " bytes:"
-                  << marshal::to_binary_string(m_buf_node, siz) << std::endl;
+                  << to_binary_string(m_buf_node, siz) << std::endl;
 
     m_state = CS_WAIT_WRITE_CHALLENGE_REPLY_DONE;
     boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_node, siz),
@@ -592,7 +592,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
     char tag = get8(m_node_rd);
     if (this->handler()->verbose() >= VERBOSE_TRACE)
         std::cout << "<- got auth challenge ack (tag=" << tag << "): " 
-                  << marshal::to_binary_string(m_node_rd, m_expect_size-1) << std::endl;
+                  << to_binary_string(m_node_rd, m_expect_size-1) << std::endl;
 
     if (tag != 'a') {
         std::stringstream str; str << "Error reading auth challenge ack body tag '" 

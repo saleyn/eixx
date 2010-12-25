@@ -6,7 +6,9 @@ namespace EIXX_NAMESPACE {
 namespace marshal {
 
     detail::atom_table<>& atom::atom_table() {
-        return boost::details::pool::singleton_default<detail::atom_table<> >::instance();
+        //return boost::details::pool::singleton_default<detail::atom_table<> >::instance();
+        static detail::atom_table<> s_atom_table;
+        return s_atom_table;
     }
 
 } // namespace marshal

@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/connect/transport_otp_connection_tcp.hpp>
 #include <eixx/connect/transport_otp_connection_uds.hpp>
 #include <eixx/marshal/trace.hpp>
+#include <eixx/util/string_util.hpp>
+#include <eixx/marshal/string.hpp>
 #include <misc/eiext.h>                 // see erl_interface/src
 
 namespace EIXX_NAMESPACE {
@@ -197,25 +199,19 @@ template <class Handler, class Alloc>
 void connection<Handler, Alloc>::
 handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
-    if (unlikely(verbose() >= VERBOSE_TRACE))
-        std::cout << "connection<Handler, Alloc>::handle_read(transferred=" 
+    if (unlikely(verbose() >= VERBOSE_WIRE))
+        std::cout << "connection::handle_read(transferred=" 
                   << bytes_transferred << ", got_header=" 
                   << (m_got_header ? "true" : "false")
-                  << ", pkt_sz=" << m_packet_size << ", ec="
-                  << err.value() << ')' << std::endl;
-
-    /*
-    if (unlikely(verbose() >= VERBOSE_WIRE))
-        std::cout << "Bytes read=" << bytes_transferred
-                  << ", header=" << (m_got_header ? "true" : "false")
                   << ", rd_buf.size=" << m_rd_buf.capacity()
                   << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
                   << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
-                  << std::endl;
-    */
+                  << ", rd_capacity=" << rd_capacity()
+                  << ", pkt_sz=" << m_packet_size << " (ec="
+                  << err.value() << ')' << std::endl;
 
     if (unlikely(m_connection_aborted)) {
-        if (verbose() >= VERBOSE_TRACE)
+        if (verbose() >= VERBOSE_WIRE)
             std::cout << "Connection aborted - "
                          "exiting connection<Handler, Alloc>::handle_read" 
                       << std::endl;
@@ -229,44 +225,62 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
             ? boost::asio::error::not_connected : err;
         stop(e);
         return;
-    } else if (m_got_header) {
-        m_rd_end += bytes_transferred;
-    } else {
-        // Make sure that the buffer size is large enouch to store
-        // next message.
-        BOOST_ASSERT(bytes_transferred >= s_header_size);
-        bytes_transferred -= s_header_size;
-        m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
-        if (m_packet_size > m_rd_buf.capacity()-s_header_size) {
-            m_rd_buf.reserve(m_packet_size + s_header_size);
-            m_rd_ptr = &*m_rd_buf.begin();
-        }
-        m_rd_ptr    += s_header_size;
-        m_rd_end     = m_rd_ptr + bytes_transferred;
-        m_got_header = true;
     }
 
-    long need_bytes = m_packet_size - rd_length();
+    m_rd_end += bytes_transferred;
+
+    if (!m_got_header) {
+        size_t len = rd_length();
+
+        m_got_header = len >= s_header_size;
+
+        if (m_got_header) {
+            // Make sure that the buffer size is large enouch to store
+            // next message.
+            m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
+            if (m_packet_size > m_rd_buf.capacity()-s_header_size) {
+                size_t begin_offset = m_rd_ptr - &m_rd_buf[0];
+                m_rd_buf.reserve(begin_offset + m_packet_size + s_header_size);
+                m_rd_ptr = &m_rd_buf[0] + begin_offset;
+                m_rd_end = m_rd_ptr + len;
+            }
+        }
+    }
+
+    long need_bytes = m_packet_size + s_header_size - rd_length();
+
+    /*
+    if (unlikely(verbose() >= VERBOSE_WIRE))
+        std::cout << "  pkt_size=" << m_packet_size << ", need=" << need_bytes
+                  << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
+                  << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
+                  << ", length=" << rd_length()
+                  << ", rd_buf.size=" << m_rd_buf.capacity()
+                  << ", got_header=" << (m_got_header ? "true" : "false")
+                  << ", " << to_binary_string(m_rd_ptr, std::min(rd_length(), 15lu)) << "..."
+                  << std::endl;
+    */
 
     // Process all messages in the buffer
-    while (m_packet_size > 0 && need_bytes <= 0) {
+    while (m_got_header && need_bytes <= 0) {
+        m_rd_ptr += s_header_size;
         m_in_msg_count++;
 
-        /*
-        if (unlikely(verbose() >= VERBOSE_WIRE))
-            std::cout << " MsgCnt=" << m_in_msg_count
-                      << ", pkt_size=" << m_packet_size << ", need=" << need_bytes
-                      << ", rd_buf.size=" << m_rd_buf.capacity()
-                      << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
-                      << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
-                      << ", rd_size=" << rd_size()
-                      << std::endl;
-        */
-
         try {
-            if (verbose() >= VERBOSE_WIRE)
-                marshal::to_binary_string(
-                    std::cout << "client <- agent: ", m_rd_ptr, m_packet_size) << std::endl;
+            /*
+            if (unlikely(verbose() >= VERBOSE_WIRE)) {
+                std::cout << " MsgCnt=" << m_in_msg_count
+                          << ", pkt_size=" << m_packet_size << ", need=" << need_bytes
+                          << ", rd_buf.size=" << m_rd_buf.capacity()
+                          << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
+                          << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
+                          << ", len=" << rd_length()
+                          << ", rd_capacity=" << rd_capacity()
+                          << std::endl;
+                to_binary_string(
+                    std::cout << "client <- server: ", m_rd_ptr, m_packet_size) << std::endl;
+            }
+            */
 
             // Decode the packet into a message and dispatch it.
             process_message(m_rd_ptr, m_packet_size);
@@ -274,15 +288,14 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         } catch (std::exception& e) {
             ON_ERROR_CALLBACK(this,
                 "Error processing packet from server: " << e.what() << std::endl << "  ";
-                marshal::to_binary_string(m_rd_ptr, m_packet_size));
+                to_binary_string(m_rd_ptr, m_packet_size));
         }
-        m_rd_ptr += m_packet_size;
-        m_got_header = ((m_rd_end - m_rd_ptr) >= (long)s_header_size);
-        if (!m_got_header)
-            break;
-        m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
-        m_rd_ptr     += s_header_size;
-        need_bytes    = m_packet_size - rd_length();
+        m_rd_ptr     += m_packet_size;
+        m_got_header  = rd_length() >= (long)s_header_size;
+        if (m_got_header) {
+            m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
+            need_bytes    = m_packet_size + s_header_size - rd_length();
+        }
     }
     bool crunched = false;
 
@@ -291,28 +304,30 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         m_rd_end = m_rd_ptr;
         m_packet_size = s_header_size;
         need_bytes    = m_packet_size;
-    } else if ((m_rd_ptr - (&*m_rd_buf.begin() + s_header_size)) > 0) {
+    } else if ((m_rd_ptr - (&m_rd_buf[0] + s_header_size)) > 0) {
         // Crunch the buffer by copying leftover bytes to the beginning of the buffer.
         const size_t len = m_rd_end - m_rd_ptr;
         char* begin = &m_rd_buf[0];
-        memcpy(begin, m_rd_ptr, len);
+        if (likely(m_rd_ptr - begin < len))
+            memcpy(begin, m_rd_ptr, len);
+        else
+            memmove(begin, m_rd_ptr, len);
         m_rd_ptr = begin;
         m_rd_end = begin + len;
         crunched = true;
     }
 
-    /*
     if (unlikely(verbose() >= VERBOSE_WIRE))
         std::cout << "Scheduling connection::async_read(offset=" 
                   << (m_rd_end-&m_rd_buf[0])
-                  << ", sz=" << rd_size() << ", transf_at_least=" 
+                  << ", capacity=" << rd_capacity() << ", pkt_size=" 
                   << m_packet_size << ", need=" << need_bytes
                   << ", got_header=" << (m_got_header ? "true" : "false")
                   << ", crunched=" << (crunched ? "true" : "false")
                   << ", aborted=" << (m_connection_aborted ? "true" : "false") << ')'
                   << std::endl;
-    */
-    boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_size());
+
+    boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_capacity());
     async_read(
         buffers, boost::asio::transfer_at_least(need_bytes),
         boost::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(), 
@@ -339,10 +354,14 @@ transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
 
     /* now decode header */
     /* pass-through, version, control tuple header, control message type */
-    if (unlikely(get8(s) != ERL_PASS_THROUGH))
-        throw err_decode_exception("Missing pass-throgh flag in message");
+    if (unlikely(get8(s) != ERL_PASS_THROUGH)) {
+        int n = len < 65 ? len : 64;
+        std::string s = std::string("Missing pass-throgh flag in message")
+                      + to_binary_string(mbuf, n);
+        throw err_decode_exception(s, len);
+    }
 
-    if (unlikely(ei_decode_version(s,&index,&version)) || unlikely((version != ERL_VERSION_MAGIC)))
+    if (unlikely(ei_decode_version(s,&index,&version) || version != ERL_VERSION_MAGIC))
         throw err_decode_exception("Invalid control message magic number", version);
 
     tuple<Alloc> cntrl(s, index, len, m_allocator);
@@ -436,7 +455,7 @@ send(const transport_msg<Alloc>& a_msg)
                   << l_cntrl.to_string() << (l_has_msg ? ", msg=" : "")
                   << (l_has_msg ? a_msg.msg().to_string() : std::string("")) << std::endl;
     //if (unlikely(verbose() >= VERBOSE_WIRE))
-    //    std::cout << "SEND " << len << " bytes " << marshal::to_binary_string(data, len) << std::endl;
+    //    std::cout << "SEND " << len << " bytes " << to_binary_string(data, len) << std::endl;
 
     boost::asio::const_buffer b(data, len);
     m_io_service.post(

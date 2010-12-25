@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _IMPL_BINARY_HPP_
 
 #include <eixx/marshal/defaults.hpp>
+#include <eixx/util/string_util.hpp>
 #include <eixx/marshal/alloc_base.hpp>
 #include <eixx/marshal/string.hpp>
 #include <eixx/marshal/varbind.hpp>
@@ -113,7 +114,7 @@ public:
         if (printable)
             return out << "<<" << string<Alloc>(data(), size()) << ">>";
         else
-            return to_binary_string(out, data(), size());
+            return EIXX_NAMESPACE::to_binary_string(out, data(), size());
     }
 };
 
