@@ -32,6 +32,13 @@ Ths library is dependend on {@link http://www.boost.org BOOST}
 project and erl_interface, which is a part of the 
 {@link www.erlang.org Erlang} distribution.
 
+Downloading
+===========
+
+    Repository location: http://github.com/saleyn/eixx
+
+    $ git clone git@github.com:saleyn/eixx.git
+
 Building
 ========
 
@@ -53,7 +60,7 @@ LICENSE
 Example
 =======
 
-Here's a example use of the ei++ library:
+Here's an example use of the ei++ library:
 
     void on_message(otp_mailbox& a_mbox, boost::system::error_code& ec) {
         // On timeout ec == boost::asio::error::timeout
