@@ -62,17 +62,19 @@ Here's a example use of the ei++ library:
                       << ec.message() << std::endl;
         } else {
             while (!a_mbox.queue().empty()) {
-                // Dequeue first message from the mailbox
-                boost::scoped_ptr<transport_msg> msg( a_mbox.queue().front() );
+                // Dequeue first message from the mailbox.
+                // The mailbox has a queue of transport messages.
+                boost::scoped_ptr<transport_msg> dist_msg( a_mbox.queue().front() );
                 a_mbox.queue().pop_front();
-                std::cout << "Main mailbox got a message: " << *msg << std::endl;
+                std::cout << "Main mailbox got a distributed transport message:\n  "
+                          << *dist_msg << std::endl;
 
-                // Do a pattern match
+                // Use the following pattern for a pattern match on the message.
                 static const eterm s_pattern = eterm::format("{From, {command, Cmd}}");
 
                 varbind binding;
 
-                if (s_pattern.match(*msg, &binding)) {
+                if (s_pattern.match(dist_msg->msg(), &binding)) {
                     const eterm* cmd = binding->find("Cmd");
                     std::cout << "Got a command " << *cmd << std::endl;
                     // Process command
