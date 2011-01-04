@@ -32,6 +32,16 @@ Ths library is dependend on {@link http://www.boost.org BOOST}
 project and erl_interface, which is a part of the 
 {@link www.erlang.org Erlang} distribution.
 
+Building
+========
+
+    Run:
+    $ ./bootstrap
+    $ ./configure --with-boost="/path/to/boost" [--with-erlang="/path/to/erlang"] \
+        [--prefix="/target/install/path"]
+    $ make
+    $ make install      # Default install path is ./install
+
 Author
 ======
     Serge Aleynikov <saleyn at gmail dot com>
@@ -51,14 +61,25 @@ Here's a example use of the ei++ library:
             std::cout << "Mailbox " << a_mbox.self() << " got error: "
                       << ec.message() << std::endl;
         } else {
-            otp_mailbox::queue_type::iterator
-                it = a_mbox.queue().begin(), end = a_mbox.queue().end();
-            while (it != end) {
-                std::cout << "Main mailbox got a message: " << *(*it) << std::endl;
-                delete *it;
-                it = a_mbox.queue().erase(it);
+            while (!a_mbox.queue().empty()) {
+                // Dequeue first message from the mailbox
+                boost::scoped_ptr<transport_msg> msg( a_mbox.queue().front() );
+                a_mbox.queue().pop_front();
+                std::cout << "Main mailbox got a message: " << *msg << std::endl;
+
+                // Do a pattern match
+                static const eterm s_pattern = eterm::format("{From, {command, Cmd}}");
+
+                varbind binding;
+
+                if (s_pattern.match(*msg, &binding)) {
+                    const eterm* cmd = binding->find("Cmd");
+                    std::cout << "Got a command " << *cmd << std::endl;
+                    // Process command
+                }
             }
         }
+        // Schedule next async receive of a message (can also provide a timeout).
         a_mbox.async_receive(&on_main_msg);
     }
 

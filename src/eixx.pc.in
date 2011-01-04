@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE@
+Description: EIXX: C++ Interface to Erlang
+#Requires: boost_0_41_0
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -leixx
+Cflags: -I${includedir}/@PACKAGE@-@PACKAGE_VERSION@/include
+

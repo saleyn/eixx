@@ -2,3 +2,4 @@ test_*
 lib/libeixx.so
 src/pri_test
 src/test_node
+eixx*.tar.gz
