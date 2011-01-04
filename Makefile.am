@@ -10,7 +10,6 @@ clean-local:
 docs: build-aux/Doxyfile
 	$(MKDIR_P) @docdir@
 	doxygen build-aux/Doxyfile
-	(cd lib/dma/src && $(MAKE) $@)
 
 build-aux/Doxyfile: build-aux/Doxyfile.in
 	$(SED) -e 's|[@]docdir@|${docdir}|g' \
@@ -27,5 +26,8 @@ MAINTAINERCLEANFILES = configure build-aux/l*.m4 build-aux/*.sh \
 
 EXTRA_DIST = README build-aux/boost.m4 build-aux/Doxyfile.in \
              bootstrap
+
+installdir = $(prefix)
+install_DATA = README
 
 .PHONY: docs doc

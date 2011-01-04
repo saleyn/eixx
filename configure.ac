@@ -6,7 +6,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Wno-portability])
 
-AC_SUBST([eixxdir], [$libdir/eixx])
+AC_SUBST([eixxdir], [$libdir])
 
 # Default prefix
 AC_PREFIX_DEFAULT(`pwd`)
