@@ -28,6 +28,6 @@ EXTRA_DIST = README build-aux/boost.m4 build-aux/Doxyfile.in \
              bootstrap
 
 installdir = $(prefix)
-install_DATA = README
+install_DATA = README LICENSE
 
 .PHONY: docs doc
