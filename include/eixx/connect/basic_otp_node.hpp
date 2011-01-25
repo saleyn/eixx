@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_BASIC_OTP_NODE_HPP_
 
 #include <time.h>
+#include <boost/function.hpp>
 #include <eixx/connect/basic_otp_node_local.hpp>
 #include <eixx/connect/basic_otp_connection.hpp>
 #include <eixx/connect/basic_otp_mailbox_registry.hpp>
@@ -73,6 +74,7 @@ template <typename Alloc, typename Mutex = detail::mutex>
 class basic_otp_node: public basic_otp_node_local {
     class atom_con_hash_fun;
 
+    typedef basic_otp_node<Alloc, Mutex>        self;
     typedef transport_msg<Alloc>                transport_msg_t;
     typedef basic_otp_connection<Alloc,Mutex>   connection_t;
 
@@ -116,6 +118,36 @@ class basic_otp_node: public basic_otp_node_local {
     Alloc                                       m_allocator;
     verbose_type                                m_verboseness;
 
+    friend class basic_otp_connection<Alloc, Mutex>;
+
+    void on_disconnect_internal(const connection_t& a_con,
+        const std::string& a_remote_node, const boost::system::error_code& err)
+    {
+        if (on_disconnect)
+            on_disconnect(*this, a_con, a_remote_node, err);
+    }
+
+protected:
+    /// Publish the node port to epmd making this node known to the world.
+    void publish_port() throw (err_connection);
+
+    /// Unregister this node from epmd.
+    void unpublish_port() throw (err_connection);
+
+    /// Get connection identified by the \a a_node name.
+    /// @throws err_connection if not connected to \a a_node._
+    basic_otp_connection<Alloc, Mutex>* get_connection(const atom& a_nodename) {
+        typename conn_hash_map::const_iterator l_con = m_connections.find(a_nodename);
+        if (l_con == m_connections.end())
+            throw err_connection("Not connected to node", a_nodename);
+        return l_con->second.get();
+    }
+
+    /// Send a message to a process ToProc which is either epid<Alloc> or 
+    /// atom<Alloc> for registered names.
+    template <typename ToProc>
+    void send(const atom& a_to_node, ToProc a_to, const transport_msg<Alloc>& a_msg)
+        throw (err_no_process, err_connection);
 public:
     typedef basic_otp_mailbox_registry<Alloc, Mutex> mailbox_registry_t;
 
@@ -250,6 +282,14 @@ public:
     }
 
     /**
+     * Callback invoked on disconnect from a peer node
+     */
+    boost::function<
+        //    OtpNode      OtpConnection     RemoteNodeName         ErrorCode
+        void (self&, const connection_t&, const std::string&, const boost::system::error_code&)
+    > on_disconnect; 
+
+    /**
      * Accept connections from client processes.
      * This method sets the socket listener for incoming connections and
      * registers the port with local epmd daemon.
@@ -350,27 +390,6 @@ public:
         const ref<Alloc>& a_ref, const eterm<Alloc>& a_reason)
         throw (err_no_process, err_connection);
 
-protected:
-    /// Publish the node port to epmd making this node known to the world.
-    void publish_port() throw (err_connection);
-
-    /// Unregister this node from epmd.
-    void unpublish_port() throw (err_connection);
-
-    /// Get connection identified by the \a a_node name.
-    /// @throws err_connection if not connected to \a a_node._
-    basic_otp_connection<Alloc, Mutex>* get_connection(const atom& a_nodename) {
-        typename conn_hash_map::const_iterator l_con = m_connections.find(a_nodename);
-        if (l_con == m_connections.end())
-            throw err_connection("Not connected to node", a_nodename);
-        return l_con->second.get();
-    }
-
-    /// Send a message to a process ToProc which is either epid<Alloc> or 
-    /// atom<Alloc> for registered names.
-    template <typename ToProc>
-    void send(const atom& a_to_node, ToProc a_to, const transport_msg<Alloc>& a_msg)
-        throw (err_no_process, err_connection);
 };
 
 } // namespace connect

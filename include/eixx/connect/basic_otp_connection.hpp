@@ -186,6 +186,9 @@ public:
         if (verbose() > VERBOSE_NONE)
             std::cerr << "Disconnected from node: " << a_con->remote_node()
                       << " (" << err.message() << ')' << std::endl;
+        if (m_node)
+            m_node->on_disconnect_internal(*this, a_con->remote_node(), err);
+
         m_transport.reset();
         reconnect();
     }

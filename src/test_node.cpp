@@ -86,6 +86,15 @@ void on_connect(otp_connection* a_con, const std::string& a_error) {
         list::make("This is a test string"), &g_io_server->self());
 }
 
+void on_disconnect(
+    otp_node& a_node, const otp_connection& a_con,
+    const std::string& a_remote_node, const boost::system::error_code& err)
+{
+    std::cout << "Disconnected from remote node " << a_remote_node << std::endl;
+    if (a_con.reconnect_timeout() == 0)
+        a_node.stop();
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2)
         usage(argv[0]);
@@ -115,6 +124,8 @@ int main(int argc, char* argv[]) {
     boost::asio::io_service io_service;
     otp_node l_node(io_service, l_nodename);
     l_node.verbose(verbose);
+
+    l_node.on_disconnect = on_disconnect;
 
     g_io_server = l_node.create_mailbox("io_server");
     g_main      = l_node.create_mailbox("main");
