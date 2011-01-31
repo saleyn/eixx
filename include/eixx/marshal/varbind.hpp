@@ -96,9 +96,14 @@ public:
     }
 
     const eterm<Alloc>*
+    operator[] (const char* a_var_name) const throw(err_unbound_variable) {
+        return (*this)[string<Alloc>(a_var_name)];
+    }
+
+    const eterm<Alloc>*
     operator[] (const string<Alloc>& a_var_name) const throw(err_unbound_variable) {
         const eterm<Alloc>* p = find(a_var_name);
-        if (!p) throw err_unbound_variable(a_var_name);
+        if (!p) throw err_unbound_variable(a_var_name.c_str());
         return p;
     }
 

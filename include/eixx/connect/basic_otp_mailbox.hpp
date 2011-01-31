@@ -190,6 +190,13 @@ public:
         throw (std::runtime_error);
 
     /**
+     * Cancel pending asynchronous receive operation
+     */
+    void cancel_async_receive() {
+        m_deadline_timer.cancel();
+    }
+
+    /**
      * Get a message from mailbox that matches the given pattern.
      * It will block until an apropiate message arrives.
      * @param pattern ErlTerm with pattern to check

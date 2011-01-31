@@ -9,7 +9,7 @@ namespace asio {
 namespace error {
 
     enum timer_errors {
-        timeout
+        timeout = 0
     };
 
     namespace detail {
@@ -62,7 +62,7 @@ namespace asio {
 
             void operator() (const system::error_code& ec) {
                 system::error_code e =
-                    ec == error::operation_aborted
+                    ec == system::error_code()
                         ? system::make_error_code(error::timeout)
                         : ec;
                 m_h(e);
@@ -86,6 +86,8 @@ namespace asio {
             super::async_wait(wrapper);
         }
 
+        /// Returns <tt>boost::asio::error::operation_aborted</tt> on cancel,
+        /// and <tt>boost::asio::error::timeout</tt> on timeout.
         template<typename Handler>
         void async_wait_timeout(Handler h, long millisecs)
         {
