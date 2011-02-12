@@ -58,6 +58,8 @@ protected:
     }
 
 public:
+    typedef const char* const_iterator;
+
     string() : m_blob(NULL) {}
 
     string(const char* s, const Alloc& a = Alloc()) {
@@ -113,6 +115,9 @@ public:
             *this = str;
         }
     }
+
+    const_iterator begin() const { return m_blob ? c_str() : NULL; }
+    const_iterator end()   const { return m_blob ? c_str()+size() : NULL; }
 
     const char* c_str()  const { return m_blob ? m_blob->data() : ""; }
     size_t      size()   const { return m_blob ? m_blob->size()-1 : 0; }
