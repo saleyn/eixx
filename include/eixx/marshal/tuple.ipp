@@ -52,7 +52,7 @@ tuple<Alloc>::tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc
         new (&m_blob->data()[i]) eterm<Alloc>(buf, idx, size, a_alloc);
     }
     set_init_size(arity);
-    BOOST_ASSERT(idx <= size);
+    BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>

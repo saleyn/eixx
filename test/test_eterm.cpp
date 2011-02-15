@@ -125,11 +125,11 @@ BOOST_AUTO_TEST_CASE( test_list )
     { list et(10); }
     { list et(10, alloc); }
     {
-        eterm list[] = { 
+        eterm l[] = { 
             eterm(atom("abc")),
             eterm(atom("efg"))
         };
-        eterm et(list);
+        eterm et = list(l);
         BOOST_REQUIRE(et.initialized());
     }
     {
@@ -460,25 +460,25 @@ BOOST_AUTO_TEST_CASE( test_tuple )
         BOOST_REQUIRE(!et2.initialized());
     }
     {
-        eterm list[] = { 
+        eterm l[] = { 
             eterm(atom("abc")),
             eterm(atom("efg"))
         };
-        eterm et(list);
+        eterm et = tuple(l);
         BOOST_REQUIRE(et.initialized());
     }
 
-    eterm list[] = { 
+    eterm l[] = { 
         eterm(atom("abc")),
         eterm(atom("efg")),
         eterm(atom("eee")),
         eterm(atom("fff"))
     };
 
-    tuple et(sizeof(list)/sizeof(eterm), alloc);
+    tuple et(sizeof(l)/sizeof(eterm), alloc);
 
-    for (int i=0; i < sizeof(list)/sizeof(eterm); i++)
-        et.push_back(list[i]);
+    for (size_t i=0; i < sizeof(l)/sizeof(eterm); i++)
+        et.push_back(l[i]);
 
     // Note that now the tuple owns previously dangling eterm pointers
     // in the list[] array.

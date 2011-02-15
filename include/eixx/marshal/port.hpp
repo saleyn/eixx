@@ -49,12 +49,12 @@ namespace marshal {
 template <class Alloc>
 class port {
     struct port_blob {
-        int     id;
         uint8_t creation;
+        int     id;
         atom    node;
 
         port_blob(const atom& a_node, int a_id, uint8_t a_cre)
-            : node(a_node), id(a_id), creation(a_cre)
+            : creation(a_cre), id(a_id), node(a_node)
         {}
     };
 

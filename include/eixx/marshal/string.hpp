@@ -164,7 +164,7 @@ public:
     }
 
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
-        out << *this;
+        return out << *this;
     }
 };
 

@@ -49,12 +49,12 @@ class ref {
     enum { COUNT = 3 };
 
     struct ref_blob {
-        uint32_t ids[COUNT];
         uint8_t  creation;
         atom     node;
+        uint32_t ids[COUNT];
 
         ref_blob(const atom& a_node, uint32_t* a_ids, uint8_t a_cre)
-            : node(a_node), creation(a_cre)
+            : creation(a_cre), node(a_node)
         {
             ids[0]   = a_ids[0] & 0x3ffff;
             ids[1]   = a_ids[1];

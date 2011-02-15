@@ -95,7 +95,7 @@ public:
 
     tuple(const eterm<Alloc> items[], size_t a_size, const Alloc& alloc = Alloc())
         : m_blob(new blob<eterm<Alloc>, Alloc>(a_size+1, alloc)) {
-        for(int i=0; i < a_size; i++) {
+        for(size_t i=0; i < a_size; i++) {
             new (&m_blob->data()[i]) eterm<Alloc>(items[i]);
         }
         set_init_size(a_size);
@@ -138,12 +138,12 @@ public:
     }
 
     const eterm<Alloc>& operator[] (int idx) const {
-        BOOST_ASSERT(m_blob && idx < size());
+        BOOST_ASSERT(m_blob && (size_t)idx < size());
         return m_blob->data()[idx];
     }
 
     eterm<Alloc>& operator[] (int idx) {
-        BOOST_ASSERT(m_blob && idx < size());
+        BOOST_ASSERT(m_blob && (size_t)idx < size());
         return m_blob->data()[idx];
     }
 

@@ -52,7 +52,7 @@ binary<Alloc>::binary(const char* buf, int& idx, size_t size, const Alloc& a_all
     ::memcpy(data(),s,sz);
 
     idx += s + sz - s0;
-    BOOST_ASSERT(idx <= size);
+    BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>

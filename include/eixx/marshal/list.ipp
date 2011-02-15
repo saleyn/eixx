@@ -65,7 +65,7 @@ void list<Alloc>::init(const eterm<Alloc> items[], size_t N, const Alloc& alloc)
     l_header->alloc_size    = n;
     l_header->size          = N;
 
-    for (int i=0; i < N; i++) {
+    for (size_t i=0; i < N; i++) {
         BOOST_ASSERT(items[i].initialized());
         new (&hd[i].node) eterm<Alloc>(items[i]);
         hd[i].next = &hd[i+1];
@@ -141,7 +141,7 @@ list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
             throw err_decode_exception("Not a NIL list!", idx);
         idx++;
     }
-    BOOST_ASSERT(idx <= size);
+    BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>
@@ -175,7 +175,7 @@ list<Alloc> list<Alloc>::tail(size_t idx) const throw(err_bad_argument)
     int len = (int)l_header->size - (int)idx - 1;
     if (len < 0)
         throw err_bad_argument("List too short");
-    for (int i=0; i <= idx; i++)
+    for (size_t i=0; i <= idx; i++)
         p = p->next;
     list<Alloc> l(p, len, this->get_allocator());
     return l;

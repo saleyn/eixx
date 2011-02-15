@@ -102,7 +102,7 @@ public:
     bool                has_msg()   const { return m_msg.type() != EIXX_NAMESPACE::UNDEFINED; }
 
     /// Indicates that there was an error processing this message
-    bool  has_error()               const { return m_type & EXCEPTION == EXCEPTION; }
+    bool  has_error()               const { return (m_type & EXCEPTION) == EXCEPTION; }
 
     /// Set an error flag indicating a problem processing this message
     void  set_error_flag() const {

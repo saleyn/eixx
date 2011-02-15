@@ -20,13 +20,13 @@ test "$scriptdir" = "" && scriptdir='../lib'
 AC_ARG_VAR([ERLC_FLAGS], [general flags to prepend to ERLC_FLAGS])
 
 ERLC_FLAGS="${ERLC_FLAGS} +debug_info"
-CXXFLAGS="${CXXFLAGS% } -MMD"
+CXXFLAGS="${CXXFLAGS% } -MMD -Wall -fno-strict-aliasing"
 
 AC_ARG_ENABLE(debug,
      AC_HELP_STRING([--enable-debug],[enable debug [[default=yes]]]),
      [ if test "x$enable_debug" = "xyes" -o -z "x$enable_debug"; then
            # CXXFLAGS="${CXXFLAGS% } -ggdb -O0 -Wall -fno-default-inline -fno-inline -fno-inline-functions"
-           CXXFLAGS="${CXXFLAGS% } -g -O0 -Wall"
+           CXXFLAGS="${CXXFLAGS% } -g -O0"
        elif test "x$enable_debug" = "xno"; then
            ERLC_FLAGS="${ERLC_FLAGS//+debug_info}"
        fi

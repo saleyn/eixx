@@ -237,7 +237,9 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
     }
 
     m_epmd_wr += bytes_transferred;
+    #ifndef BOOST_DISABLE_ASSERTS
     int got_bytes = m_epmd_wr - m_buf_epmd;
+    #endif
     BOOST_ASSERT(got_bytes >= 10);
 
     const char* s      = m_buf_epmd + 2;
@@ -290,7 +292,7 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
     m_our_challenge = gen_challenge();
 
     // send challenge
-    int siz = 2 + 1 + 2 + 4 + this->m_this_node.size();
+    size_t siz = 2 + 1 + 2 + 4 + this->m_this_node.size();
 
     if (siz > sizeof(m_buf_node)) {
         std::stringstream str; str << "Node name too long: " << this->this_node() 
@@ -436,7 +438,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
     m_node_wr += bytes_transferred;
     m_expect_size = get16be(m_node_rd);
 
-    if ((m_expect_size - 11) > MAXNODELEN || m_expect_size > (m_buf_node+1)-m_node_rd) {
+    if ((m_expect_size - 11) > (size_t)MAXNODELEN || m_expect_size > (size_t)((m_buf_node+1)-m_node_rd)) {
         std::stringstream str; str << "Error in auth status challenge node length " 
             << this->remote_node() << " : " << m_expect_size;
         this->handler()->on_connect_failure(this, str.str());
@@ -471,7 +473,9 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     }
 
     m_node_wr += bytes_transferred;
+    #ifndef BOOST_DISABLE_ASSERTS
     int got_bytes = m_node_wr - m_node_rd;
+    #endif
     BOOST_ASSERT(got_bytes >= (int)m_expect_size);
 
     char tag = get8(m_node_rd);
@@ -586,7 +590,9 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
     }
 
     m_node_wr += bytes_transferred;
+    #ifndef BOOST_DISABLE_ASSERTS
     int got_bytes = m_node_wr - m_node_rd;
+    #endif
     BOOST_ASSERT(got_bytes >= (int)m_expect_size);
 
     char tag = get8(m_node_rd);

@@ -124,7 +124,6 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
     switch (type) {
     case ERL_ATOM_EXT: {
         int b;
-        void* r;
         if (ei_decode_boolean(a_buf, &idx, &b) < 0)
             new (this) eterm<Alloc>(atom(a_buf, idx, a_size));
         else
@@ -235,7 +234,7 @@ void eterm<Alloc>::encode(char* a_buf, size_t size,
         ei_encode_version(a_buf, &offset);
     visit_eterm_encoder visitor(a_buf, offset, size);
     visitor.apply_visitor(*this);
-    BOOST_ASSERT(offset == size);
+    BOOST_ASSERT((size_t)offset == size);
 }
 
 template <class Alloc>

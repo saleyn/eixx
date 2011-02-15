@@ -156,7 +156,7 @@ namespace marshal {
         char c;
         int len;
 
-        skip_null_chars(fmt);
+        // skip_null_chars(fmt);
 
         while (1) {
             c = *(*fmt)++;

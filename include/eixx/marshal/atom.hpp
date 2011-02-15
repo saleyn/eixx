@@ -193,7 +193,7 @@ namespace detail {
                 return n;
             
             n = m_atoms.size();
-            if (n+1 == m_atoms.capacity())
+            if ((size_t)(n+1) == m_atoms.capacity())
                 throw std::runtime_error("Atom hash table is full!");
             m_atoms.push_back(a_atom);
             m_index[a_atom.c_str()] = n;
@@ -274,7 +274,7 @@ public:
         int len = get16be(s);
         m_index = atom_table().lookup(string_t(s, len));
         idx += s + len - s0;
-        BOOST_ASSERT(idx <= a_size);
+        BOOST_ASSERT((size_t)idx <= a_size);
     }
 
     const char*     c_str()     const { return atom_table()[m_index].c_str();  }
@@ -327,9 +327,9 @@ public:
     std::ostream& dump(std::ostream& out, ...) const {
         const char* s = c_str();
         if (this->empty() || s[0] < 'a' || s[0] > 'z' || strchr(s, ' ') != NULL)
-            out << "'" << s << "'";
+            return out << "'" << s << "'";
         else
-            out << s;
+            return out << s;
     }
 };
 

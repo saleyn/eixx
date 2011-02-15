@@ -79,8 +79,8 @@ private:
         , m_cookie(a_cookie)
         , m_alloc(a_alloc)
         , m_connected(false)
-        , m_reconnect_secs(a_reconnect_secs)
         , m_reconnect_timer(m_io_service)
+        , m_reconnect_secs(a_reconnect_secs)
         , m_abort(false)
     {
         BOOST_ASSERT(a_node != NULL);
@@ -146,11 +146,12 @@ public:
     }
 
     void send(const transport_msg<Alloc>& a_msg) throw (err_connection) {
-        if (!m_transport)
+        if (!m_transport) {
             if (m_abort)
                 return;
             else
                 throw err_connection("Not connected to node", remote_node());
+        }
         m_transport->send(a_msg);
     }
 

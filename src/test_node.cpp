@@ -22,7 +22,7 @@ otp_mailbox *g_io_server, *g_main;
 static atom g_rem_node;
 
 void on_io_request(otp_mailbox& a_mbox, boost::system::error_code& ec) {
-    if (ec)
+    if (ec && ec != boost::asio::error::operation_aborted)
         std::cerr << "Mailbox " << a_mbox.self() << " got error: "
                   << ec.message() << std::endl;
     else {
@@ -38,7 +38,7 @@ void on_io_request(otp_mailbox& a_mbox, boost::system::error_code& ec) {
 }
 
 void on_main_msg(otp_mailbox& a_mbox, boost::system::error_code& ec) {
-    if (ec)
+    if (ec && ec != boost::asio::error::operation_aborted)
         std::cerr << "Mailbox " << a_mbox.self() << " got error: "
                   << ec.message() << std::endl;
     else {

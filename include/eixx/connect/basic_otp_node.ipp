@@ -45,11 +45,11 @@ basic_otp_node<Alloc, Mutex>::basic_otp_node(
     const Alloc& a_alloc, int8_t a_creation)
     throw (err_bad_argument, err_connection, eterm_exception)
     : basic_otp_node_local(a_nodename.to_string(), a_cookie)
-    , m_io_service(a_io_svc)
     , m_creation((a_creation < 0 ? time(NULL) : (int)a_creation) & 0x03)  // Creation counter
     , m_pid_count(1)
     , m_port_count(1)
     , m_serial(0)
+    , m_io_service(a_io_svc)
     , m_mailboxes(*this)
     , m_connections(atom_con_hash_fun::get_default_hash_size(), atom_con_hash_fun(&m_connections))
     , m_allocator(a_alloc)

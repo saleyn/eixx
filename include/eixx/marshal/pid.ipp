@@ -58,7 +58,7 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     init(l_node, l_id, l_serial, l_creation, alloc);
 
     idx += s - s0;
-    BOOST_ASSERT(idx <= size);
+    BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>

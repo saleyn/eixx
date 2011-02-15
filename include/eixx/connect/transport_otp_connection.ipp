@@ -308,7 +308,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         // Crunch the buffer by copying leftover bytes to the beginning of the buffer.
         const size_t len = m_rd_end - m_rd_ptr;
         char* begin = &m_rd_buf[0];
-        if (likely(m_rd_ptr - begin < len))
+        if (likely((size_t)(m_rd_ptr - begin) < len))
             memcpy(begin, m_rd_ptr, len);
         else
             memmove(begin, m_rd_ptr, len);
@@ -443,7 +443,6 @@ send(const transport_msg<Alloc>& a_msg)
     size_t len      = cntrl_sz + msg_sz + 1 /*passthrough*/ + 1 /*version*/ + 4 /*len*/;
     char*  data     = allocate(len);
     char*  s        = data;
-    int    idx      = 0;
     put32be(s, len-4);
     *s++ = ERL_PASS_THROUGH;
     l_cntrl.encode(s, cntrl_sz, 0, true);
