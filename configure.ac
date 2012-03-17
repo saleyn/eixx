@@ -61,7 +61,7 @@ AC_PROG_SED
 
 # Checks for libraries.
 
-BOOST_REQUIRE([1.41.0], [AC_MSG_ERROR("BOOST library version >= 1.41.0 not found!")])
+BOOST_REQUIRE([1.49.0], [AC_MSG_ERROR("BOOST library version >= 1.49.0 not found!")])
 BOOST_FIND_HEADER([boost/property_tree/ptree.hpp])
 BOOST_SYSTEM
 BOOST_THREADS
