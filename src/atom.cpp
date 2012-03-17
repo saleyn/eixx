@@ -1,6 +1,6 @@
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/marshal/atom.hpp>
-#include <boost/pool/detail/singleton.hpp>
+//#include <boost/pool/detail/singleton.hpp>
 
 namespace EIXX_NAMESPACE {
 namespace marshal {

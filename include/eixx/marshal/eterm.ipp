@@ -209,19 +209,25 @@ template <typename Alloc>
 void eterm<Alloc>::encode(char* a_buf, size_t size, 
     size_t a_header_size, bool a_with_version) const throw (err_encode_exception)
 {
+    #if BOOST_VERSION >= 104900
+    namespace bd = boost::spirit::detail;
+    #else
+    namespace bd = boost::detail;
+    #endif
+
     BOOST_ASSERT(size > 0);
     size_t msg_sz = size - a_header_size;
     switch (a_header_size) {
         case 0:
             break;
         case 1:
-            boost::detail::store_big_endian<uint8_t, 1>(a_buf, msg_sz);
+            bd::store_big_endian<uint8_t, 1>(a_buf, msg_sz);
             break;
         case 2:
-            boost::detail::store_big_endian<uint16_t, 2>(a_buf, msg_sz);
+            bd::store_big_endian<uint16_t, 2>(a_buf, msg_sz);
             break;
         case 4:
-            boost::detail::store_big_endian<uint32_t, 4>(a_buf, msg_sz);
+            bd::store_big_endian<uint32_t, 4>(a_buf, msg_sz);
             break;
         default: {
             std::stringstream s;

@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
         usage(argv[0]);
 
     boost::asio::io_service io_service;
-    otp_node l_node(io_service, l_nodename);
+    otp_node l_node(io_service, l_nodename, use_cookie);
     l_node.verbose(verbose);
 
     l_node.on_disconnect = on_disconnect;

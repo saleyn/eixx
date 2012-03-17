@@ -37,7 +37,13 @@ namespace {
         const char* home = getenv("HOME") ? getenv("HOME") : "";
         if (home) {
             std::stringstream s;
-            s << home << boost::filesystem2::slash<std::string>::value << ".erlang.cookie";
+            s   << home
+                #if BOOST_VERSION >= 104600
+                << boost::filesystem::path("/").make_preferred().native()
+                #else
+                << boost::filesystem2::slash<std::string>::value
+                #endif
+                << ".erlang.cookie";
             std::ifstream file(s.str().c_str());
             if (! file.fail()) {
                 std::string cookie;

@@ -67,7 +67,7 @@ epid<Alloc> basic_otp_node<Alloc, Mutex>::create_pid() {
     epid<Alloc> p(m_nodename, m_pid_count++, m_serial, m_creation, m_allocator);
     if (m_pid_count > 0x7fff) {
         m_pid_count = 0;
-        m_serial = ++m_serial & 0x1fff; /* 13 bits */
+        m_serial = (m_serial + 1) & 0x1fff; /* 13 bits */
     }
     return p;
 }

@@ -43,7 +43,7 @@ namespace marshal {
 template <typename Alloc>
 class visit_eterm_stringify
     : public static_visitor<visit_eterm_stringify<Alloc>, void> {
-    mutable std::ostream& out;
+    std::ostream& out;  // FIXME:
     const varbind<Alloc>* vars;
 public: 
     visit_eterm_stringify(std::ostream& a, const varbind<Alloc>* binding=NULL)

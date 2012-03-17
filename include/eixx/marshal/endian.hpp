@@ -31,20 +31,38 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_ENDIAN_HPP_
 #define _EIXX_ENDIAN_HPP_
 
+#include <boost/version.hpp>
 #include <boost/spirit/home/support/detail/endian.hpp>
 
 namespace EIXX_NAMESPACE {
 
 template <typename T>
 inline void put_be(char*& s, T n) {
+    #if BOOST_VERSION >= 104900
+    boost::spirit::detail::store_big_endian<T, sizeof(T)>(s, n);
+    #else
     boost::detail::store_big_endian<T, sizeof(T)>(s, n);
+    #endif
     s += sizeof(T);
 }
 
 template <typename T>
 inline void get_be(const char*& s, T& n) {
+    #if BOOST_VERSION >= 104900
+    n = boost::spirit::detail::load_big_endian<T, sizeof(T)>(s);
+    #else
     n = boost::detail::load_big_endian<T, sizeof(T)>(s);
+    #endif
     s += sizeof(T);
+}
+
+template <typename T>
+inline T cast_be(const char* s) {
+    #if BOOST_VERSION >= 104900
+    return boost::spirit::detail::load_big_endian<T, sizeof(T)>(s);
+    #else
+    return boost::detail::load_big_endian<T, sizeof(T)>(s);
+    #endif
 }
 
 inline void put8   (char*& s, uint8_t n ) { put_be(s, n); }

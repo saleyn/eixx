@@ -39,7 +39,7 @@ namespace marshal {
 
 class visit_eterm_encoder: public static_visitor<visit_eterm_encoder, void> {
     mutable char* buf;
-    mutable int&  idx;
+    int&  idx;
     const size_t  size;
 public: 
     visit_eterm_encoder(char* a_buf, int& a_idx, size_t a_size)

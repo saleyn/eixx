@@ -16,6 +16,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <boost/interprocess/detail/atomic.hpp>
+#include <boost/version.hpp>
 #include <boost/static_assert.hpp>
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -27,7 +28,11 @@
 
 namespace EIXX_NAMESPACE {
 
+#if BOOST_VERSION > 104800
+namespace bid = boost::interprocess::ipcdetail;
+#else
 namespace bid = boost::interprocess::detail;
+#endif
 
 /// \def THROW_RUNTIME_ERROR(S)
 /// Throw an <tt>std::runtime_error</tt> by allowing to use a stream 

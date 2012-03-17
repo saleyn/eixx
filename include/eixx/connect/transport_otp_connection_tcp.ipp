@@ -71,7 +71,7 @@ void tcp_connection<Handler, Alloc>::connect(
     if (a_remote_node.find('@', 0) == std::string::npos)
         THROW_RUNTIME_ERROR("Invalid format of remote_node: " << a_remote_node);
 
-    boost::system::error_code err = boost::asio::error::host_not_found;
+    //boost::system::error_code err = boost::asio::error::host_not_found;
     std::stringstream es;
 
     m_socket.close();

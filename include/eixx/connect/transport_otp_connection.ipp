@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/connect/transport_otp_connection_tcp.hpp>
 #include <eixx/connect/transport_otp_connection_uds.hpp>
+#include <eixx/marshal/endian.hpp>
 #include <eixx/marshal/trace.hpp>
 #include <eixx/util/string_util.hpp>
 #include <eixx/marshal/string.hpp>
@@ -42,6 +43,16 @@ namespace EIXX_NAMESPACE {
 namespace connect {
 
 using EIXX_NAMESPACE::marshal::trace;
+
+template <class Handler, class Alloc>
+const size_t connection<Handler, Alloc>::s_header_size = 4;
+
+template <class Handler, class Alloc>
+const char   connection<Handler, Alloc>::s_header_magic = 132;
+
+template <class Handler, class Alloc>
+const eterm<Alloc> connection<Handler, Alloc>::s_null_cookie;
+
 
 template <class Handler, class Alloc>
 typename connection<Handler, Alloc>::pointer
@@ -237,7 +248,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         if (m_got_header) {
             // Make sure that the buffer size is large enouch to store
             // next message.
-            m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
+            m_packet_size = cast_be<uint32_t>(m_rd_ptr);
             if (m_packet_size > m_rd_buf.capacity()-s_header_size) {
                 size_t begin_offset = m_rd_ptr - &m_rd_buf[0];
                 m_rd_buf.reserve(begin_offset + m_packet_size + s_header_size);
@@ -293,7 +304,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         m_rd_ptr     += m_packet_size;
         m_got_header  = rd_length() >= (long)s_header_size;
         if (m_got_header) {
-            m_packet_size = boost::detail::load_big_endian<uint32_t, s_header_size>(m_rd_ptr);
+            m_packet_size = cast_be<uint32_t>(m_rd_ptr);
             need_bytes    = m_packet_size + s_header_size - rd_length();
         }
     }

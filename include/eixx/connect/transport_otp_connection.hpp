@@ -68,8 +68,8 @@ class connection
     , public boost::enable_shared_from_this< connection<Handler, Alloc> >
 {
 protected:
-    static const size_t         s_header_size  = 4;
-    static const char           s_header_magic = 132;
+    static const size_t         s_header_size;
+    static const char           s_header_magic;
     static const eterm<Alloc>   s_null_cookie;
 
     boost::asio::io_service&    m_io_service;

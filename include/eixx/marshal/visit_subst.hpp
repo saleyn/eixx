@@ -44,7 +44,7 @@ namespace marshal {
 template <typename Alloc>
 class visit_eterm_subst
     : public static_visitor<visit_eterm_subst<Alloc>, bool> {
-    mutable eterm<Alloc>& m_out;
+    eterm<Alloc>& m_out;
     const varbind<Alloc>* m_binding;
 public:
     visit_eterm_subst(eterm<Alloc>& a_out, const varbind<Alloc>* a_binding)

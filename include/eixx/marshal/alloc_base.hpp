@@ -75,8 +75,6 @@ namespace marshal {
         get_allocator() const { return allocator_type(get_t_allocator()); }
     };
 
-    namespace bid = boost::interprocess::detail;
-
     /// \brief Reference-counted blob of memory to store the object of type T.
     template<typename T, typename Alloc>
     class blob : private boost::noncopyable
