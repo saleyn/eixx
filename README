@@ -60,7 +60,7 @@ LICENSE
 Example
 =======
 
-Here's an example use of the ei++ library:
+Here's an example use of the eixx library:
 
     void on_message(otp_mailbox& a_mbox, boost::system::error_code& ec) {
         // On timeout ec == boost::asio::error::timeout
@@ -89,7 +89,7 @@ Here's an example use of the ei++ library:
             }
         }
         // Schedule next async receive of a message (can also provide a timeout).
-        a_mbox.async_receive(&on_main_msg);
+        a_mbox.async_receive(&on_message);
     }
 
     void on_connect(otp_connection* a_con, const std::string& a_error) {
@@ -123,7 +123,7 @@ Here's an example use of the ei++ library:
 
         node.connect(&on_connect, "abc@myhost");
 
-        // Asynchronously receive a message with a deadline in 10s:
+        // Asynchronously receive a message with a deadline of 10s:
         mbox->async_receive(&on_message, 10000);
 
         node.run();
