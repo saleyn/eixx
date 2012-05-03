@@ -124,6 +124,11 @@ Erlang not found. Fill the ERL variable with erl(1) path or provide
 Erlang prefix with --with-erlang.])
 fi
 
+AC_CHECK_HEADERS([${ERLANG_LIB_DIR_erl_interface}/src/misc/eimd5.h], [],
+    [ AC_MSG_ERROR([
+    Required header file eimd5.h in the Erlang erl_interface installation not found!
+    Download build and install a recent version of Erlang and try again!]) ])
+
 dnl Get ERTS version.
 ERLANG_CHECK_ERTS
 ERLANG_CHECK_RELEASE
