@@ -34,13 +34,14 @@ project and erl_interface, which is a part of the
 
 Downloading
 ===========
-
     Repository location: http://github.com/saleyn/eixx
 
     $ git clone git@github.com:saleyn/eixx.git
 
 Building
 ========
+    Make sure that you have autoconf-archive package installed:
+        http://www.gnu.org/software/autoconf-archive
 
     Run:
     $ ./bootstrap

@@ -172,6 +172,48 @@ BOOST_AUTO_TEST_CASE( test_match2 )
     BOOST_REQUIRE_EQUAL(3, etm.size());
 }
 
+BOOST_AUTO_TEST_CASE( test_match3 )
+{
+    {
+        const eterm e = eterm::format("{snap, x12, []}");
+        const eterm p = eterm::format("{snap, N, L}");
+        varbind binding;
+        BOOST_REQUIRE(p.match(e, &binding));
+        const eterm* n = binding.find("N");
+        const eterm* l = binding.find("L");
+        BOOST_REQUIRE(n);
+        BOOST_REQUIRE(l);
+        BOOST_REQUIRE_EQUAL(ATOM,    n->type());
+        BOOST_REQUIRE_EQUAL(LIST,    l->type());
+        BOOST_REQUIRE_EQUAL(atom("x12"), n->to_atom());
+        BOOST_REQUIRE_EQUAL(list(),  l->to_list());
+    }
+    {
+        const eterm t   = eterm::format("[1,a,$b,\"xyz\",{1,10.0},[]]");
+        const eterm pat = eterm::format("[A,B,C,D,E,F]");
+        varbind p;
+        BOOST_REQUIRE(pat.match(t, &p));
+        const eterm* a = p.find("A");
+        const eterm* b = p.find("B");
+        const eterm* c = p.find("C");
+        const eterm* d = p.find("D");
+        const eterm* e = p.find("E");
+        const eterm* f = p.find("F");
+        BOOST_REQUIRE(a);
+        BOOST_REQUIRE(b);
+        BOOST_REQUIRE(c);
+        BOOST_REQUIRE(d);
+        BOOST_REQUIRE(e);
+        BOOST_REQUIRE(f);
+        BOOST_REQUIRE_EQUAL(eterm(1),  a->to_long());
+        BOOST_REQUIRE_EQUAL(atom("a"), b->to_atom());
+        BOOST_REQUIRE_EQUAL(eterm('b'), *c);
+        BOOST_REQUIRE_EQUAL(string("xyz"), d->to_str());
+        BOOST_REQUIRE_EQUAL(eterm::format("{1,10.0}"), *e);
+        BOOST_REQUIRE_EQUAL(list(), f->to_list());
+    }
+}
+
 static void run(int n)
 {
     static const int iterations = ::getenv("ITERATIONS") ? atoi(::getenv("ITERATIONS")) : 1;
