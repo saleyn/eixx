@@ -34,10 +34,10 @@ BOOST_AUTO_TEST_CASE( test_atomable )
 {
     {
         marshal::detail::atom_table<> t(10);
-        BOOST_REQUIRE_EQUAL(0, t.lookup(""));
-        BOOST_REQUIRE_EQUAL(1, t.lookup("abc"));
-        BOOST_REQUIRE_EQUAL(2, t.lookup("aaaaa"));
-        BOOST_REQUIRE_EQUAL(1, t.lookup("abc"));
+        BOOST_REQUIRE_EQUAL(0u, t.lookup(""));
+        BOOST_REQUIRE_EQUAL(1u, t.lookup("abc"));
+        BOOST_REQUIRE_EQUAL(2u, t.lookup("aaaaa"));
+        BOOST_REQUIRE_EQUAL(1u, t.lookup("abc"));
     }
 }
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE( test_atom )
 {
     {
         atom a("");
-        BOOST_REQUIRE_EQUAL(0, a.index());
+        BOOST_REQUIRE_EQUAL(0u, a.index());
         BOOST_REQUIRE_EQUAL(atom(), a);
     }
     {
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( test_bool )
         const uint8_t buf[] = {ERL_ATOM_EXT,0,5,102,97,108,115,101};
         int i = 0;
         eterm t((const char*)buf, i, sizeof(buf), alloc);
-        BOOST_REQUIRE_EQUAL(sizeof(buf), i);
+        BOOST_REQUIRE_EQUAL(sizeof(buf), (size_t)i);
         BOOST_REQUIRE_EQUAL(false, t.to_bool());
         BOOST_REQUIRE_EQUAL(std::string("false"), t.to_string());
     }
@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE( test_list )
             eterm(3)
         };
         list et(items, alloc);
-        BOOST_REQUIRE_EQUAL(3, et.length());
+        BOOST_REQUIRE_EQUAL(3u, et.length());
 
         const list& cp1 = et.tail(0);
-        BOOST_REQUIRE_EQUAL(2, cp1.length());
+        BOOST_REQUIRE_EQUAL(2u, cp1.length());
         list::const_iterator it = cp1.begin();
         BOOST_REQUIRE_EQUAL(LONG, it->type());
         BOOST_REQUIRE_EQUAL(2, (it++)->to_long());
@@ -418,9 +418,9 @@ BOOST_AUTO_TEST_CASE( test_ref )
         uint32_t ids[] = {1,2,3};
         ref et("abc@fc12", ids, 4, alloc);
         BOOST_REQUIRE_EQUAL(atom("abc@fc12"), et.node());
-        BOOST_REQUIRE_EQUAL(1, et.id(0));
-        BOOST_REQUIRE_EQUAL(2, et.id(1));
-        BOOST_REQUIRE_EQUAL(3, et.id(2));
+        BOOST_REQUIRE_EQUAL(1u, et.id(0));
+        BOOST_REQUIRE_EQUAL(2u, et.id(1));
+        BOOST_REQUIRE_EQUAL(3u, et.id(2));
         BOOST_REQUIRE_EQUAL(4, et.creation());
         eterm t(et);
         BOOST_REQUIRE(t.initialized());
@@ -674,8 +674,8 @@ BOOST_AUTO_TEST_CASE( test_cast )
         tuple et(ll, alloc);
         BOOST_REQUIRE_EQUAL(sizeof(ll) / sizeof(eterm), et.size());
 
-        BOOST_REQUIRE_EQUAL(1,      ll[0].to_list().length());
-        BOOST_REQUIRE_EQUAL(1,      ll[1].to_tuple().size());
+        BOOST_REQUIRE_EQUAL(1u,     ll[0].to_list().length());
+        BOOST_REQUIRE_EQUAL(1u,     ll[1].to_tuple().size());
         BOOST_REQUIRE_EQUAL("test", ll[2].to_atom());
         BOOST_REQUIRE_EQUAL(123,    ll[3].to_long());
         BOOST_REQUIRE_EQUAL(1.0,    ll[4].to_double());

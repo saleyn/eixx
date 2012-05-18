@@ -61,11 +61,12 @@ AC_PROG_SED
 
 # Checks for libraries.
 
-BOOST_REQUIRE([1.49.0], [AC_MSG_ERROR("BOOST library version >= 1.49.0 not found!")])
-BOOST_FIND_HEADER([boost/property_tree/ptree.hpp])
-BOOST_SYSTEM
-BOOST_THREADS
-BOOST_TEST
+AX_BOOST_BASE([1.49.0], [], [AC_MSG_ERROR("BOOST library version >= 1.49.0 not found!")])
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
+AX_BOOST_ASIO
+AX_BOOST_DATE_TIME
+AX_BOOST_UNIT_TEST_FRAMEWORK
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h sys/time.h])

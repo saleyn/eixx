@@ -134,15 +134,6 @@ protected:
     /// Unregister this node from epmd.
     void unpublish_port() throw (err_connection);
 
-    /// Get connection identified by the \a a_node name.
-    /// @throws err_connection if not connected to \a a_node._
-    basic_otp_connection<Alloc, Mutex>* get_connection(const atom& a_nodename) {
-        typename conn_hash_map::const_iterator l_con = m_connections.find(a_nodename);
-        if (l_con == m_connections.end())
-            throw err_connection("Not connected to node", a_nodename);
-        return l_con->second.get();
-    }
-
     /// Send a message to a process ToProc which is either epid<Alloc> or 
     /// atom<Alloc> for registered names.
     template <typename ToProc>
@@ -279,6 +270,15 @@ public:
         throw(err_connection)
     {
         connect(h, a_remote_node, "", a_reconnect_secs);
+    }
+
+    /// Get connection identified by the \a a_node name.
+    /// @throws err_connection if not connected to \a a_node._
+    connection_t* connection(const atom& a_nodename) const {
+        typename conn_hash_map::const_iterator l_con = m_connections.find(a_nodename);
+        if (l_con == m_connections.end())
+            throw err_connection("Not connected to node", a_nodename);
+        return l_con->second.get();
     }
 
     /**

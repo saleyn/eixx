@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE( test_match2 )
             boost::bind(&cb_t::operator(), &cb, _1, _2, _3), 4);
 
     // Make sure we registered 4 pattern above.
-    BOOST_REQUIRE_EQUAL(4, etm.size());
+    BOOST_REQUIRE_EQUAL(4u, etm.size());
 
     // Match the following terms against registered patters.
     BOOST_REQUIRE(etm.match(eterm::format("{test, 1, 123}")));  // N = 1
@@ -164,12 +164,12 @@ BOOST_AUTO_TEST_CASE( test_match2 )
     BOOST_REQUIRE_EQUAL(1, cb.match[3]);
 
     // Make sure we registered 4 pattern above.
-    BOOST_REQUIRE_EQUAL(4, etm.size());
+    BOOST_REQUIRE_EQUAL(4u, etm.size());
 
     // Test pattern deletion.
     etm.erase(action);
     // Make sure we registered 4 pattern above.
-    BOOST_REQUIRE_EQUAL(3, etm.size());
+    BOOST_REQUIRE_EQUAL(3u, etm.size());
 }
 
 BOOST_AUTO_TEST_CASE( test_match3 )
@@ -228,7 +228,7 @@ static void run(int n)
 
     static eterm_pattern_matcher sp(list, boost::ref(cb), alloc);
 
-    BOOST_REQUIRE_EQUAL(n == 1 ? 4 : 3, sp.size());
+    BOOST_REQUIRE_EQUAL(n == 1 ? 4u : 3u, sp.size());
 
     for(int i=0; i < iterations; i++) {
         BOOST_REQUIRE(!sp.match(eterm::format(alloc, "{ok, 1, 3, 4}")));
@@ -244,7 +244,7 @@ static void run(int n)
 
     if (n == 1) {
         sp.erase(sp.front());
-        BOOST_REQUIRE_EQUAL(3, sp.size());   // N = 1
+        BOOST_REQUIRE_EQUAL(3u, sp.size());   // N = 1
     }
 }
 
