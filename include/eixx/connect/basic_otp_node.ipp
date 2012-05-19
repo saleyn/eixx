@@ -170,8 +170,8 @@ void basic_otp_node<Alloc, Mutex>::send(
             throw err_no_process(eterm<Alloc>::cast(a_to).to_string());
         mbox->deliver(a_msg);
     } else {
-        connection_t* l_con = connection(a_to_node);
-        l_con->send(a_msg);
+        connection_t& l_con = connection(a_to_node);
+        l_con.send(a_msg);
     }
 }
 
