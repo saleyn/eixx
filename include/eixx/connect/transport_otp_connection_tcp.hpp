@@ -35,17 +35,42 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/connect/transport_otp_connection.hpp>
 #include <ei.h>
+#include <erl_interface.h>
 
+#ifdef HAVE_CONFIG_H
+#include <eixx/config.h>
+#endif
+
+#ifdef EIXX_HAVE_EI_EPMD
 extern "C" {
 
-#include <misc/eimd5.h>             // see erl_interface/src
 #include <epmd/ei_epmd.h>           // see erl_interface/src
+#include <misc/eiext.h>             // ERL_VERSION_MAGIC
 #include <connect/ei_connect_int.h> // see erl_interface/src
 
 }
+#endif
 
 namespace EIXX_NAMESPACE {
 namespace connect {
+
+#ifndef EIXX_HAVE_EI_EPMD
+// These constants are not exposed by EI headers:
+static const char  ERL_VERSION_MAGIC            = 131;
+static const short EPMD_PORT                    = 4369;
+static const int   EPMDBUF                      = 512;
+static const char  EI_EPMD_PORT2_REQ            = 122;
+static const char  EI_EPMD_PORT2_RESP           = 119;
+static const char  EI_DIST_HIGH                 = 5;
+static const int   DFLAG_PUBLISHED              = 1;
+static const int   DFLAG_ATOM_CACHE             = 2;
+static const int   DFLAG_EXTENDED_REFERENCES    = 4;
+static const int   DFLAG_DIST_MONITOR           = 8;
+static const int   DFLAG_FUN_TAGS               = 16;
+static const int   DFLAG_NEW_FUN_TAGS           = 0x80;
+static const int   DFLAG_EXTENDED_PIDS_PORTS    = 0x100;
+static const int   DFLAG_NEW_FLOATS             = 0x800;
+#endif
 
 //----------------------------------------------------------------------------
 /// TCP connection channel

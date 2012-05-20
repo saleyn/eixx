@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/trace.hpp>
 #include <eixx/util/string_util.hpp>
 #include <eixx/marshal/string.hpp>
-#include <misc/eiext.h>                 // see erl_interface/src
+//#include <misc/eiext.h>                 // see erl_interface/src
 
 namespace EIXX_NAMESPACE {
 namespace connect {

@@ -77,18 +77,14 @@ libeixx_la_hdr4_HEADERS  = $(eixx_hdrs4:%=../include/@PACKAGE@/%)
 libeixx_la_SOURCES  = atom.cpp basic_otp_node_local.cpp \
 					  $(eixx_headers:%=../include/@PACKAGE@/%)
 libeixx_la_LTADD    = -version-info 0:1 -shared
-libeixx_la_LIBS     = $(BOOST_THREAD_LIB)
-libeixx_la_CXXFLAGS = $(if $(tr1),-std=c++0x) -I../include $(BOOST_CPPFLAGS) \
-					  -I$(ERLANG_LIB_DIR_erl_interface)/include \
-				      -I$(ERLANG_LIB_DIR_erl_interface)/src
-#libeixx_la_LDFLAGS  = -shared $(BOOST_LDFLAGS)
+libeixx_la_LIBS     = $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)
+libeixx_la_CXXFLAGS = $(if $(tr1),-std=c++0x) -g -O$(if optimize,3,0) -I../include $(BOOST_CPPFLAGS) \
+					  $(EI_CPPFLAGS)
 
 #EXTRA_DIST = ../README overview.inl overview_usage.inl overview_config.inl
 
 test_node_SOURCES   = test_node.cpp
-test_node_CPPFLAGS  = -I$(srcdir)/../include $(BOOST_CPPFLAGS) \
-					  -I$(ERLANG_LIB_DIR_erl_interface)/include \
-					  -I$(ERLANG_LIB_DIR_erl_interface)/src
-test_node_LDFLAGS  	= $(BOOST_LDFLAGS) -L$(ERLANG_LIB_DIR_erl_interface)/lib
-test_node_LDADD		= $(srcdir)/.libs/libeixx.la -lei \
-					  $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
+test_node_CPPFLAGS  = -g -O0 -I$(srcdir)/../include $(BOOST_CPPFLAGS) $(EI_CPPFLAGS)
+test_node_LDFLAGS  	= $(BOOST_LDFLAGS) $(EI_LDFLAGS)
+test_node_LDADD		= libeixx.la $(EI_LIB) \
+					  $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)

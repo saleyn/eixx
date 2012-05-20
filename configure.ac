@@ -5,6 +5,8 @@ AC_INIT([eixx], [0.1], [BUG-REPORT-ADDRESS])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Wno-portability])
+AM_CONFIG_HEADER(config.h)
+AX_PREFIX_CONFIG_H(include/eixx/config.h)
 
 AC_SUBST([eixxdir], [$libdir])
 
@@ -68,6 +70,10 @@ AX_BOOST_ASIO
 AX_BOOST_DATE_TIME
 AX_BOOST_UNIT_TEST_FRAMEWORK
 
+# eixx requires md5 support
+AX_LIB_CRYPTO([yes])
+AC_CHECK_HEADERS([openssl/md5.h])
+
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h sys/time.h])
 
@@ -125,10 +131,19 @@ Erlang not found. Fill the ERL variable with erl(1) path or provide
 Erlang prefix with --with-erlang.])
 fi
 
-AC_CHECK_HEADERS([${ERLANG_LIB_DIR_erl_interface}/src/misc/eimd5.h], [],
-    [ AC_MSG_ERROR([
-    Required header file eimd5.h in the Erlang erl_interface installation not found!
-    Download build and install a recent version of Erlang and try again!]) ])
+AC_SUBST([EI_LDFLAGS], ["-L${ERLANG_LIB_DIR_erl_interface}/lib"])
+AC_SUBST([EI_LIB],     ["-lei"])
+
+AC_CHECK_HEADERS([${ERLANG_LIB_DIR_erl_interface}/src/epmd/ei_epmd.h],
+   [ AC_DEFINE([HAVE_EI_EPMD], [1],
+       [erl_interface/src/epmd/ei_epmd.h is available])
+     AC_SUBST([EI_CPPFLAGS],
+         ["-I${ERLANG_LIB_DIR_erl_interface}/include -I${ERLANG_LIB_DIR_erl_interface}/src"])
+   ],
+   [
+     AC_SUBST([EI_CPPFLAGS],
+         ["-I ${ERLANG_LIB_DIR_erl_interface}/include"])
+   ])
 
 dnl Get ERTS version.
 ERLANG_CHECK_ERTS

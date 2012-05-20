@@ -139,8 +139,11 @@ public:
         return p;
     }
 
-    void disconnect() {
-        m_abort = true;
+    /// Bounce or permanently disconnect the connection.
+    /// @param a_dont_reconnect if true will not result in subsequent reconnection attempts.
+    ///             Otherwise will attempt to reconnect in m_reconnect_secs seconds.
+    void disconnect(bool a_dont_reconnect = false) {
+        m_abort = a_dont_reconnect;
         if (m_transport)
             m_transport->stop();
     }
@@ -161,7 +164,7 @@ public:
     void on_connect(connection_type* a_con) {
         BOOST_ASSERT(m_transport.get() == a_con);
         if (m_on_connect_status)
-            m_on_connect_status(this, std::string(""));
+            m_on_connect_status(this, std::string());
         if (verbose() > VERBOSE_NONE)
             std::cerr << "Connected to node: " << a_con->remote_node() << std::endl;
         m_connected = true;

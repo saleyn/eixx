@@ -33,13 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_CONNECTION_TCP_IPP_
 #define _EIXX_CONNECTION_TCP_IPP_
 
-extern "C" {
-
-#include <misc/eimd5.h>             // see erl_interface/src
-#include <epmd/ei_epmd.h>           // see erl_interface/src
-#include <connect/ei_connect_int.h> // see erl_interface/src
-
-}
+#include <sys/utsname.h>
+#include <openssl/md5.h>
 
 namespace EIXX_NAMESPACE {
 namespace connect {
@@ -666,14 +661,13 @@ template <class Handler, class Alloc>
 uint32_t tcp_connection<Handler, Alloc>::
 md_32(char* string, int length)
 {
-    MD5_CTX ctx;
+    BOOST_STATIC_ASSERT(MD5_DIGEST_LENGTH == 16);
     union {
-        char c[16];
+        char c[MD5_DIGEST_LENGTH];
         unsigned x[4];
     } digest;
-    ei_MD5Init(&ctx);
-    ei_MD5Update(&ctx, (unsigned char *) string, (unsigned) length);
-    ei_MD5Final((unsigned char *) digest.c, &ctx);
+    MD5((unsigned char *) string, length, (unsigned char *) digest.c);
+    return (digest.x[0] ^ digest.x[1] ^ digest.x[2] ^ digest.x[3]);
     return (digest.x[0] ^ digest.x[1] ^ digest.x[2] ^ digest.x[3]);
 }
 
@@ -684,10 +678,10 @@ gen_digest(unsigned challenge, const char cookie[], uint8_t digest[16])
     MD5_CTX c;
     char chbuf[21];
     sprintf(chbuf,"%u", challenge);
-    ei_MD5Init(&c);
-    ei_MD5Update(&c, (unsigned char *) cookie, (uint32_t) strlen(cookie));
-    ei_MD5Update(&c, (unsigned char *) chbuf,  (uint32_t) strlen(chbuf));
-    ei_MD5Final(digest, &c);
+    MD5_Init(&c);
+    MD5_Update(&c, (unsigned char *) cookie, (uint32_t) strlen(cookie));
+    MD5_Update(&c, (unsigned char *) chbuf,  (uint32_t) strlen(chbuf));
+    MD5_Final(digest, &c);
 }
 
 } // namespace connect
