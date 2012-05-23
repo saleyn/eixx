@@ -61,8 +61,9 @@ namespace asio {
             async_wait_handler_wrapper(Handler h): m_h(h) {}
 
             void operator() (const system::error_code& ec) {
-                system::error_code e =
-                    ec == system::error_code()
+                //if (ec == error::operation_aborted)
+                //    return;
+                system::error_code e = ec == system::error_code()
                         ? system::make_error_code(error::timeout)
                         : ec;
                 m_h(e);
@@ -76,7 +77,8 @@ namespace asio {
         {}
 
         /// Asynchronous wait without expiration. The expiration time
-        /// is set to <tt>boost::posix_time::pos_infin</tt>.
+        /// is set to <tt>boost::posix_time::pos_infin</tt>.  When timer
+        /// is canceled returns <tt>boost::asio::error::operation_aborted</tt>.
         template<typename Handler>
         void async_wait(Handler h)
         {

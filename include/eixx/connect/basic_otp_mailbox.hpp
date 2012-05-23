@@ -248,8 +248,17 @@ public:
     void send_rpc(const atom& a_node,
                   const atom& a_mod,
                   const atom& a_fun,
-                  const list<Alloc>& args) {
-        m_node.send_rpc(a_node, a_mod, a_fun, args);
+                  const list<Alloc>& args,
+                  const epid<Alloc>* gleader = NULL) {
+        m_node.send_rpc(self(), a_node, a_mod, a_fun, args);
+    }
+
+    /// Execute an equivalent of rpc:cast(...). Doesn't return any value.
+    void send_rpc_cast(const atom& a_node, const atom& a_mod,
+            const atom& a_fun, const list<Alloc>& args,
+            const epid<Alloc>* gleader = NULL)
+            throw (err_bad_argument, err_no_process, err_connection) {
+        m_node.send_rpc_cast(self(), a_node, a_mod, a_fun, args, gleader);
     }
 
     /// Send exit message to all linked pids and monitoring pids

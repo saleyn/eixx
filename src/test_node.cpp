@@ -22,50 +22,68 @@ otp_mailbox *g_io_server, *g_main;
 static atom g_rem_node;
 
 void on_io_request(otp_mailbox& a_mbox, boost::system::error_code& ec) {
-    if (ec && ec != boost::asio::error::operation_aborted)
-        std::cerr << "Mailbox " << a_mbox.self() << " got error: "
-                  << ec.message() << std::endl;
-    else {
-        otp_mailbox::queue_type::iterator
-            it = a_mbox.queue().begin(), end = a_mbox.queue().end();
-        while (it != end) {
-            std::cerr << "I/O server got a message: " << *(*it) << std::endl;
-            delete *it;
-            it = a_mbox.queue().erase(it);
+    if (ec == boost::asio::error::operation_aborted) {
+        eixx::transport_msg* p;
+        while ((p = a_mbox.receive()) != NULL) {
+            boost::scoped_ptr<eixx::transport_msg> l_tmsg(p);
+
+            static eterm s_put_chars = eterm::format("{io_request,_,_,{put_chars,S}}");
+
+            varbind l_binding;
+            if (s_put_chars.match(l_tmsg->msg(), &l_binding))
+                std::cerr << "I/O request from server: "
+                          << l_binding["S"]->to_string() << std::endl;
+            else
+                std::cerr << "I/O server got a message: " << l_tmsg->msg() << std::endl;
         }
-    }
+    } else if (ec != boost::asio::error::timeout)
+        return;
+    
     a_mbox.async_receive(&on_io_request);
 }
 
 void on_main_msg(otp_mailbox& a_mbox, boost::system::error_code& ec) {
-    if (ec && ec != boost::asio::error::operation_aborted)
-        std::cerr << "Mailbox " << a_mbox.self() << " got error: "
-                  << ec.message() << std::endl;
-    else {
-        while (!a_mbox.queue().empty()) {
-            boost::scoped_ptr<eixx::transport_msg> l_tmsg( a_mbox.queue().front() );
-            a_mbox.queue().pop_front();
+    if (ec == boost::asio::error::operation_aborted) {
+        eixx::transport_msg* p;
+        while ((p = a_mbox.receive()) != NULL) {
+            boost::scoped_ptr<eixx::transport_msg> l_tmsg(p);
 
             const eterm& l_msg = l_tmsg->msg();
 
-            std::cerr << "Main mailbox got a message: " << l_msg << std::endl;
-
-            static eterm s_add_symbols = eterm::format("{From, {add_symbols, S}}");
-            static eterm s_stop        = atom("stop");
+            static eterm s_now_pattern  = eterm::format("{rex, {N1, N2, N3}}");
+            static eterm s_stop         = atom("stop");
 
             varbind l_binding;
 
-            if (s_add_symbols.match(l_msg, &l_binding)) {
-                const epid& l_from = l_binding.find("From")->to_pid();
-                a_mbox.node().send_rpc_cast(a_mbox.self(), l_from.node(),
-                    "ota_db", "commit_symbols", list::make(atom("add"), 1, *l_binding.find("S")));
-                a_mbox.node().send(g_rem_node, l_from, atom("ok"));
-            } else if (s_stop.match(l_msg, &l_binding)) {
+            if (s_now_pattern.match(l_msg, &l_binding)) {
+                struct timeval tv = 
+                    { l_binding["N1"]->to_long() * 1000000 +
+                      l_binding["N1"]->to_long(),
+                      l_binding["N1"]->to_long() };
+                struct tm tm;
+                localtime_r(&tv.tv_sec, &tm);
+                printf("Server time: %02d:%02d:%02d.%06ld\n",
+                    tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec);
+            } else if (s_stop.match(l_msg)) {
                 a_mbox.node().stop();
-            }
+                return;
+            } else
+                std::cout << "Unhandled message: " << l_msg << std::endl;
         }
+    } else if (ec == boost::asio::error::timeout) {
+        // Make sure that remote node has a process registered as "test".
+        // Try sending a message to it.
+        static uint32_t n;
+        if (n++ & 1)
+            g_main->send_rpc(g_rem_node, "erlang", "now", list::make());
+        else 
+            g_io_server->send_rpc_cast(g_rem_node, atom("io"), atom("put_chars"),
+                list::make("This is a test string"), &g_io_server->self());
+    } else if (ec) {
+        return;
     }
-    a_mbox.async_receive(&on_main_msg);
+    
+    a_mbox.async_receive(&on_main_msg, 5000);
 }
 
 void on_connect(otp_connection* a_con, const std::string& a_error) {
@@ -78,11 +96,10 @@ void on_connect(otp_connection* a_con, const std::string& a_error) {
 
     // Make sure that remote node has a process registered as "test".
     // Try sending a message to it.
-    l_node->send(g_main->self(), a_con->remote_node(),
-        "test", tuple::make(g_main->self(), "Hello world!"));
+    g_main->send_rpc(a_con->remote_node(), "erlang", "now", list::make());
 
     // Send an rpc request to print a string. The remote 
-    l_node->send_rpc(g_main->self(), a_con->remote_node(), atom("io"), atom("put_chars"),
+    g_io_server->send_rpc_cast(a_con->remote_node(), atom("io"), atom("put_chars"),
         list::make("This is a test string"), &g_io_server->self());
 }
 
@@ -138,7 +155,7 @@ int main(int argc, char* argv[]) {
 
     //l_node->send_rpc(self, a_con->remote_node(), atom("shell_default"), atom("ls"),
     //    list::make(), &io_server);
-    g_main->async_receive(&on_main_msg);
+    g_main->async_receive(&on_main_msg, 5000);
 
     l_node.run();
     
