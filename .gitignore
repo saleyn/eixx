@@ -26,7 +26,7 @@ src/.deps
 src/.libs
 src/Makefile
 src/Makefile.in
-src/eixx-0.1.pc
+src/eixx.pc
 src/pri_test
 src/test_node
 src/*.la

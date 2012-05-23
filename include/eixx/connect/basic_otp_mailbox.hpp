@@ -59,7 +59,7 @@ using EIXX_NAMESPACE::marshal::epid;
  * will be forwarded to another local mailbox or a pid on another node.
  *
  * MailBox will receive and queue messages
- * delivered with the deliver() method. The messages can be 
+ * delivered with the deliver() method. The messages can be
  * dequeued using the receive() family of functions.
  *
  * You can get the message in order of arrival, or use pattern matching
@@ -68,7 +68,7 @@ using EIXX_NAMESPACE::marshal::epid;
  * Each mailbox is associated with a unique {@link epid
  * pid} that contains information necessary for message delivery.
  *
- * Messages to remote nodes are encoded in the Erlang external binary 
+ * Messages to remote nodes are encoded in the Erlang external binary
  * format for transmission.
  *
  * Mailboxes can be linked and monitored in much the same way as
@@ -155,7 +155,25 @@ public:
         return out << '}';
     }
 
-    /// Deliver a message to this mailbox
+    /// Find the first message in the mailbox matching a pattern.
+    /// Return the message, and if \a a_binding is not NULL set the binding variables.
+    /// The call is not thread-safe and should be evaluated in the thread running the
+    /// mailbox node's service.
+    boost::scoped_ptr<transport_msg<Alloc> >
+    match(const eterm<Alloc>& a_pattern, varbind* a_binding = NULL);
+
+    /// Dequeue the next message from the mailbox.  The call is non-blocking and
+    /// returns NULL if no messages are waiting.
+    boost::scoped_ptr<transport_msg<Alloc> >
+    receive() {
+        if (m_queue.empty())
+            return NULL;
+        transport_msg<Alloc>* p = m_queue.front();
+        m_queue.pop_front();
+        return p;
+    }
+
+    /// Deliver a message to this mailbox. The call is thread-safe.
 	void deliver(const transport_msg<Alloc>& a_msg) {
         transport_msg<Alloc>* l_msg = new transport_msg<Alloc>(a_msg);
         m_io_service.post(
@@ -287,7 +305,8 @@ public:
 //------------------------------------------------------------------------------
 
 template <typename Alloc, typename Mutex>
-void basic_otp_mailbox<Alloc, Mutex>::break_links(const eterm<Alloc>& a_reason)
+void basic_otp_mailbox<Alloc, Mutex>::
+break_links(const eterm<Alloc>& a_reason)
 {
     for (typename std::set<epid<Alloc> >::const_iterator
             it=m_links.begin(), end = m_links.end(); it != end; ++it)
@@ -300,6 +319,24 @@ void basic_otp_mailbox<Alloc, Mutex>::break_links(const eterm<Alloc>& a_reason)
 }
 
 template <typename Alloc, typename Mutex>
+boost::scoped_ptr<transport_msg<Alloc> > basic_otp_mailbox<Alloc, Mutex>::
+match(const eterm<Alloc>& a_pattern, varbind* a_binding)
+{
+    for (typename queue_type::iterator it = m_queue.begin(), e = m_queue.end();
+            it != e; ++it)
+    {
+        transport_msg<Alloc>* p = *it;
+        BOOST_ASSERT(p);
+        if (a_pattern.match(p->msg(), a_binding)) {
+            // Found a match
+            m_queue.erase(it);
+            return p;
+        }
+    }
+    return NULL;
+}
+
+template <typename Alloc, typename Mutex>
 void basic_otp_mailbox<Alloc, Mutex>::
 do_on_deadline_timer(receive_handler_type f, boost::system::error_code& ec)
 {
@@ -309,8 +346,8 @@ do_on_deadline_timer(receive_handler_type f, boost::system::error_code& ec)
 }
 
 template <typename Alloc, typename Mutex>
-void basic_otp_mailbox<Alloc, Mutex>::async_receive(receive_handler_type h, long msec_timeout)
-    throw (std::runtime_error)
+void basic_otp_mailbox<Alloc, Mutex>::
+async_receive(receive_handler_type h, long msec_timeout) throw (std::runtime_error)
 {
     m_deadline_timer.cancel();
 
@@ -324,18 +361,19 @@ void basic_otp_mailbox<Alloc, Mutex>::async_receive(receive_handler_type h, long
     if (msec_timeout < 0)
         m_deadline_timer.async_wait(
             boost::bind(
-                &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer, 
+                &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer,
                 this, h, boost::asio::placeholders::error));
     else
         m_deadline_timer.async_wait_timeout(
             boost::bind(
-                &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer, 
+                &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer,
                 this, h, boost::asio::placeholders::error),
             msec_timeout);
 }
 
 template <typename Alloc, typename Mutex>
-void basic_otp_mailbox<Alloc, Mutex>::do_deliver(transport_msg<Alloc>* a_msg)
+void basic_otp_mailbox<Alloc, Mutex>::
+do_deliver(transport_msg<Alloc>* a_msg)
 {
     try {
         switch (a_msg->type()) {
@@ -384,9 +422,9 @@ void basic_otp_mailbox<Alloc, Mutex>::do_deliver(transport_msg<Alloc>* a_msg)
         m_queue.push_back(a_msg);
     }
 
-    // If the timer's expiration is set to some non-default value, it means that 
+    // If the timer's expiration is set to some non-default value, it means that
     // there's an outstanding asynchronous receive operation.  We cancel the timer
-    // that will cause invocation of the handler passed to the deadline timer 
+    // that will cause invocation of the handler passed to the deadline timer
     // upon executing mailbox->async_receive(Handler, Timeout).
     if (m_deadline_timer.expires_at() != boost::asio::deadline_timer_ex::time_type())
         m_deadline_timer.cancel();
@@ -398,7 +436,7 @@ void basic_otp_mailbox<Alloc, Mutex>::do_deliver(transport_msg<Alloc>* a_msg)
 namespace std {
 
     template <typename Alloc, typename Mutex>
-    ostream& operator<< (ostream& out, 
+    ostream& operator<< (ostream& out,
         const EIXX_NAMESPACE::connect::basic_otp_mailbox<Alloc,Mutex>& a_mbox)
     {
         return a_mbox.dump(out);
