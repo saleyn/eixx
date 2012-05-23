@@ -5,6 +5,7 @@ eixx_hdrs1 =  alloc_pool.hpp \
               alloc_pool_st.hpp \
               alloc_std_debug.hpp \
               alloc_std.hpp \
+			  config.h \
               connect.hpp \
               eixx.hpp \
               eterm.hpp \
