@@ -8,5 +8,5 @@ Description: EIXX: C++ Interface to Erlang
 #Requires: boost_0_41_0
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} @EI_LDFLAGS@ -leixx @EI_LIB@
-Cflags: -I${includedir}/include @EI_CPPFLAGS@
+Cflags: -I${includedir} @EI_CPPFLAGS@
 
