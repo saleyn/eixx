@@ -7,6 +7,6 @@ Name: @PACKAGE@
 Description: EIXX: C++ Interface to Erlang
 #Requires: boost_0_41_0
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} @EI_LDFLAGS@ -leixx @EI_LIB@
+Libs: -L${libdir} @EI_LDFLAGS@ -leixx @EI_LIB@ @CRYPTO_LIBS@
 Cflags: -I${includedir} @EI_CPPFLAGS@
 

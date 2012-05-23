@@ -159,13 +159,12 @@ public:
     /// Return the message, and if \a a_binding is not NULL set the binding variables.
     /// The call is not thread-safe and should be evaluated in the thread running the
     /// mailbox node's service.
-    boost::scoped_ptr<transport_msg<Alloc> >
+    transport_msg<Alloc>*
     match(const eterm<Alloc>& a_pattern, varbind* a_binding = NULL);
 
     /// Dequeue the next message from the mailbox.  The call is non-blocking and
     /// returns NULL if no messages are waiting.
-    boost::scoped_ptr<transport_msg<Alloc> >
-    receive() {
+    transport_msg<Alloc>* receive() {
         if (m_queue.empty())
             return NULL;
         transport_msg<Alloc>* p = m_queue.front();
@@ -319,7 +318,7 @@ break_links(const eterm<Alloc>& a_reason)
 }
 
 template <typename Alloc, typename Mutex>
-boost::scoped_ptr<transport_msg<Alloc> > basic_otp_mailbox<Alloc, Mutex>::
+transport_msg<Alloc>* basic_otp_mailbox<Alloc, Mutex>::
 match(const eterm<Alloc>& a_pattern, varbind* a_binding)
 {
     for (typename queue_type::iterator it = m_queue.begin(), e = m_queue.end();
