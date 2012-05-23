@@ -127,6 +127,8 @@ class basic_otp_node: public basic_otp_node_local {
             on_disconnect(*this, a_con, a_remote_node, err);
     }
 
+    void report_status(report_level a_level, const connection_t* a_con, const std::string& s);
+
 protected:
     /// Publish the node port to epmd making this node known to the world.
     void publish_port() throw (err_connection);
@@ -288,6 +290,15 @@ public:
         //    OtpNode      OtpConnection     RemoteNodeName         ErrorCode
         void (self&, const connection_t&, const std::string&, const boost::system::error_code&)
     > on_disconnect; 
+
+    /**
+     * Callback invoked if verbosity is different from VERBOSE_NONE. If not assigned,
+     * the content is printed to stderr. 
+     */
+    boost::function<
+        //    OtpNode      OtpConnection     Status         Message
+        void (self&, const connection_t*, report_level, const std::string&)
+    > on_status; 
 
     /**
      * Accept connections from client processes.

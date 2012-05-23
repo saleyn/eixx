@@ -112,8 +112,11 @@ protected:
         , m_is_writing(false)
         , m_connection_aborted(false)
     {
-        if (handler()->verbose() >= VERBOSE_TRACE)
-            std::cout << "Calling connection::connection(type=" << m_type << ')' << std::endl;
+        if (unlikely(handler()->verbose() >= VERBOSE_TRACE)) {
+            std::stringstream s;
+            s << "Calling connection::connection(type=" << m_type << ')';
+            a_h->report_status(REPORT_INFO, s.str());
+        }
     }
 
     char* allocate(size_t a_sz)    {
@@ -150,10 +153,13 @@ protected:
             m_is_writing = true;
             flip_queues(); // Work on the data accumulated in the available_queue.
             if (unlikely(verbose() >= VERBOSE_WIRE))
-                for(cb_t::const_iterator it=buffers.begin(); it != buffers.end(); ++it)
-                    std::cout << "  async_write " << boost::asio::buffer_size(*it) << " bytes: " 
-                        << to_binary_string(boost::asio::buffer_cast<const char*>(*it),
-                                            boost::asio::buffer_size(*it)) << std::endl;
+                for(cb_t::const_iterator it=buffers.begin(); it != buffers.end(); ++it) {
+                    std::stringstream s;
+                    s << "  async_write " << boost::asio::buffer_size(*it) << " bytes: " 
+                      << to_binary_string(boost::asio::buffer_cast<const char*>(*it),
+                                          boost::asio::buffer_size(*it));
+                    m_handler->report_status(REPORT_INFO, s.str());
+                }
             async_write(buffers, boost::asio::transfer_all(), 
                 boost::bind(&connection<Handler, Alloc>::handle_write, this->shared_from_this(),
                     boost::asio::placeholders::error));
@@ -195,10 +201,12 @@ protected:
         a_msg.encode(data, sz, s_header_size, true);
         BOOST_ASSERT(*(data - 1) == s_header_magic);
 
-        if (unlikely(verbose() >= VERBOSE_MESSAGE))
-            std::cout << "client -> agent: " << a_msg.to_string() << std::endl;
-        if (unlikely(verbose() >= VERBOSE_WIRE))
-            to_binary_string(std::cout << "client -> agent: ", data, sz) << std::endl;
+        if (unlikely(verbose() >= VERBOSE_MESSAGE)) {
+            m_handler->report_status(REPORT_INFO, "client -> agent: " + a_msg.to_string());
+            if (unlikely(verbose() >= VERBOSE_WIRE))
+                m_handler->report_status(REPORT_INFO, "client -> agent: " + 
+                    to_binary_string(data, sz));
+        }
 
         boost::asio::const_buffer b(data, sz);
         m_io_service.post(
@@ -236,7 +244,8 @@ protected:
             return;
 
         if (handler()->verbose() >= VERBOSE_TRACE)
-            std::cout << "Calling connection::start()" << std::endl;
+            m_handler->report_status(REPORT_INFO, "Calling connection::start()");
+
         m_connection_aborted = false;
         m_handler->on_connect(this);
 
@@ -282,7 +291,7 @@ public:
 
     virtual ~connection() {
         if (handler()->verbose() >= VERBOSE_TRACE)
-            std::cout << "Calling connection::~connection()" << std::endl;
+            m_handler->report_status(REPORT_INFO, "Calling ~connection::connection()");
     }
 
     /// Close connection channel orderly by user. 
@@ -305,7 +314,8 @@ public:
             return;
 
         if (handler()->verbose() >= VERBOSE_TRACE)
-            std::cout << "Calling connection::stop(" << e.message() << ')' << std::endl;
+            m_handler->report_status(REPORT_INFO, 
+                std::string("Calling ~connection::connection()") + e.message());
 
         m_connection_aborted = true;
         m_handler->on_disconnect(this, e);

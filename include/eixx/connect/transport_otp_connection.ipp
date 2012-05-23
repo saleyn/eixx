@@ -171,17 +171,18 @@ void connection<Handler, Alloc>::
 handle_write(const boost::system::error_code& err)
 {
     if (m_connection_aborted) {
-        if (verbose() >= VERBOSE_TRACE)
-            std::cout << "Connection aborted - "
-                         "exiting connection<Handler, Alloc>::handle_write" 
-                      << std::endl;
+        if (unlikely(verbose() >= VERBOSE_TRACE))
+            m_handler->report_status(REPORT_INFO,
+                "Connection aborted - exiting connection::handle_write");
         return;
     }
 
     if (unlikely(err)) {
-        if (verbose() >= VERBOSE_TRACE)
-            std::cout << "connection<Handler, Alloc>::handle_write("
-                      << err.value() << ')' << std::endl;
+        if (verbose() >= VERBOSE_TRACE) {
+            std::stringstream s;
+            s << "connection::handle_write(" << err.value() << ')';
+            m_handler->report_status(REPORT_INFO, s.str());
+        }
         // We use operation_aborted as a user-initiated connection reset,
         // therefore check to substitute the error since bytes_transferred == 0
         // means a connection loss.
@@ -210,22 +211,25 @@ template <class Handler, class Alloc>
 void connection<Handler, Alloc>::
 handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
-    if (unlikely(verbose() >= VERBOSE_WIRE))
-        std::cout << "connection::handle_read(transferred=" 
-                  << bytes_transferred << ", got_header=" 
-                  << (m_got_header ? "true" : "false")
-                  << ", rd_buf.size=" << m_rd_buf.capacity()
-                  << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
-                  << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
-                  << ", rd_capacity=" << rd_capacity()
-                  << ", pkt_sz=" << m_packet_size << " (ec="
-                  << err.value() << ')' << std::endl;
+    if (unlikely(verbose() >= VERBOSE_WIRE)) {
+        std::stringstream s;
+        s << "connection::handle_read(transferred=" 
+          << bytes_transferred << ", got_header=" 
+          << (m_got_header ? "true" : "false")
+          << ", rd_buf.size=" << m_rd_buf.capacity()
+          << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
+          << ", rd_end=" << (m_rd_end - &m_rd_buf[0])
+          << ", rd_capacity=" << rd_capacity()
+          << ", pkt_sz=" << m_packet_size << " (ec="
+          << err.value() << ')';
+        m_handler->report_status(REPORT_INFO, s.str());
+    }
 
     if (unlikely(m_connection_aborted)) {
-        if (verbose() >= VERBOSE_WIRE)
-            std::cout << "Connection aborted - "
-                         "exiting connection<Handler, Alloc>::handle_read" 
-                      << std::endl;
+        if (verbose() >= VERBOSE_WIRE) {
+            m_handler->report_status(REPORT_INFO,
+                "Connection aborted - exiting connection::handle_read"); 
+        }
         return;
     } else if (unlikely(err)) {
         // We use operation_aborted as a user-initiated connection reset,
@@ -328,15 +332,17 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         crunched = true;
     }
 
-    if (unlikely(verbose() >= VERBOSE_WIRE))
-        std::cout << "Scheduling connection::async_read(offset=" 
-                  << (m_rd_end-&m_rd_buf[0])
-                  << ", capacity=" << rd_capacity() << ", pkt_size=" 
-                  << m_packet_size << ", need=" << need_bytes
-                  << ", got_header=" << (m_got_header ? "true" : "false")
-                  << ", crunched=" << (crunched ? "true" : "false")
-                  << ", aborted=" << (m_connection_aborted ? "true" : "false") << ')'
-                  << std::endl;
+    if (unlikely(verbose() >= VERBOSE_WIRE)) {
+        std::stringstream s;
+        s << "Scheduling connection::async_read(offset=" 
+          << (m_rd_end-&m_rd_buf[0])
+          << ", capacity=" << rd_capacity() << ", pkt_size=" 
+          << m_packet_size << ", need=" << need_bytes
+          << ", got_header=" << (m_got_header ? "true" : "false")
+          << ", crunched=" << (crunched ? "true" : "false")
+          << ", aborted=" << (m_connection_aborted ? "true" : "false") << ')';
+        m_handler->report_status(REPORT_INFO, s.str());
+    }
 
     boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_capacity());
     async_read(
@@ -431,11 +437,18 @@ process_message(const char* a_buf, size_t a_size)
             break;
         */
         default:
-            if (unlikely(verbose() >= VERBOSE_WIRE))
-                std::cout << "Got transport msg - (cntrl): " << tm.cntrl() << std::endl;
-            if (unlikely(verbose() >= VERBOSE_MESSAGE))
-                if (tm.has_msg())
-                    std::cout << "Got transport msg - (msg):   " << tm.msg() << std::endl;
+            if (unlikely(verbose() >= VERBOSE_MESSAGE)) {
+                if (unlikely(verbose() >= VERBOSE_WIRE)) {
+                    std::stringstream s;
+                    s << "Got transport msg - (cntrl): " << tm.cntrl();
+                    m_handler->report_status(REPORT_INFO, s.str());
+                }
+                if (tm.has_msg()) {
+                    std::stringstream s;
+                    s << "Got transport msg - (msg):   " << tm.msg();
+                    m_handler->report_status(REPORT_INFO, s.str());
+                }
+            }
             m_handler->on_message(this, tm);
     }
 }
@@ -460,10 +473,13 @@ send(const transport_msg<Alloc>& a_msg)
     if (l_has_msg)
         a_msg.msg().encode(s + cntrl_sz, msg_sz, 0, true);
 
-    if (unlikely(verbose() >= VERBOSE_MESSAGE))
-        std::cout << "SEND cntrl="
-                  << l_cntrl.to_string() << (l_has_msg ? ", msg=" : "")
-                  << (l_has_msg ? a_msg.msg().to_string() : std::string("")) << std::endl;
+    if (unlikely(verbose() >= VERBOSE_MESSAGE)) {
+        std::stringstream s;
+        s << "SEND cntrl="
+          << l_cntrl.to_string() << (l_has_msg ? ", msg=" : "")
+          << (l_has_msg ? a_msg.msg().to_string() : std::string(""));
+        m_handler->report_status(REPORT_INFO, s.str());
+    }
     //if (unlikely(verbose() >= VERBOSE_WIRE))
     //    std::cout << "SEND " << len << " bytes " << to_binary_string(data, len) << std::endl;
 

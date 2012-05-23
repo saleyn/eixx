@@ -7,6 +7,8 @@
 
 #include <eixx/connect/test_helper.hpp>
 
+using namespace EIXX_NAMESPACE;
+
 void usage(char* exe) {
     printf("Usage: %s -n NODE -r REMOTE_NODE [-c COOKIE] [-v VERBOSE] [-t RECONNECT_SECS]\n"
            "    -v VERBOSE          - verboseness: none|debug|message|wire|trace\n"
@@ -16,7 +18,12 @@ void usage(char* exe) {
     exit(1);
 }
 
-using namespace EIXX_NAMESPACE;
+void on_status(otp_node& a_node, const otp_connection* a_con,
+        report_level a_level, const std::string& s)
+{
+    static const char* s_levels[] = {"INFO   ", "WARNING", "ERROR  "};
+    std::cerr << s_levels[a_level] << "| " << s << std::endl;
+}
 
 otp_mailbox *g_io_server, *g_main;
 static atom g_rem_node;
@@ -87,8 +94,6 @@ void on_main_msg(otp_mailbox& a_mbox, boost::system::error_code& ec) {
 }
 
 void on_connect(otp_connection* a_con, const std::string& a_error) {
-    otp_node* l_node = a_con->node();
-
     if (!a_error.empty()) {
         std::cout << a_error << std::endl;
         return;
@@ -141,7 +146,7 @@ int main(int argc, char* argv[]) {
     boost::asio::io_service io_service;
     otp_node l_node(io_service, l_nodename, use_cookie);
     l_node.verbose(verbose);
-
+    l_node.on_status     = on_status;
     l_node.on_disconnect = on_disconnect;
 
     g_io_server = l_node.create_mailbox("io_server");

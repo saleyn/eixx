@@ -143,6 +143,8 @@ public:
     boost::asio::io_service&        io_service()    const { return m_io_service; }
     /// Queue of pending received messages.
     queue_type&                     queue()               { return m_queue;      }
+    /// Indicates if mailbox doesn't have any pending messages
+    bool                            empty()         const { return m_queue.empty(); }
 
     void name(const atom& a_name) { m_name = a_name; }
 

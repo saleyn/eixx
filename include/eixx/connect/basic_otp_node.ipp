@@ -145,6 +145,17 @@ void basic_otp_node<Alloc, Mutex>::stop_server()
 }
 
 template <typename Alloc, typename Mutex>
+void basic_otp_node<Alloc, Mutex>::
+report_status(report_level a_level, const connection_t* a_con, const std::string& s)
+{
+    static const char* s_levels[] = {"INFO", "WARN", "ERROR"};
+    if (on_status)
+        on_status(*this, a_con, a_level, s);
+    else
+        std::cerr << s_levels[a_level] << "| " << s << std::endl;
+}
+
+template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::deliver(const transport_msg<Alloc>& a_msg)
     throw (err_bad_argument, err_no_process, err_connection)
 {
@@ -154,7 +165,9 @@ void basic_otp_node<Alloc, Mutex>::deliver(const transport_msg<Alloc>& a_msg)
         l_mbox->deliver(a_msg);
     } catch (std::exception& e) {
         // FIXME: Add proper error reporting.
-        std::cerr << "Cannot deliver message " << a_msg.to_string() << ": " << e.what() << std::endl;
+        std::stringstream s;
+        s << "Cannot deliver message " << a_msg.to_string() << ": " << e.what();
+        report_status(REPORT_WARNING, NULL, s.str());
     }
 }
 

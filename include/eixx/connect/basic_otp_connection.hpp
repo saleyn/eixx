@@ -102,9 +102,12 @@ private:
     void timer_reconnect(const boost::system::error_code& ec) {
         if (ec == boost::asio::error::operation_aborted)
             return;     // timer reset
-            
-        if (verbose() >= VERBOSE_TRACE)
-            std::cerr << "basic_otp_connection::timer_reconnect: " << ec.message() << std::endl;
+
+        if (unlikely(verbose() >= VERBOSE_TRACE)) {
+            std::stringstream s;
+            s << "basic_otp_connection::timer_reconnect: " << ec.message();
+            report_status(REPORT_INFO, s.str());
+        }
 
         m_transport = connection_type::create(
             m_io_service, this, m_node->nodename().to_string(),
@@ -165,8 +168,10 @@ public:
         BOOST_ASSERT(m_transport.get() == a_con);
         if (m_on_connect_status)
             m_on_connect_status(this, std::string());
-        if (verbose() > VERBOSE_NONE)
-            std::cerr << "Connected to node: " << a_con->remote_node() << std::endl;
+        if (unlikely(verbose() > VERBOSE_NONE)) {
+            report_status(REPORT_INFO,
+                "Connected to node: " + a_con->remote_node());
+        }
         m_connected = true;
     }
 
@@ -178,18 +183,23 @@ public:
         m_connected = false;
         if (m_on_connect_status)
             m_on_connect_status(this, a_error);
-        else if (verbose() > VERBOSE_NONE)
-            std::cerr << "Failed to connect to node " << a_con->remote_node()
-                      << ": " << a_error << std::endl;
+        else if (unlikely(verbose() > VERBOSE_NONE)) {
+            std::stringstream s;
+            s << "Failed to connect to node " << a_con->remote_node() << ": " << a_error;
+            report_status(REPORT_ERROR, s.str());
+        }
         reconnect();
     }
 
     void on_disconnect(connection_type* a_con, const boost::system::error_code& err) {
         m_connected = false;
 
-        if (verbose() > VERBOSE_NONE)
-            std::cerr << "Disconnected from node: " << a_con->remote_node()
-                      << " (" << err.message() << ')' << std::endl;
+        if (unlikely(verbose() > VERBOSE_NONE)) {
+            std::stringstream s;
+            s << "Disconnected from node: " << a_con->remote_node()
+              << " (" << err.message() << ')';
+            report_status(REPORT_ERROR, s.str());
+        }
         if (m_node)
             m_node->on_disconnect_internal(*this, a_con->remote_node(), err);
 
@@ -198,19 +208,27 @@ public:
     }
 
     void on_error(connection_type* a_con, const std::string& s) {
-        std::cerr << "Error in communication with node: " << a_con->remote_node() << std::endl
-                  << "  " << s << std::endl;
+        std::stringstream str;
+        str << "Error in communication with node: " << a_con->remote_node()
+                  << "\n  " << s;
+        report_status(REPORT_ERROR, str.str());
     }
 
     void on_message(connection_type* a_con, const transport_msg<Alloc>& a_tm) {
         try {
             m_node->deliver(a_tm);
         } catch (std::exception& e) {
-            std::cerr << "Got message " << a_tm.type_string() << std::endl
+            std::stringstream s;
+            s << "Got message " << a_tm.type_string() << std::endl
                       << "  cntrl: " << a_tm.cntrl() << std::endl
                       << "  msg..: " << a_tm.msg() << std::endl
-                      << "  error: " << e.what() << std::endl;
+                      << "  error: " << e.what();
+            report_status(REPORT_INFO, s.str());
         }
+    }
+
+    void report_status(report_level a_level, const std::string& s) {
+        node()->report_status(a_level, this, s);
     }
 };
 

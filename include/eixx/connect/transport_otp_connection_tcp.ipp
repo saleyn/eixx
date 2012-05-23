@@ -122,9 +122,12 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
         put8(w,EI_EPMD_PORT2_REQ);
         strcpy(w, alivename.c_str());
 
-        if (this->handler()->verbose() >= VERBOSE_TRACE)
-            std::cout << "-> sending epmd port req for '" << alivename << "': "
-                      << to_binary_string(m_buf_epmd, len+2) << std::endl;
+        if (this->handler()->verbose() >= VERBOSE_TRACE) {
+            std::stringstream s;
+            s << "-> sending epmd port req for '" << alivename << "': "
+              << to_binary_string(m_buf_epmd, len+2);
+            this->handler()->report_status(REPORT_INFO, s.str());
+        }
 
         m_state = CS_WAIT_EPMD_WRITE_DONE;
         boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_epmd, len+2),
@@ -192,9 +195,12 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
 
     int n = get8(s);
 
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "<- response from epmd: " << n 
-                  << " (" << (n ? "failed" : "ok") << ')' << std::endl;
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "<- response from epmd: " << n 
+          << " (" << (n ? "failed" : "ok") << ')';
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
 
     if (n) { // Got negative response
         std::stringstream str; str << "Node " << this->remote_node() << " not known to epmd!";
@@ -245,11 +251,14 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
     uint16_t dist_low  = get16be(s);
     m_dist_version     = (dist_high > EI_DIST_HIGH ? EI_DIST_HIGH : dist_high);
 
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "<- epmd returned: port=" << port << ",ntype=" << ntype
-                  << ",proto=" << proto << ",dist_high=" << dist_high
-                  << ",dist_low=" << dist_low << std::endl;
- 
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "<- epmd returned: port=" << port << ",ntype=" << ntype
+          << ",proto=" << proto << ",dist_high=" << dist_high
+          << ",dist_low=" << dist_low;
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
+
     m_peer_endpoint.port(port);
     m_peer_endpoint.address( m_socket.remote_endpoint().address() );
     m_socket.close();
@@ -281,8 +290,11 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
         return;
     }
 
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "<- Connected to node: " << this->remote_node() << std::endl;
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "<- Connected to node: " << this->remote_node();
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
 
     m_our_challenge = gen_challenge();
 
@@ -309,9 +321,12 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
                 | DFLAG_DIST_MONITOR));
     memcpy(w, this->this_node().c_str(), this->this_node().size());
 
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "-> sending name " << siz << " bytes:" 
-                  << to_binary_string(m_buf_node, siz) << std::endl;
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "-> sending name " << siz << " bytes:" 
+          << to_binary_string(m_buf_node, siz);
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
 
     m_state = CS_WAIT_WRITE_CHALLENGE_DONE;
     boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_node, siz),
@@ -486,10 +501,12 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     int flags          = get32be(m_node_rd);
     m_remote_challenge = get32be(m_node_rd);
 
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "<- got auth challenge (version=" << version 
-                  << ", flags=" << flags << ", remote_challenge=" << m_remote_challenge
-                  << ')' << std::endl;
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "<- got auth challenge (version=" << version 
+          << ", flags=" << flags << ", remote_challenge=" << m_remote_challenge << ')';
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
 
     uint8_t our_digest[16];
     gen_digest(m_remote_challenge, this->m_cookie.c_str(), our_digest);
@@ -502,9 +519,12 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     put32be(w, m_our_challenge);
     memcpy (w, our_digest, 16);
 
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "-> sending challenge reply " << siz << " bytes:"
-                  << to_binary_string(m_buf_node, siz) << std::endl;
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "-> sending challenge reply " << siz << " bytes:"
+          << to_binary_string(m_buf_node, siz);
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
 
     m_state = CS_WAIT_WRITE_CHALLENGE_REPLY_DONE;
     boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_node, siz),
@@ -563,7 +583,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header(
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_node_wr, (m_buf_node+1)-m_node_wr),
             boost::asio::transfer_at_least(need_bytes),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body, shared_from_this(),
+            boost::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body,
+                shared_from_this(),
                 boost::asio::placeholders::error,
                 boost::asio::placeholders::bytes_transferred));
     } else {
@@ -591,9 +612,12 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
     BOOST_ASSERT(got_bytes >= (int)m_expect_size);
 
     char tag = get8(m_node_rd);
-    if (this->handler()->verbose() >= VERBOSE_TRACE)
-        std::cout << "<- got auth challenge ack (tag=" << tag << "): " 
-                  << to_binary_string(m_node_rd, m_expect_size-1) << std::endl;
+    if (this->handler()->verbose() >= VERBOSE_TRACE) {
+        std::stringstream s;
+        s << "<- got auth challenge ack (tag=" << tag << "): " 
+          << to_binary_string(m_node_rd, m_expect_size-1);
+        this->handler()->report_status(REPORT_INFO, s.str());
+    }
 
     if (tag != 'a') {
         std::stringstream str; str << "Error reading auth challenge ack body tag '" 

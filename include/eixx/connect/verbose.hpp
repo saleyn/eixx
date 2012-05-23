@@ -12,6 +12,14 @@
 #define _EIXX_VERBOSE_HPP_
 
 namespace EIXX_NAMESPACE {
+
+// otp_node.on_status reporting level
+enum report_level {
+      REPORT_INFO
+    , REPORT_WARNING
+    , REPORT_ERROR
+};
+
 namespace connect {
 
 // Verboseness level
