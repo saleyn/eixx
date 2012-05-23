@@ -1,0 +1,2 @@
+1. Check serialization of long: -6478876429381754229
+2. Check encoding binary encoding of: ["ecg",-6478876429381754229,Pid,"example_core",29633]

@@ -9,7 +9,7 @@ namespace asio {
 namespace error {
 
     enum timer_errors {
-        timeout = 0
+        timeout = ETIMEDOUT
     };
 
     namespace detail {
