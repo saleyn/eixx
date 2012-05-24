@@ -80,12 +80,12 @@ namespace {
  * tuple it can be partially initialized.
  * eterm initialization is not thread safe!
  *
- * eterm is a very lightweight structure of size equal to two 
+ * eterm is a very lightweight structure of size equal to two
  * longs.  The first one represents term type and the second one
  * either contains the value or a pointer to a compound reference
  * counted value.  All eterms at copy constructed on stack, therefore
  * there's no need to create pointers to eterms as copying them is
- * a very fast operation due to their small size.  The underlying 
+ * a very fast operation due to their small size.  The underlying
  * storage for compound terms is allocated on heap using user-provided
  * allocator.  The reference counting assures proper resource
  * reclamations when more than one eterm points to the same underlying
@@ -94,7 +94,7 @@ namespace {
  *
  * Generally eterm objects are immutable once they are initialized.
  * An exception is a tuple and a list which you can update when
- * you are using the eterm in some local scope and need to 
+ * you are using the eterm in some local scope and need to
  * reuse its shape by plugging in different values. An example is
  * to use a static variable to hold a compiled eterm produced by the
  * format function, and encode it into binary on each code pass:
@@ -138,13 +138,13 @@ class eterm {
         // we allocate space for a pointer to a compound type, and using
         // that space to store the value of the compound type.
         // Additionally, we ensure that the size of each compound type
-        // is sizeof(void*).  Therefore it's safe to store the actual 
+        // is sizeof(void*).  Therefore it's safe to store the actual
         // value of a compound type in this union, so the pointer serves
         // as the value placeholder.
-        // This trick allows us to have minimum overhead related to 
-        // copying terms as for simple types it merely involves copying 
+        // This trick allows us to have minimum overhead related to
+        // copying terms as for simple types it merely involves copying
         // 8 bytes (64-bit platform) and for compound types it means copying
-        // the same 8 bytes and in some cases 
+        // the same 8 bytes and in some cases
         // incrementing compound type's reference count.
         // This approach was tested against boost::variant<> and was found
         // to be several times more efficient.
@@ -194,9 +194,9 @@ public:
     eterm(long   a) : m_type(LONG)                  { vt.i = a; }
     eterm(double a) : m_type(DOUBLE)                { vt.d = a; }
     eterm(bool   a) : m_type(BOOL)                  { vt.b = a; }
-    eterm(const char* a, const Alloc& alloc = Alloc()) 
+    eterm(const char* a, const Alloc& alloc = Alloc())
         : m_type(STRING)  { new (&vt.p) string<Alloc>(a, alloc); }
-    eterm(const std::string& a, const Alloc& alloc = Alloc()) 
+    eterm(const std::string& a, const Alloc& alloc = Alloc())
         : m_type(STRING)  { new (&vt.p) string<Alloc>(a.c_str(), a.size(), alloc); }
     eterm(const atom& a)           : m_type(ATOM)   { new (&vt.p) atom(a);  }
     eterm(const string<Alloc>& a)  : m_type(STRING) { new (&vt.p) string<Alloc>(a);}
@@ -210,7 +210,7 @@ public:
     eterm(const trace<Alloc>& a)   : m_type(TRACE)  { new (&vt.p) trace<Alloc>(a); }
 
     /**
-     * Construct a term by decoding it from the begining of 
+     * Construct a term by decoding it from the begining of
      * a binary buffer encoded using Erlang external format.
      * http://www.erlang.org/doc/apps/erts/erl_ext_dist.html
      * @param a_buf is the buffer to decode the term from.
@@ -257,8 +257,8 @@ public:
     }
 
     /**
-     * Destruct this term. For compound terms it decreases the 
-     * reference count of their storage. This does nothing to 
+     * Destruct this term. For compound terms it decreases the
+     * reference count of their storage. This does nothing to
      * simple terms (e.g. long, double, bool).
      */
     ~eterm() {
@@ -279,7 +279,7 @@ public:
     }
 
     /**
-     * Assign the value to this term.  If current term has been initialized, 
+     * Assign the value to this term.  If current term has been initialized,
      * its old value is destructed.
      */
     template <typename T>
@@ -313,7 +313,7 @@ public:
      * Return true for all terms except tuples and lists for which return
      * the corrsponding value of their initialized() method.
      */
-    bool initialized() const { 
+    bool initialized() const {
         switch (type()) {
             case TUPLE: { const tuple<Alloc>& v = vt; return v.initialized(); }
             case LIST:  { const list<Alloc>&  v = vt; return v.initialized(); }
@@ -356,6 +356,22 @@ public:
     list<Alloc>&         to_list()         { check(LIST);   return vt; }
     const trace<Alloc>&  to_trace()  const { check(TRACE);  return vt; }
     trace<Alloc>&        to_trace()        { check(TRACE);  return vt; }
+
+    // Checks if database of the term is of given type
+
+    bool is_double() const { return m_type == DOUBLE; }
+    bool is_long()   const { return m_type == LONG  ; }
+    bool is_bool()   const { return m_type == BOOL  ; }
+    bool is_atom()   const { return m_type == ATOM  ; }
+    bool is_str()    const { return m_type == STRING; }
+    bool is_binary() const { return m_type == BINARY; }
+    bool is_pid()    const { return m_type == PID   ; }
+    bool is_port()   const { return m_type == PORT  ; }
+    bool is_ref()    const { return m_type == REF   ; }
+    bool is_var()    const { return m_type == VAR   ; }
+    bool is_tuple()  const { return m_type == TUPLE ; }
+    bool is_list()   const { return m_type == LIST  ; }
+    bool is_trace()  const { return m_type == TRACE ; }
 
     /**
      * Perform pattern matching.
@@ -400,10 +416,10 @@ public:
     find_unbound(const varbind<Alloc>* a_binding) const;
 
     /**
-     * @return the size of a buffer needed to hold encoded 
+     * @return the size of a buffer needed to hold encoded
      * representation of this eterm
      */
-    size_t encode_size(size_t a_header_size = DEF_HEADER_SIZE, 
+    size_t encode_size(size_t a_header_size = DEF_HEADER_SIZE,
                        bool a_with_version = true) const;
 
     /**
@@ -414,12 +430,12 @@ public:
      *        needs to be encoded in the beginning of the buffer.
      * @return binary encoded string.
      */
-    string<Alloc> encode(size_t a_header_size = DEF_HEADER_SIZE, 
+    string<Alloc> encode(size_t a_header_size = DEF_HEADER_SIZE,
                          bool a_with_version = true) const;
 
     /**
      * Encode a term into a binary representation stored in a
-     * given buffer. The buffer must have the size obtained by the function 
+     * given buffer. The buffer must have the size obtained by the function
      * call encode_size().
      * @param buf is the buffer to hold encoded value.
      * @param size is the size of the \a buf.
@@ -463,12 +479,9 @@ public:
 
     /// Cast a value to eterm. If t is of eterm type, it is returned as is.
     template <typename T>
-    static eterm<Alloc> cast(T t) {
-        return eterm<Alloc>(t);
-    }
-    static const eterm<Alloc>& cast(const eterm<Alloc>& t) {
-        return t;
-    }
+    static eterm<Alloc> cast(T t) { return eterm<Alloc>(t); }
+
+    static const eterm<Alloc>& cast(const eterm<Alloc>& t) { return t; }
 
     template <typename Visitor>
     wrap<typename Visitor::result_type, Visitor>

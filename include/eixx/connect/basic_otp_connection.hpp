@@ -70,7 +70,7 @@ private:
     basic_otp_connection(
             connect_completion_handler h,
             boost::asio::io_service& a_svc,
-            basic_otp_node<Alloc,Mutex>* a_node, const atom& a_remote_node, 
+            basic_otp_node<Alloc,Mutex>* a_node, const atom& a_remote_node,
             const std::string& a_cookie, int a_reconnect_secs = 0,
             const Alloc& a_alloc = Alloc())
         : m_io_service(a_svc)
@@ -132,7 +132,7 @@ public:
     static pointer
     connect(connect_completion_handler h,
             boost::asio::io_service& a_svc,
-            basic_otp_node<Alloc,Mutex>* a_node, const atom& a_remote_node, 
+            basic_otp_node<Alloc,Mutex>* a_node, const atom& a_remote_node,
             const std::string& a_cookie,
             int a_reconnect_secs = 0,
             const Alloc& a_alloc = Alloc())
@@ -143,10 +143,10 @@ public:
     }
 
     /// Bounce or permanently disconnect the connection.
-    /// @param a_dont_reconnect if true will not result in subsequent reconnection attempts.
+    /// @param a_permanent if true will not result in subsequent reconnection attempts.
     ///             Otherwise will attempt to reconnect in m_reconnect_secs seconds.
-    void disconnect(bool a_dont_reconnect = false) {
-        m_abort = a_dont_reconnect;
+    void disconnect(bool a_permanent = false) {
+        m_abort = a_permanent;
         if (m_transport)
             m_transport->stop();
     }
@@ -177,7 +177,7 @@ public:
 
     /// Callback executed on failed connection attempt.  It calls the connection
     /// status handler passed to the instance of this class on connect()
-    /// call. The second argument 
+    /// call. The second argument
     void on_connect_failure(connection_type* a_con, const std::string& a_error) {
         BOOST_ASSERT(m_transport.get() == a_con);
         m_connected = false;
@@ -194,7 +194,7 @@ public:
     void on_disconnect(connection_type* a_con, const boost::system::error_code& err) {
         m_connected = false;
 
-        if (unlikely(verbose() > VERBOSE_NONE)) {
+        if (unlikely(verbose() > VERBOSE_DEBUG)) {
             std::stringstream s;
             s << "Disconnected from node: " << a_con->remote_node()
               << " (" << err.message() << ')';
