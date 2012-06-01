@@ -88,7 +88,7 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
 }
 
 template <typename Alloc>
-std::string eterm<Alloc>::to_string(const varbind<Alloc>* binding, size_t a_size_limit) const {
+std::string eterm<Alloc>::to_string(size_t a_size_limit, const varbind<Alloc>* binding) const {
     if (m_type == UNDEFINED)
         return "";
     std::ostringstream out;

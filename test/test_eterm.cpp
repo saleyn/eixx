@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( test_atom )
         eterm et2(marshal::atom("Abc"));
         BOOST_REQUIRE_EQUAL("'Abc'", et2.to_string());
 
-        BOOST_REQUIRE_EQUAL("a", et1.to_string(NULL, 1));
+        BOOST_REQUIRE_EQUAL("a", et1.to_string(1));
     }
 }
 
