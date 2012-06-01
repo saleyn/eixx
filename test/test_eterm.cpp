@@ -70,6 +70,8 @@ BOOST_AUTO_TEST_CASE( test_atom )
         BOOST_REQUIRE_EQUAL(std::string("abc"), et1.to_string());
         eterm et2(marshal::atom("Abc"));
         BOOST_REQUIRE_EQUAL("'Abc'", et2.to_string());
+
+        BOOST_REQUIRE_EQUAL("a", et1.to_string(NULL, 1));
     }
 }
 

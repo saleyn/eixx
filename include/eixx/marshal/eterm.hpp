@@ -335,7 +335,8 @@ public:
      * Get the string representation of this eterm using a variable binding
      * @param binding Variable binding to use. It can be null.
      */
-    std::string to_string(const varbind<Alloc>* binding = NULL) const;
+    std::string to_string(const varbind<Alloc>* binding = NULL,
+        size_t a_size_limit = std::string::npos) const;
 
     // Convert a term to its underlying type.  Will throw an exception
     // when the underlying type doesn't correspond to the requested operation.

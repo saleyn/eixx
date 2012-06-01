@@ -88,13 +88,15 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
 }
 
 template <typename Alloc>
-std::string eterm<Alloc>::to_string(const varbind<Alloc>* binding) const {
+std::string eterm<Alloc>::to_string(const varbind<Alloc>* binding, size_t a_size_limit) const {
     if (m_type == UNDEFINED)
         return "";
     std::ostringstream out;
     visit_eterm_stringify<Alloc> visitor(out, binding);
     visitor.apply_visitor(*this);
-    return out.str();
+    std::string s = out.str();
+    return a_size_limit == std::string::npos
+        ? s : s.substr(0, std::min(a_size_limit, s.size()));
 }
 
 template <class Alloc>
