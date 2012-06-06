@@ -62,7 +62,7 @@ connection<Handler, Alloc>::create(
     const std::string&  a_this_node,
     const std::string&  a_node,
     const std::string&  a_cookie,
-    const Alloc&        a_alloc) 
+    const Alloc&        a_alloc)
 {
     if (a_this_node.find('@') == std::string::npos)
         THROW_RUNTIME_ERROR("Invalid name of this node: " << a_this_node);
@@ -96,7 +96,7 @@ connection<Handler, Alloc>::create(
 }
 
 template <class Handler, class Alloc>
-connection_type 
+connection_type
 connection<Handler, Alloc>::parse_connection_type(std::string& s) throw(std::runtime_error)
 {
     size_t pos = s.find("://", 0);
@@ -113,8 +113,8 @@ connection<Handler, Alloc>::parse_connection_type(std::string& s) throw(std::run
 }
 
 // NOTE: This is somewhat ugly because addition of new connection types
-// requires modification of async_read() and async_write() functions by 
-// adding case statements.  However, there doesn't seem to be a way of 
+// requires modification of async_read() and async_write() functions by
+// adding case statements.  However, there doesn't seem to be a way of
 // handling it more generically because the socket type is statically
 // defined in ASIO and boost::asio::async_read()/async_write() funcations
 // are template specialized for each socket type. Consequently we
@@ -127,13 +127,13 @@ void connection<Handler, Alloc>::async_read(
 {
     switch (m_type) {
         case TCP: {
-            boost::asio::ip::tcp::socket& s = 
+            boost::asio::ip::tcp::socket& s =
                 reinterpret_cast<tcp_connection<Handler, Alloc>*>(this)->socket();
             boost::asio::async_read(s, b, c, h);
             break;
         }
         case UDS: {
-            boost::asio::local::stream_protocol::socket& s = 
+            boost::asio::local::stream_protocol::socket& s =
                 reinterpret_cast<uds_connection<Handler, Alloc>*>(this)->socket();
             boost::asio::async_read(s, b, c, h);
             break;
@@ -150,13 +150,13 @@ void connection<Handler, Alloc>::async_write(
 {
     switch (m_type) {
         case TCP: {
-            boost::asio::ip::tcp::socket& s = 
+            boost::asio::ip::tcp::socket& s =
                 reinterpret_cast<tcp_connection<Handler, Alloc>*>(this)->socket();
             boost::asio::async_write(s, b, c, h);
             break;
         }
         case UDS: {
-            boost::asio::local::stream_protocol::socket& s = 
+            boost::asio::local::stream_protocol::socket& s =
                 reinterpret_cast<uds_connection<Handler, Alloc>*>(this)->socket();
             boost::asio::async_write(s, b, c, h);
             break;
@@ -186,13 +186,13 @@ handle_write(const boost::system::error_code& err)
         // We use operation_aborted as a user-initiated connection reset,
         // therefore check to substitute the error since bytes_transferred == 0
         // means a connection loss.
-        boost::system::error_code e = 
+        boost::system::error_code e =
             err == boost::asio::error::operation_aborted
             ? boost::asio::error::not_connected : err;
         stop(e);
         return;
     }
-    for (std::deque<boost::asio::const_buffer>::iterator 
+    for (std::deque<boost::asio::const_buffer>::iterator
                 it  = m_out_msg_queue[writing_queue()].begin(),
                 end = m_out_msg_queue[writing_queue()].end();
             it != end; ++it) {
@@ -213,8 +213,8 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
     if (unlikely(verbose() >= VERBOSE_WIRE)) {
         std::stringstream s;
-        s << "connection::handle_read(transferred=" 
-          << bytes_transferred << ", got_header=" 
+        s << "connection::handle_read(transferred="
+          << bytes_transferred << ", got_header="
           << (m_got_header ? "true" : "false")
           << ", rd_buf.size=" << m_rd_buf.capacity()
           << ", rd_ptr=" << (m_rd_ptr - &m_rd_buf[0])
@@ -228,14 +228,14 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
     if (unlikely(m_connection_aborted)) {
         if (verbose() >= VERBOSE_WIRE) {
             m_handler->report_status(REPORT_INFO,
-                "Connection aborted - exiting connection::handle_read"); 
+                "Connection aborted - exiting connection::handle_read");
         }
         return;
     } else if (unlikely(err)) {
         // We use operation_aborted as a user-initiated connection reset,
         // therefore check to substitute the error since bytes_transferred == 0
         // means a connection loss.
-        boost::system::error_code e = 
+        boost::system::error_code e =
             err == boost::asio::error::operation_aborted && bytes_transferred == 0
             ? boost::asio::error::not_connected : err;
         stop(e);
@@ -334,9 +334,9 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 
     if (unlikely(verbose() >= VERBOSE_WIRE)) {
         std::stringstream s;
-        s << "Scheduling connection::async_read(offset=" 
+        s << "Scheduling connection::async_read(offset="
           << (m_rd_end-&m_rd_buf[0])
-          << ", capacity=" << rd_capacity() << ", pkt_size=" 
+          << ", capacity=" << rd_capacity() << ", pkt_size="
           << m_packet_size << ", need=" << need_bytes
           << ", got_header=" << (m_got_header ? "true" : "false")
           << ", crunched=" << (crunched ? "true" : "false")
@@ -347,7 +347,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
     boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_capacity());
     async_read(
         buffers, boost::asio::transfer_at_least(need_bytes),
-        boost::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(), 
+        boost::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(),
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
 }
@@ -401,7 +401,7 @@ transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
     } else {
         a_tm.set(msgtype, cntrl);
     }
-        
+
     return msgtype;
 }
 
@@ -464,7 +464,7 @@ send(const transport_msg<Alloc>& a_msg)
     bool   l_has_msg= a_msg.has_msg();
     size_t cntrl_sz = l_cntrl.encode_size(0, true);
     size_t msg_sz   = l_has_msg ? a_msg.msg().encode_size(0, true) : 0;
-    size_t len      = cntrl_sz + msg_sz + 1 /*passthrough*/ + 1 /*version*/ + 4 /*len*/;
+    size_t len      = cntrl_sz + msg_sz + 1 /*passthrough*/ + 4 /*len*/;
     char*  data     = allocate(len);
     char*  s        = data;
     put32be(s, len-4);

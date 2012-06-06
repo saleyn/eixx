@@ -258,3 +258,35 @@ BOOST_AUTO_TEST_CASE( test_encode_trace )
     BOOST_REQUIRE_EQUAL("{1,2,3,#Pid<abc@fc12.96.0.3>,4}", eterm(t1).to_string());
 }
 
+BOOST_AUTO_TEST_CASE( test_encode_rpc )
+{
+    static const char s_expected[] = {
+        131,104,2,103,100,0,14,69,67,71,46,72,49,46,48,48,49,64,102,49,54,0,0,0,1,
+        0,0,0,0,0,104,5,100,0,4,99,97,108,108,100,0,7,101,99,103,95,97,112,105,100,
+        0,11,114,101,103,95,112,114,111,99,101,115,115,108,0,0,0,5,100,0,3,69,67,71,
+        100,0,10,69,67,71,46,72,49,46,48,48,49,103,100,0,14,69,67,71,46,72,49,46,48,
+        48,49,64,102,49,54,0,0,0,1,0,0,0,0,0,107,0,12,101,120,97,109,112,108,101,95,
+        99,111,114,101,98,0,0,7,208,106,100,0,4,117,115,101,114
+    };
+
+    epid l_pid("ECG.H1.001@f16", 1, 0, 0);
+    eterm l_term =
+        tuple::make(l_pid,
+            tuple::make(atom("call"), atom("ecg_api"), atom("reg_process"),
+                list::make(atom("ECG"), atom("ECG.H1.001"), l_pid, "example_core", 2000),
+                atom("user")));
+
+    //{#Pid<'ECG.H1.001@f16'.1.0.0>,
+    //  {call,ecg_api,reg_process,
+    //    ['ECG','ECG.H1.001',#Pid<'ECG.H1.001@f16'.1.0.0>,"example_core",2000],user}}
+    char l_buf[256];
+    size_t l_sz = l_term.encode_size(0, true);
+    BOOST_REQUIRE(l_sz < sizeof(l_buf));
+    l_term.encode(l_buf, l_sz, 0, true);
+    std::string s = std::string(l_buf, l_sz);
+    std::string s_exp = std::string(l_buf, sizeof(s_expected));
+    if (s != s_exp)
+        std::cout << "String: " << to_binary_string(s.c_str(), s.size()) << std::endl;
+    BOOST_REQUIRE_EQUAL(s_exp, s);
+}
+

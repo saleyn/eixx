@@ -694,3 +694,5 @@ BOOST_AUTO_TEST_CASE( test_cast2 )
     { eterm t( eterm::cast(true)); BOOST_REQUIRE_EQUAL(BOOL,   t.type()); }
     { eterm t( eterm::cast("ab")); BOOST_REQUIRE_EQUAL(STRING, t.type()); }
 }
+
+

@@ -7,7 +7,7 @@ test_eterm_SOURCES   = test_eterm.cpp test_eterm_encode.cpp \
 test_eterm_CPPFLAGS  = -I$(srcdir)/../include $(BOOST_CPPFLAGS) \
  					   -I$(ERLANG_LIB_DIR_erl_interface)/include \
 					   -I$(ERLANG_LIB_DIR_erl_interface)/src \
-					   -DBOOST_TEST_DYN_LINK -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) \
+					   -DBOOST_TEST_DYN_LINK -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) \
 					   $(if $(debug),-DEIXX_DEBUG)
 test_eterm_LDFLAGS 	= $(BOOST_LDFLAGS) \
 					  -L$(ERLANG_LIB_DIR_erl_interface)/lib
