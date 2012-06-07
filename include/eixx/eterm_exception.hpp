@@ -76,10 +76,17 @@ public:
  */
 class err_wrong_type: public eterm_exception {
 public:
+    err_wrong_type(eterm_type a_got, eterm_type a_expected) {
+        std::ostringstream s;
+        s << "Wrong type " << type_to_string(a_got)
+          << " (expected " << type_to_string(a_expected) << ')';
+        m_msg = s.str();
+    }
     template <typename Got, typename Expected>
     err_wrong_type(Got a_got, Expected a_expected) {
         std::ostringstream s;
-        s << "Wrong type " << a_got << " (expected " << a_expected << ')';
+        s << "Wrong type " << a_got
+          << " (expected " << a_expected << ')';
         m_msg = s.str();
     }
 };

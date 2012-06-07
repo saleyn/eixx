@@ -86,6 +86,9 @@ namespace EIXX_NAMESPACE {
         , MAX_ETERM_TYPE    = 13
     };
 
+    /// Returns string representation of type \a a_type.
+    const char* type_to_string(eterm_type a_type);
+
 } // namespace EIXX_NAMESPACE
 
 #endif // _EIXX_DEFAULTS_HPP
