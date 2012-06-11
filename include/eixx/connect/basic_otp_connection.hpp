@@ -157,8 +157,9 @@ public:
                 return;
             else
                 throw err_connection("Not connected to node", remote_node());
-        }
-        m_transport->send(a_msg);
+        } else if (m_connected)
+            m_transport->send(a_msg);
+        // If not connected, the message sending will be ignored
     }
 
     /// Callback executed on successful connection.  It calls the connection
@@ -166,13 +167,13 @@ public:
     /// call.
     void on_connect(connection_type* a_con) {
         BOOST_ASSERT(m_transport.get() == a_con);
+        m_connected = true;
         if (m_on_connect_status)
             m_on_connect_status(this, std::string());
         if (unlikely(verbose() > VERBOSE_NONE)) {
             report_status(REPORT_INFO,
                 "Connected to node: " + a_con->remote_node());
         }
-        m_connected = true;
     }
 
     /// Callback executed on failed connection attempt.  It calls the connection
