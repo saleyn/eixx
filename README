@@ -85,8 +85,8 @@ Here's an example use of the eixx library:
                 if (s_pattern.match(dist_msg->msg(), &binding)) {
                     const eterm* cmd = binding->find("Cmd");
                     std::cout << "Got a command " << *cmd << std::endl;
-                    // Process command
-                    process_command(binding["From"]->to_pid(), *binding["Cmd"]);
+                    // Process command, e.g.:
+                    // process_command(binding["From"]->to_pid(), *cmd);
                 }
             }
         }
