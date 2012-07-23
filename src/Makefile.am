@@ -79,7 +79,7 @@ libeixx_la_SOURCES  = atom.cpp defaults.cpp basic_otp_node_local.cpp \
 					  $(eixx_headers:%=../include/@PACKAGE@/%)
 libeixx_la_LTADD    = -version-info 0:1 -shared
 libeixx_la_LIBS     = $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)
-libeixx_la_CXXFLAGS = $(if $(tr1),-std=c++0x) -g -O$(if optimize,3,0) -I../include $(BOOST_CPPFLAGS) \
+libeixx_la_CXXFLAGS = $(if $(tr1),-std=c++0x) -g -O$(if $(optimize),3,0) -I../include $(BOOST_CPPFLAGS) \
 					  $(EI_CPPFLAGS)
 
 #EXTRA_DIST = ../README overview.inl overview_usage.inl overview_config.inl

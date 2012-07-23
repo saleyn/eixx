@@ -47,22 +47,18 @@ inline void put_be(char*& s, T n) {
 }
 
 template <typename T>
-inline void get_be(const char*& s, T& n) {
-    #if BOOST_VERSION >= 104900
-    n = boost::spirit::detail::load_big_endian<T, sizeof(T)>(s);
-    #else
-    n = boost::detail::load_big_endian<T, sizeof(T)>(s);
-    #endif
-    s += sizeof(T);
-}
-
-template <typename T>
 inline T cast_be(const char* s) {
     #if BOOST_VERSION >= 104900
     return boost::spirit::detail::load_big_endian<T, sizeof(T)>(s);
     #else
     return boost::detail::load_big_endian<T, sizeof(T)>(s);
     #endif
+}
+
+template <typename T>
+inline void get_be(const char*& s, T& n) {
+    n = cast_be<T>(s);
+    s += sizeof(T);
 }
 
 inline void put8   (char*& s, uint8_t n ) { put_be(s, n); }

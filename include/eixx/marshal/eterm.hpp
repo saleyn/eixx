@@ -83,7 +83,7 @@ namespace {
  * eterm is a very lightweight structure of size equal to two
  * longs.  The first one represents term type and the second one
  * either contains the value or a pointer to a compound reference
- * counted value.  All eterms at copy constructed on stack, therefore
+ * counted value.  All eterms are copy constructed on stack, therefore
  * there's no need to create pointers to eterms as copying them is
  * a very fast operation due to their small size.  The underlying
  * storage for compound terms is allocated on heap using user-provided
@@ -143,8 +143,8 @@ class eterm {
         // as the value placeholder.
         // This trick allows us to have minimum overhead related to
         // copying terms as for simple types it merely involves copying
-        // 8 bytes (64-bit platform) and for compound types it means copying
-        // the same 8 bytes and in some cases
+        // 16 bytes (64-bit platform) and for compound types it means copying
+        // the same 16 bytes and in some cases
         // incrementing compound type's reference count.
         // This approach was tested against boost::variant<> and was found
         // to be several times more efficient.

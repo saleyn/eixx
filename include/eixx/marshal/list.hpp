@@ -88,8 +88,10 @@ private:
                 // construction of the list head descriptor, deallocate
                 // all the following cons.
                 if (l_header->alloc_size > 0 && l_header->size > l_header->alloc_size) 
-                    for (cons_t* p = (l_header->head + l_header->alloc_size - 1)->next; p; ++p)
+                    for (cons_t* p = (l_header->head + l_header->alloc_size - 1)->next, *q; p; p = q) {
+                        q = p->next;
                         this->get_t_allocator().deallocate(p, sizeof(cons_t));
+                    }
             }
             m_blob->free();
         }

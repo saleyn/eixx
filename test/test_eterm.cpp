@@ -24,7 +24,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define BOOST_TEST_MODULE test_eterm
 
 #include <boost/test/unit_test.hpp>
-#include <eixx/alloc_pool_st.hpp>
+//#include <eixx/alloc_pool_st.hpp>
+#include <eixx/alloc_std.hpp>
 #include <eixx/eixx.hpp>
 #include <set>
 
@@ -227,6 +228,14 @@ BOOST_AUTO_TEST_CASE( test_list3 )
         BOOST_REQUIRE_EQUAL(5,   t.nth(4).to_long());
         BOOST_REQUIRE_EQUAL(6,   t.nth(5).to_long());
     }
+}
+
+BOOST_AUTO_TEST_CASE( test_list4 )
+{
+    list l;
+    for (int i=0; i<2; ++i)
+        l.push_back(eterm(atom("abc")));
+    l.close();
 }
 
 BOOST_AUTO_TEST_CASE( test_double )

@@ -701,7 +701,7 @@ gen_digest(unsigned challenge, const char cookie[], uint8_t digest[16])
 {
     MD5_CTX c;
     char chbuf[21];
-    sprintf(chbuf,"%u", challenge);
+    snprintf(chbuf, sizeof(chbuf), "%u", challenge);
     MD5_Init(&c);
     MD5_Update(&c, (unsigned char *) cookie, (uint32_t) strlen(cookie));
     MD5_Update(&c, (unsigned char *) chbuf,  (uint32_t) strlen(chbuf));

@@ -26,7 +26,7 @@ ERLC_FLAGS="${ERLC_FLAGS} +debug_info"
 CXXFLAGS="${CXXFLAGS% } -MMD -Wall -fno-strict-aliasing"
 
 AC_ARG_ENABLE(debug,
-     AC_HELP_STRING([--enable-debug],[enable debug [[default=yes]]]),
+     AC_HELP_STRING([--enable-debug],[enable debug [[default=no]]]),
      [ if test "x$enable_debug" = "xyes" -o -z "x$enable_debug"; then
            # CXXFLAGS="${CXXFLAGS% } -ggdb -O0 -Wall -fno-default-inline -fno-inline -fno-inline-functions"
            CXXFLAGS="${CXXFLAGS% } -g -O0"
@@ -39,7 +39,7 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(optimize,
      AC_HELP_STRING([--enable-optimize],[enable code optimization [[default=yes]]]),
      [ if test "x$enable_optimize" = "xyes" ; then
-           CXXFLAGS="${CXXFLAGS% } -O3"
+           CXXFLAGS="${CXXFLAGS% } -g -O3"
        fi
      ],
 )
