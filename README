@@ -65,17 +65,17 @@ Here's an example use of the eixx library:
 
     void on_message(otp_mailbox& a_mbox, boost::system::error_code& ec) {
         // On timeout ec == boost::asio::error::timeout
-        if (ec) {
-            std::cout << "Mailbox " << a_mbox.self() << " got error: "
+        if (ec == boost::asio::error::timeout) {
+            std::cout << "Mailbox " << a_mbox.self() << " timeout: "
                       << ec.message() << std::endl;
         } else {
-            while (!a_mbox.queue().empty()) {
-                // Dequeue first message from the mailbox.
-                // The mailbox has a queue of transport messages.
-                boost::scoped_ptr<transport_msg> dist_msg( a_mbox.queue().front() );
-                a_mbox.queue().pop_front();
+            // The mailbox has a queue of transport messages.
+            // Dequeue next message from the mailbox.
+            boost::scoped_ptr<transport_msg> dist_msg;
+
+            while (dist_msg.reset(a_mbox.receive())) {
                 std::cout << "Main mailbox got a distributed transport message:\n  "
-                          << *dist_msg << std::endl;
+                          << *p << std::endl;
 
                 // Use the following pattern for a pattern match on the message.
                 static const eterm s_pattern = eterm::format("{From, {command, Cmd}}");
@@ -85,10 +85,12 @@ Here's an example use of the eixx library:
                 if (s_pattern.match(dist_msg->msg(), &binding)) {
                     const eterm* cmd = binding->find("Cmd");
                     std::cout << "Got a command " << *cmd << std::endl;
-                    // Process command
+                    // Process command, e.g.:
+                    // process_command(binding["From"]->to_pid(), *cmd);
                 }
             }
         }
+        
         // Schedule next async receive of a message (can also provide a timeout).
         a_mbox.async_receive(&on_message);
     }
@@ -98,7 +100,7 @@ Here's an example use of the eixx library:
             std::cout << a_error << std::endl;
             return;
         }
-        
+
         // Illustrate creation of Erlang terms.
         eterm t1 = eterm::format("{ok, ~i}", 10);
         eterm t2 = tuple::make(10, 1.0, atom("test"), "abc");
@@ -109,7 +111,7 @@ Here's an example use of the eixx library:
         otp_mailbox* mbox = node->get_mailbox("main");
 
         // Send a message: {{ok, 10}, {10, 1.0, 'test', "abc"}, "This is a string"}
-        // to an Erlang process named 'test' running 
+        // to an Erlang process named 'test' running
         // on node "abc@myhost"
 
         node->send(mbox.self(), a_con->remote_node(), atom("test"), t4);
@@ -119,7 +121,7 @@ Here's an example use of the eixx library:
         use namespace eixx;
 
         otp_node node("abc");
-        
+
         otp_mailbox* mbox = node.create_mailbox("main");
 
         node.connect(&on_connect, "abc@myhost");
