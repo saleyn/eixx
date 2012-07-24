@@ -160,7 +160,7 @@ public:
      * @throws eterm_exception if there is an error in transport creation
      */
     basic_otp_node(boost::asio::io_service& a_io_svc,
-                   const atom& a_nodename,
+                   const atom& a_nodename = atom(),
                    const std::string& a_cookie = "",
                    const Alloc& a_alloc = Alloc(),
                    int8_t a_creation = -1)
@@ -171,7 +171,8 @@ public:
     /// Change name of current node
     void set_nodename(const atom& a_nodename, const std::string& a_cookie = "") {
         close();
-        basic_otp_node_local::set_nodename(a_nodename.to_string(), a_cookie);
+        if (a_nodename != atom())
+            basic_otp_node_local::set_nodename(a_nodename.to_string(), a_cookie);
     }
 
     /// Get current verboseness level

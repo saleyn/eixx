@@ -3,7 +3,7 @@ bin_PROGRAMS = test_eterm test_perf
 test_eterm_SOURCES   = test_eterm.cpp test_eterm_encode.cpp \
                        test_eterm_format.cpp test_eterm_match.cpp \
                        test_eterm_pool.cpp test_eterm_refc.cpp \
-                       test_mailbox.cpp
+                       test_mailbox.cpp test_node.cpp
 test_eterm_CPPFLAGS  = -I$(srcdir)/../include $(BOOST_CPPFLAGS) \
  					   -I$(ERLANG_LIB_DIR_erl_interface)/include \
 					   -I$(ERLANG_LIB_DIR_erl_interface)/src \

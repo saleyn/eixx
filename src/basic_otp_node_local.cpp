@@ -100,11 +100,12 @@ void basic_otp_node_local::set_nodename(
             boost::asio::io_service svc;
             boost::asio::ip::tcp::resolver resolver(svc);
             boost::asio::ip::tcp::resolver::query query(m_hostname, "");
-            boost::asio::ip::tcp::resolver::iterator iter = resolver.resolve(query), end;
+            boost::asio::ip::tcp::resolver::iterator it;
 
-            for (; iter != end; iter++) {
-                if (iter->host_name().find('.') != std::string::npos) {
-                    m_hostname = iter->host_name();
+            for (it = resolver.resolve(query); it != boost::asio::ip::tcp::resolver::iterator(); ++it) {
+                std::string l_host_name = it->host_name();
+                if (l_host_name.find('.') != std::string::npos) {
+                    m_hostname = l_host_name;
                     break;
                 }
             }
