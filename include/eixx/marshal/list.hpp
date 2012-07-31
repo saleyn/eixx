@@ -90,7 +90,7 @@ private:
                 if (l_header->alloc_size > 0 && l_header->size > l_header->alloc_size) 
                     for (cons_t* p = (l_header->head + l_header->alloc_size - 1)->next, *q; p; p = q) {
                         q = p->next;
-                        this->get_t_allocator().deallocate(p, sizeof(cons_t));
+                        this->get_t_allocator().deallocate(p, 1);
                     }
             }
             m_blob->free();

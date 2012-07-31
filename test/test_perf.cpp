@@ -1,5 +1,4 @@
-//#include <eixx/alloc_pool_st.hpp>
-#include <eixx/alloc_std.hpp>
+#include "test_alloc.hpp"
 #include <eixx/eixx.hpp>
 #include <stdio.h>
 #include <sys/time.h>

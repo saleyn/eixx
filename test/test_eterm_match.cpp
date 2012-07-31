@@ -23,9 +23,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <boost/test/unit_test.hpp>
-#include <boost/pool/pool_alloc.hpp>
 #include <boost/bind.hpp>
-#include <eixx/alloc_pool_st.hpp>
+#include "test_alloc.hpp"
 #include <eixx/eixx.hpp>
 
 using namespace EIXX_NAMESPACE;

@@ -81,6 +81,7 @@ namespace marshal {
                , public Alloc::template rebind<T>::other
     {
         typedef typename Alloc::template rebind<T>::other base_t;
+        typedef typename Alloc::template rebind<blob<T,Alloc> >::other blob_alloc_t;
 
         atomic<int>  m_rc;
         const size_t m_size;
@@ -134,20 +135,23 @@ namespace marshal {
             return *reinterpret_cast<const Alloc*>(this);
         }
 
+        static blob_alloc_t& get_blob_alloc() {
+            static blob_alloc_t s_alloc;
+            return s_alloc;
+        }
+
         /// This method overrides the new() operator for this class
         /// so that the blob memory is taken from the Alloc allocator.
         static void* operator new(size_t sz) {
             BOOST_ASSERT(sz == sizeof(blob<T,Alloc>));
-            typename Alloc::template rebind<blob<T,Alloc> >::other a;
-            return a.allocate(sz);
+            return get_blob_alloc().allocate(1);
         }
 
         /// This method overrides the new() operator for this class
         /// so that the blob memory is released to the Alloc allocator.
         static void operator delete(void* p, size_t sz) {
             BOOST_ASSERT(sz == sizeof(blob<T,Alloc>));
-            typename Alloc::template rebind<blob<T,Alloc> >::other a;
-            a.deallocate(static_cast<blob<T,Alloc>*>(p), sz);
+            get_blob_alloc().deallocate(static_cast<blob<T,Alloc>*>(p), 1);
         }
     };
 
