@@ -216,17 +216,6 @@ public:
     }
 
     /**
-     * Get a message from mailbox that matches the given pattern.
-     * It will block until an apropiate message arrives.
-     * @param pattern ErlTerm with pattern to check
-     * @param binding VariableBinding to use. It can be 0. Default = 0
-     * @return an pointer to the ErlTerm representing
-     * the body of the next message waiting in this mailbox.
-     * @exception EpiConnectionException if there was an connection error
-     */
-    //bool receive(const eterm<Alloc>& a_pattern, varbind<Alloc>* a_binding = NULL);
-
-    /**
      * Block until response for a RPC call arrives.
      * @return a pointer to ErlTerm containing the response
      * @exception EpiConnectionException if there was an connection error

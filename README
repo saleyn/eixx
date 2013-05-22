@@ -75,13 +75,15 @@ Here's an example use of the eixx library:
 
             while (dist_msg.reset(a_mbox.receive())) {
                 std::cout << "Main mailbox got a distributed transport message:\n  "
-                          << *p << std::endl;
+                          << *dist_msg << std::endl;
 
-                // Use the following pattern for a pattern match on the message.
+                // Compile the following pattern into the corresponding abstract tree.
+                // The expression must be a valid Erlang term
                 static const eterm s_pattern = eterm::format("{From, {command, Cmd}}");
 
                 varbind binding;
 
+                // Pattern match the message and bind From and Cmd variables
                 if (s_pattern.match(dist_msg->msg(), &binding)) {
                     const eterm* cmd = binding->find("Cmd");
                     std::cout << "Got a command " << *cmd << std::endl;
