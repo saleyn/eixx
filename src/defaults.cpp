@@ -41,7 +41,7 @@ namespace EIXX_NAMESPACE {
     }
 
     eterm_type type_string_to_type(const char* s, size_t n) {
-        eterm_type r = eterm_type::UNDEFINED;
+        eterm_type r = UNDEFINED;
 
         if (n < 3) return r;
 
@@ -50,40 +50,40 @@ namespace EIXX_NAMESPACE {
 
         switch (s[0]) {
             case 'i':
-                if (strncmp(p,"nt",m) == 0)         r = eterm_type::LONG;
+                if (strncmp(p,"nt",m) == 0)         r = LONG;
                 break;
             case 'd':
-                if (strncmp(p,"ouble",m) == 0)      r = eterm_type::DOUBLE;
+                if (strncmp(p,"ouble",m) == 0)      r = DOUBLE;
                 break;
             case 'f':
-                if (strncmp(p,"loat",m) == 0)       r = eterm_type::DOUBLE;
+                if (strncmp(p,"loat",m) == 0)       r = DOUBLE;
                 break;
             case 'b':
-                if      (strncmp(p,"ool",m) == 0)   r = eterm_type::BOOL;
-                else if (strncmp(p,"inary",m) == 0) r = eterm_type::BINARY;
+                if      (strncmp(p,"ool",m) == 0)   r = BOOL;
+                else if (strncmp(p,"inary",m) == 0) r = BINARY;
                 break;
             case 'a':
-                if (strncmp(p,"tom",m) == 0)        r = eterm_type::ATOM;
+                if (strncmp(p,"tom",m) == 0)        r = ATOM;
                 break;
             case 's':
-                if (strncmp(p,"tring",m) == 0)      r = eterm_type::STRING;
+                if (strncmp(p,"tring",m) == 0)      r = STRING;
                 break;
             case 'p':
-                if      (strncmp(p,"id",m) == 0)    r = eterm_type::PID;
-                else if (strncmp(p,"ort",m) == 0)   r = eterm_type::PORT;
+                if      (strncmp(p,"id",m) == 0)    r = PID;
+                else if (strncmp(p,"ort",m) == 0)   r = PORT;
                 break;
             case 'r':
-                if (strncmp(p,"ef",m) == 0)         r = eterm_type::REF;
+                if (strncmp(p,"ef",m) == 0)         r = REF;
                 break;
             case 'v':
-                if (strncmp(p,"ar",m) == 0)         r = eterm_type::VAR;
+                if (strncmp(p,"ar",m) == 0)         r = VAR;
                 break;
             case 't':
-                if      (strncmp(p,"uple",m) == 0)  r = eterm_type::TUPLE;
-                else if (strncmp(p,"race",m) == 0)  r = eterm_type::TRACE;
+                if      (strncmp(p,"uple",m) == 0)  r = TUPLE;
+                else if (strncmp(p,"race",m) == 0)  r = TRACE;
                 break;
             case 'l':
-                if (strncmp(p,"ist",m) == 0)        r = eterm_type::LIST;
+                if (strncmp(p,"ist",m) == 0)        r = LIST;
                 break;
             default:
                 break;

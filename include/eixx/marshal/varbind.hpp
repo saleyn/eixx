@@ -56,7 +56,7 @@ protected:
 
 public:
     explicit varbind(const Alloc& a_alloc = Alloc())
-        : m_term_map(std::less< string<Alloc> >(), a_alloc)
+        : m_term_map(std::less<atom>(), a_alloc)
     {}
 
     varbind(const varbind<Alloc>& rhs) : m_term_map(rhs.m_term_map)

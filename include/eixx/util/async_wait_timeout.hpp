@@ -32,7 +32,7 @@ namespace error {
     }
 
     static const boost::system::error_category& timer_category
-          = boost::asio::error::get_timer_category();
+        = boost::asio::error::get_timer_category();
 
 } // namespace error
 } // namespace asio

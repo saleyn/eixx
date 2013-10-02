@@ -109,13 +109,13 @@ namespace marshal {
 
             if (c == '(' && *(p+1) == ')') {
                 type = type_string_to_type(tps, p - tps);
-                if (t == eterm_type::UNDEFINED)
+                if (type == UNDEFINED)
                     throw err_format_exception("Error parsing variable type", start);
                 p += 2;
             } else
                 throw err_format_exception("Invalid variable type", tps);
         } else
-            type = eterm_type::UNDEFINED;
+            type = UNDEFINED;
 
         *fmt = p;
         len = end - start;
@@ -353,7 +353,7 @@ namespace marshal {
             case '|':
                 skip_ws_and_comments(fmt);
                 if (isupper((int)**fmt) || (**fmt == '_')) {
-                    var a = pvariable(fmt, wbuf);
+                    var a = pvariable(fmt);
                     v.push_back(eterm<Alloc>(a));
                     skip_ws_and_comments(fmt);
                     if (**fmt == ']')
@@ -424,8 +424,8 @@ namespace marshal {
                     char* a = patom(fmt, wbuf);
                     ret.set( eterm<Alloc>(atom(a)) );
                 } else if (isupper((int)**fmt) || (**fmt == '_')) {
-                    var v = pvariable(fmt, wbuf);
-                    ret.set( eterm<Alloc>(var) );
+                    var v = pvariable(fmt);
+                    ret.set( eterm<Alloc>(v) );
                 } else if (isdigit((int)**fmt) || **fmt == '-') {    /* integer/float ? */
                     char* digit = pdigit(fmt, wbuf);
                     if (strchr(digit,(int) '.') == NULL)

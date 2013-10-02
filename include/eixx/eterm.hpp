@@ -54,7 +54,7 @@ typedef marshal::eterm_pattern_action<allocator_t>   eterm_pattern_action;
 
 namespace detail {
     BOOST_STATIC_ASSERT(sizeof(eterm)     == 2*sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(atom)      == sizeof(void*));
+    BOOST_STATIC_ASSERT(sizeof(atom)      == sizeof(int));
     BOOST_STATIC_ASSERT(sizeof(string)    == sizeof(void*));
     BOOST_STATIC_ASSERT(sizeof(binary)    == sizeof(void*));
     BOOST_STATIC_ASSERT(sizeof(epid)      == sizeof(void*));

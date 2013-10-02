@@ -41,10 +41,10 @@ namespace EIXX_NAMESPACE {
 
     // Constant global atom values
 
-    extern atom am_true;
-    extern atom am_false;
-    extern atom am_undefined;
-    extern atom am_underscore;
+    extern const atom am_ANY_;
+    extern const atom am_true;
+    extern const atom am_false;
+    extern const atom am_undefined;
 
 } // namespace EIXX_NAMESPACE
 
