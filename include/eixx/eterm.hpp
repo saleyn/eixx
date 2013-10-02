@@ -47,7 +47,7 @@ typedef marshal::ref<allocator_t>                    ref;
 typedef marshal::tuple<allocator_t>                  tuple;
 typedef marshal::list<allocator_t>                   list;
 typedef marshal::trace<allocator_t>                  trace;
-typedef marshal::var<allocator_t>                    var;
+typedef marshal::var                                 var;
 typedef marshal::varbind<allocator_t>                varbind;
 typedef marshal::eterm_pattern_matcher<allocator_t>  eterm_pattern_matcher;
 typedef marshal::eterm_pattern_action<allocator_t>   eterm_pattern_action;
