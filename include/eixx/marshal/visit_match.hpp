@@ -53,7 +53,7 @@ public:
 
     bool operator()(const tuple<Alloc>& a) const { return a.match(m_pattern, m_binding); }
     bool operator()(const list<Alloc>&  a) const { return a.match(m_pattern, m_binding); }
-    bool operator()(const var<Alloc>&   a) const { return a.match(m_pattern, m_binding); }
+    bool operator()(const var&          a) const { return a.match(m_pattern, m_binding); }
 
     template <typename T>
     bool operator()(const T& a) const {

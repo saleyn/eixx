@@ -1,7 +1,8 @@
 //----------------------------------------------------------------------------
-/// \file  visit_subst.hpp
+/// \file  atom.hpp
 //----------------------------------------------------------------------------
-/// \brief A class implementing variable substitution visitor.
+/// \brief A class implementing an atom - enumerated string stored 
+///        stored in non-garbage collected hash table of fixed size.
 //----------------------------------------------------------------------------
 // Copyright (c) 2010 Serge Aleynikov <saleyn@gmail.com>
 // Created: 2010-09-20
@@ -29,37 +30,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ***** END LICENSE BLOCK *****
 */
-#ifndef _IMPL_VISIT_SUBST_HPP_
-#define _IMPL_VISIT_SUBST_HPP_
+#ifndef _EIXX_AM_HPP_
+#define _EIXX_AM_HPP_
 
-#include <eixx/marshal/visit.hpp>
-//#include <eixx/marshal/tuple.hpp>
-//#include <eixx/marshal/list.hpp>
-//#include <eixx/marshal/var.hpp>
-#include <ei.h>
+#include <eixx/marshal/atom.hpp>
 
 namespace EIXX_NAMESPACE {
-namespace marshal {
 
-template <typename Alloc>
-class visit_eterm_subst
-    : public static_visitor<visit_eterm_subst<Alloc>, bool> {
-    eterm<Alloc>& m_out;
-    const varbind<Alloc>* m_binding;
-public:
-    visit_eterm_subst(eterm<Alloc>& a_out, const varbind<Alloc>* a_binding)
-        : m_out(a_out), m_binding(a_binding)
-    {}
+    using marshal::atom;
 
-    bool operator()(const tuple<Alloc>& a) const { return a.subst(m_out, m_binding); }
-    bool operator()(const list<Alloc>&  a) const { return a.subst(m_out, m_binding); }
-    bool operator()(const var&          a) const { return a.subst(m_out, m_binding); }
+    // Constant global atom values
 
-    template <typename T>
-    bool operator()(const T& a) const { return false; }
-};
+    extern atom am_true;
+    extern atom am_false;
+    extern atom am_undefined;
+    extern atom am_underscore;
 
 } // namespace EIXX_NAMESPACE
-} // namespace EIXX_NAMESPACE
 
-#endif // _IMPL_VISIT_SUBST_HPP_
+#endif // _EIXX_AM_HPP_

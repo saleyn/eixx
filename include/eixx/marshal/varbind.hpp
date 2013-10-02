@@ -52,9 +52,7 @@ class varbind {
         std::ostream& out, const varbind<AllocT>& binding);
 
 protected:
-    typedef std::map<
-        string<Alloc>, eterm<Alloc>, std::less< string<Alloc> >, Alloc
-    > eterm_map_t;
+    typedef std::map<atom, eterm<Alloc>, std::less<atom>, Alloc> eterm_map_t;
 
 public:
     explicit varbind(const Alloc& a_alloc = Alloc())
@@ -73,12 +71,16 @@ public:
      * @param a_term eterm to bind (must be non-zero).
      */
     void bind(const char* a_var_name, const eterm<Alloc>& a_term) {
-        bind(string<Alloc>(a_var_name), a_term);
+        bind(atom(a_var_name), a_term);
     }
 
     void bind(const string<Alloc>& a_var_name, const eterm<Alloc>& a_term) {
+        bind(atom(a_var_name), a_term);
+    }
+
+    void bind(atom a_var_name, const eterm<Alloc>& a_term) {
         // bind only if is unbound
-        m_term_map.insert(std::pair<string<Alloc>, eterm<Alloc> >(a_var_name, a_term));
+        m_term_map.insert(std::make_pair(a_var_name, a_term));
     }
 
     /**
@@ -87,21 +89,29 @@ public:
      * @return bound eterm pointer if variable is bound, 0 otherwise
      */
     const eterm<Alloc>*
-    find(const char* a_var_name) const { return find(string<Alloc>(a_var_name)); }
+    find(const char* a_var_name) const { return find(atom(a_var_name)); }
 
     const eterm<Alloc>*
-    find(const string<Alloc>& a_var_name) const {
+    find(const string<Alloc>& a_var_name) const { return find(atom(a_var_name)); }
+
+    const eterm<Alloc>*
+    find(atom a_var_name) const {
         typename eterm_map_t::const_iterator p = m_term_map.find(a_var_name);
         return (p != m_term_map.end()) ? &p->second : NULL;
     }
 
     const eterm<Alloc>*
     operator[] (const char* a_var_name) const throw(err_unbound_variable) {
-        return (*this)[string<Alloc>(a_var_name)];
+        return (*this)[atom(a_var_name)];
     }
 
     const eterm<Alloc>*
     operator[] (const string<Alloc>& a_var_name) const throw(err_unbound_variable) {
+        return (*this)[atom(a_var_name)];
+    }
+
+    const eterm<Alloc>*
+    operator[] (atom a_var_name) const throw(err_unbound_variable) {
         const eterm<Alloc>* p = find(a_var_name);
         if (!p) throw err_unbound_variable(a_var_name.c_str());
         return p;
@@ -148,7 +158,7 @@ namespace std {
 
         for (typename varbind<Alloc>::eterm_map_t::const_iterator
                 it = binding.m_term_map.begin(); it != binding.m_term_map.end(); ++it)
-            out << "    " << it->first << " = " << it->second << std::endl;
+            out << "    " << it->first.to_string() << " = " << it->second << std::endl;
         return out;
     }
 

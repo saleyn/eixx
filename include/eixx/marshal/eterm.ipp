@@ -75,7 +75,7 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
         case PID:    { const epid<Alloc>&   t = vt; return t == rhs.to_pid();   }
         case PORT:   { const port<Alloc>&   t = vt; return t == rhs.to_port();  }
         case REF:    { const ref<Alloc>&    t = vt; return t == rhs.to_ref();   }
-        case VAR:    { const var<Alloc>&    t = vt; return t == rhs.to_var();   }
+        case VAR:    { const var&           t = vt; return t == rhs.to_var();   }
         case TUPLE:  { const tuple<Alloc>&  t = vt; return t == rhs.to_tuple(); }
         case LIST:   { const list<Alloc>&   t = vt; return t == rhs.to_list();  }
         case TRACE:  { const trace<Alloc>&  t = vt; return t == rhs.to_trace(); }

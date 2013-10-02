@@ -68,31 +68,59 @@ namespace marshal {
         , ERL_MAX_NAME_LENGTH   = 255  /* Max length of variable names */
     };
 
-    static void skip_null_chars(const char** fmt) {
-        for(char c = **fmt; c == ' ' || c == '\t' || c == '\n'; c = *(++(*fmt)));
+    static void skip_ws_and_comments(const char** fmt) {
+        bool inside_comment = false;
+        for(char c = **fmt; c; c = *(++(*fmt))) {
+            if (inside_comment) {
+                if (c == '\n') inside_comment = false;
+                continue;
+            } else if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                continue;
+            } else if (c == '%') {
+                inside_comment = true;
+                continue;
+            }
+            break;
+        }
     }
 
-    static char *pvariable(const char **fmt, char *buf)
+    static var pvariable(const char **fmt)
     {
-        const char* start = *fmt;
+        const char* start = *fmt, *p = start;
         char c;
         int len;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
-        while (1) {
-            c = *(*fmt)++;
-            if (isalnum((int) c) || (c == '_'))
-                continue;
-            else
-                break;
-        }
-        (*fmt)--;
-        len = *fmt - start;
-        memcpy(buf, start, len);
-        buf[len] = 0;
+        for (c = *p; c && (isalnum((int)c) || (c == '_')); c = *(++p));
 
-        return buf;
+        const char* end = p;
+
+        eterm_type type;
+
+        // TODO: Add recursive type checking
+        // (i.e. A :: [{atom(), [integer() | string() | double() | tuple()]}])
+        if (c == ':' && *(p+1) == ':') {
+            p += 2;
+
+            const char* tps = p;
+
+            for (c = *p; c && isalnum((int)c); c = *(++p));
+
+            if (c == '(' && *(p+1) == ')') {
+                type = type_string_to_type(tps, p - tps);
+                if (t == eterm_type::UNDEFINED)
+                    throw err_format_exception("Error parsing variable type", start);
+                p += 2;
+            } else
+                throw err_format_exception("Invalid variable type", tps);
+        } else
+            type = eterm_type::UNDEFINED;
+
+        *fmt = p;
+        len = end - start;
+
+        return var(start, len, type);
 
     } /* pvariable */
 
@@ -102,7 +130,7 @@ namespace marshal {
         char c;
         int len;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         while (1) {
             c = *(*fmt)++;
@@ -128,7 +156,7 @@ namespace marshal {
         char c;
         int len,dotp=0;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         while (1) {
             c = *(*fmt)++;
@@ -156,7 +184,7 @@ namespace marshal {
         char c;
         int len;
 
-        // skip_null_chars(fmt);
+        // skip_ws_and_comments(fmt);
 
         while (1) {
             c = *(*fmt)++;
@@ -182,7 +210,7 @@ namespace marshal {
         char c;
         int len;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         while (1) {
             c = *(*fmt)++;
@@ -222,7 +250,7 @@ namespace marshal {
         int rc=ERL_OK;
 
         /* this next section hacked to remove the va_arg calls */
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
             case 'w':
@@ -268,7 +296,7 @@ namespace marshal {
     {
         int res=ERL_FMT_ERR;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
 
@@ -310,7 +338,7 @@ namespace marshal {
     {
         int res=ERL_FMT_ERR;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
 
@@ -323,12 +351,11 @@ namespace marshal {
                 break;
 
             case '|':
-                skip_null_chars(fmt);
+                skip_ws_and_comments(fmt);
                 if (isupper((int)**fmt) || (**fmt == '_')) {
-                    char wbuf[BUFSIZ];
-                    char* s = pvariable(fmt, wbuf);
-                    v.push_back( eterm<Alloc>(var<Alloc>(s, a_alloc)) );
-                    skip_null_chars(fmt);
+                    var a = pvariable(fmt, wbuf);
+                    v.push_back(eterm<Alloc>(a));
+                    skip_ws_and_comments(fmt);
                     if (**fmt == ']')
                         res = ERL_OK;
                     break;
@@ -359,7 +386,7 @@ namespace marshal {
         Alloc alloc(a_alloc);
         eterm<Alloc> ret;
 
-        skip_null_chars(fmt);
+        skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
             case '{':
@@ -397,8 +424,8 @@ namespace marshal {
                     char* a = patom(fmt, wbuf);
                     ret.set( eterm<Alloc>(atom(a)) );
                 } else if (isupper((int)**fmt) || (**fmt == '_')) {
-                    char* v = pvariable(fmt, wbuf);
-                    ret.set( eterm<Alloc>(var<Alloc>(v, alloc)) );
+                    var v = pvariable(fmt, wbuf);
+                    ret.set( eterm<Alloc>(var) );
                 } else if (isdigit((int)**fmt) || **fmt == '-') {    /* integer/float ? */
                     char* digit = pdigit(fmt, wbuf);
                     if (strchr(digit,(int) '.') == NULL)
@@ -415,6 +442,9 @@ namespace marshal {
             }
             break;
         }
+
+        if (ret.empty())
+            throw err_format_exception("invalid term", *fmt);
 
         return ret;
 

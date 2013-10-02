@@ -45,6 +45,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #  define likely(expr)   (expr)
 #endif
 
+#include <string.h>
+
 namespace EIXX_NAMESPACE {
     namespace marshal {
 
@@ -88,6 +90,22 @@ namespace EIXX_NAMESPACE {
 
     /// Returns string representation of type \a a_type.
     const char* type_to_string(eterm_type a_type);
+
+    /// Converts \a a_type to string
+    /// @param a_type is the type to convert
+    /// @param a_prefix if true, the value is prepended with "::"
+    ///
+    /// Example: printf("%s\n", type_to_type_string(eterm_type::BOOL, true);
+    ///             Outputs:  ::bool()
+    const char* type_to_type_string(eterm_type a_type, bool a_prefix=false);
+
+    /// Converts a string to eterm type
+    eterm_type type_string_to_type(const char* s, size_t n);
+
+    /// Converts a string \a s to eterm type
+    inline eterm_type type_string_to_type(const char* s) {
+        return type_string_to_type(s, strlen(s));
+    }
 
 } // namespace EIXX_NAMESPACE
 

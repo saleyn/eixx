@@ -67,7 +67,7 @@ namespace {
     template <typename Alloc> struct enum_type<epid<Alloc>,   Alloc> { typedef epid<Alloc>   type; };
     template <typename Alloc> struct enum_type<port<Alloc>,   Alloc> { typedef port<Alloc>   type; };
     template <typename Alloc> struct enum_type<ref<Alloc>,    Alloc> { typedef ref<Alloc>    type; };
-    template <typename Alloc> struct enum_type<var<Alloc>,    Alloc> { typedef var<Alloc>    type; };
+    template <typename Alloc> struct enum_type<var,    Alloc>        { typedef var    type; };
     template <typename Alloc> struct enum_type<tuple<Alloc>,  Alloc> { typedef tuple<Alloc>  type; };
     template <typename Alloc> struct enum_type<list<Alloc>,   Alloc> { typedef list<Alloc>   type; };
     template <typename Alloc> struct enum_type<trace<Alloc>,  Alloc> { typedef trace<Alloc>  type; };
@@ -174,7 +174,7 @@ class eterm {
     epid<Alloc>&    get(const epid<Alloc>*)     { check(PID);    return vt; }
     port<Alloc>&    get(const port<Alloc>*)     { check(PORT);   return vt; }
     ref<Alloc>&     get(const ref<Alloc>*)      { check(REF);    return vt; }
-    var<Alloc>&     get(const var<Alloc>*)      { check(VAR);    return vt; }
+    var&            get(const var*)             { check(VAR);    return vt; }
     tuple<Alloc>&   get(const tuple<Alloc>*)    { check(TUPLE);  return vt; }
     list<Alloc>&    get(const list<Alloc>*)     { check(LIST);   return vt; }
     trace<Alloc>&   get(const trace<Alloc>*)    { check(TRACE);  return vt; }
@@ -198,13 +198,13 @@ public:
         : m_type(STRING)  { new (&vt.p) string<Alloc>(a, alloc); }
     eterm(const std::string& a, const Alloc& alloc = Alloc())
         : m_type(STRING)  { new (&vt.p) string<Alloc>(a.c_str(), a.size(), alloc); }
-    eterm(const atom& a)           : m_type(ATOM)   { new (&vt.p) atom(a);  }
+    eterm(const atom& a)           : m_type(ATOM)   { new (&vt.p) atom(a); }
     eterm(const string<Alloc>& a)  : m_type(STRING) { new (&vt.p) string<Alloc>(a);}
     eterm(const binary<Alloc>& a)  : m_type(BINARY) { new (&vt.p) binary<Alloc>(a);}
     eterm(const epid<Alloc>& a)    : m_type(PID)    { new (&vt.p) epid<Alloc>(a);  }
     eterm(const port<Alloc>& a)    : m_type(PORT)   { new (&vt.p) port<Alloc>(a);  }
     eterm(const ref<Alloc>& a)     : m_type(REF)    { new (&vt.p) ref<Alloc>(a);   }
-    eterm(const var<Alloc>& a)     : m_type(VAR)    { new (&vt.p) var<Alloc>(a);   }
+    eterm(const var& a)            : m_type(VAR)    { new (&vt.p) var(a); }
     eterm(const tuple<Alloc>& a)   : m_type(TUPLE)  { new (&vt.p) tuple<Alloc>(a); }
     eterm(const list<Alloc>&  a)   : m_type(LIST)   { new (&vt.p) list<Alloc>(a);  }
     eterm(const trace<Alloc>& a)   : m_type(TRACE)  { new (&vt.p) trace<Alloc>(a); }
@@ -241,16 +241,16 @@ public:
     eterm(const eterm& a) : m_type(a.m_type) {
         BOOST_STATIC_ASSERT(sizeof(vartype) == sizeof(void*));
         switch (m_type) {
-            case ATOM:      { const atom&          t = a.vt; new (&vt.p) atom(t);            break; }
-            case STRING:    { const string<Alloc>& t = a.vt; new (&vt.p) string<Alloc>(t);   break; }
-            case BINARY:    { const binary<Alloc>& t = a.vt; new (&vt.p) binary<Alloc>(t);   break; }
-            case PID:       { const epid<Alloc>&   t = a.vt; new (&vt.p) epid<Alloc>(t);     break; }
-            case PORT:      { const port<Alloc>&   t = a.vt; new (&vt.p) port<Alloc>(t);     break; }
-            case REF:       { const ref<Alloc>&    t = a.vt; new (&vt.p) ref<Alloc>(t);      break; }
-            case VAR:       { const var<Alloc>&    t = a.vt; new (&vt.p) var<Alloc>(t);      break; }
-            case TUPLE:     { const tuple<Alloc>&  t = a.vt; new (&vt.p) tuple<Alloc>(t);    break; }
-            case LIST:      { const list<Alloc>&   t = a.vt; new (&vt.p) list<Alloc>(t);     break; }
-            case TRACE:     { const trace<Alloc>&  t = a.vt; new (&vt.p) trace<Alloc>(t);    break; }
+            case ATOM:      { const atom&          t = a.vt; new (&vt.p) atom(t);           break; }
+            case STRING:    { const string<Alloc>& t = a.vt; new (&vt.p) string<Alloc>(t);  break; }
+            case BINARY:    { const binary<Alloc>& t = a.vt; new (&vt.p) binary<Alloc>(t);  break; }
+            case PID:       { const epid<Alloc>&   t = a.vt; new (&vt.p) epid<Alloc>(t);    break; }
+            case PORT:      { const port<Alloc>&   t = a.vt; new (&vt.p) port<Alloc>(t);    break; }
+            case REF:       { const ref<Alloc>&    t = a.vt; new (&vt.p) ref<Alloc>(t);     break; }
+            case VAR:       { const var&           t = a.vt; new (&vt.p) var(t);            break; }
+            case TUPLE:     { const tuple<Alloc>&  t = a.vt; new (&vt.p) tuple<Alloc>(t);   break; }
+            case LIST:      { const list<Alloc>&   t = a.vt; new (&vt.p) list<Alloc>(t);    break; }
+            case TRACE:     { const trace<Alloc>&  t = a.vt; new (&vt.p) trace<Alloc>(t);   break; }
             default:
                 vt.i = a.vt.i;
         }
@@ -270,7 +270,6 @@ public:
             case PID:    { epid<Alloc>&   v = vt; v.~epid();   return; }
             case PORT:   { port<Alloc>&   v = vt; v.~port();   return; }
             case REF:    { ref<Alloc>&    v = vt; v.~ref();    return; }
-            case VAR:    { var<Alloc>&    v = vt; v.~var();    return; }
             case TUPLE:  { tuple<Alloc>&  v = vt; v.~tuple();  return; }
             case LIST:   { list<Alloc>&   v = vt; v.~list();   return; }
             case TRACE:  { trace<Alloc>&  v = vt; v.~trace();  return; }
@@ -350,7 +349,7 @@ public:
     const epid<Alloc>&   to_pid()    const { check(PID);    return vt; }
     const port<Alloc>&   to_port()   const { check(PORT);   return vt; }
     const ref<Alloc>&    to_ref()    const { check(REF);    return vt; }
-    const var<Alloc>&    to_var()    const { check(VAR);    return vt; }
+    const var&           to_var()    const { check(VAR);    return vt; }
     const tuple<Alloc>&  to_tuple()  const { check(TUPLE);  return vt; }
     tuple<Alloc>&        to_tuple()        { check(TUPLE);  return vt; }
     const list<Alloc>&   to_list()   const { check(LIST);   return vt; }
@@ -498,7 +497,7 @@ public:
             case PID:    { const epid<Alloc>&   t = vt; return wrapper(v, t); }
             case PORT:   { const port<Alloc>&   t = vt; return wrapper(v, t); }
             case REF:    { const ref<Alloc>&    t = vt; return wrapper(v, t); }
-            case VAR:    { const var<Alloc>&    t = vt; return wrapper(v, t); }
+            case VAR:    { const var&           t = vt; return wrapper(v, t); }
             case TUPLE:  { const tuple<Alloc>&  t = vt; return wrapper(v, t); }
             case LIST:   { const list<Alloc>&   t = vt; return wrapper(v, t); }
             case TRACE:  { const trace<Alloc>&  t = vt; return wrapper(v, t); }

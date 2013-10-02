@@ -21,5 +21,75 @@ namespace EIXX_NAMESPACE {
         }
     }
 
+    const char* type_to_type_string(eterm_type a_type, bool a_prefix) {
+        switch (a_type) {
+            case LONG  : return a_prefix ? "::int()"    : "int()";
+            case DOUBLE: return a_prefix ? "::float()"  : "float()";
+            case BOOL  : return a_prefix ? "::bool()"   : "bool()";
+            case ATOM  : return a_prefix ? "::atom()"   : "atom()";
+            case STRING: return a_prefix ? "::string()" : "string()";
+            case BINARY: return a_prefix ? "::binary()" : "binary()";
+            case PID   : return a_prefix ? "::pid()"    : "pid()";
+            case PORT  : return a_prefix ? "::port()"   : "port()";
+            case REF   : return a_prefix ? "::ref()"    : "ref()";
+            case VAR   : return a_prefix ? "::var()"    : "var()";
+            case TUPLE : return a_prefix ? "::tuple()"  : "tuple()";
+            case LIST  : return a_prefix ? "::list()"   : "list()";
+            case TRACE : return a_prefix ? "::trace()"  : "trace()";
+            default    : return "";
+        }
+    }
+
+    eterm_type type_string_to_type(const char* s, size_t n) {
+        eterm_type r = eterm_type::UNDEFINED;
+
+        if (n < 3) return r;
+
+        int m = n - 1;
+        const char* p = s+1;
+
+        switch (s[0]) {
+            case 'i':
+                if (strncmp(p,"nt",m) == 0)         r = eterm_type::LONG;
+                break;
+            case 'd':
+                if (strncmp(p,"ouble",m) == 0)      r = eterm_type::DOUBLE;
+                break;
+            case 'f':
+                if (strncmp(p,"loat",m) == 0)       r = eterm_type::DOUBLE;
+                break;
+            case 'b':
+                if      (strncmp(p,"ool",m) == 0)   r = eterm_type::BOOL;
+                else if (strncmp(p,"inary",m) == 0) r = eterm_type::BINARY;
+                break;
+            case 'a':
+                if (strncmp(p,"tom",m) == 0)        r = eterm_type::ATOM;
+                break;
+            case 's':
+                if (strncmp(p,"tring",m) == 0)      r = eterm_type::STRING;
+                break;
+            case 'p':
+                if      (strncmp(p,"id",m) == 0)    r = eterm_type::PID;
+                else if (strncmp(p,"ort",m) == 0)   r = eterm_type::PORT;
+                break;
+            case 'r':
+                if (strncmp(p,"ef",m) == 0)         r = eterm_type::REF;
+                break;
+            case 'v':
+                if (strncmp(p,"ar",m) == 0)         r = eterm_type::VAR;
+                break;
+            case 't':
+                if      (strncmp(p,"uple",m) == 0)  r = eterm_type::TUPLE;
+                else if (strncmp(p,"race",m) == 0)  r = eterm_type::TRACE;
+                break;
+            case 'l':
+                if (strncmp(p,"ist",m) == 0)        r = eterm_type::LIST;
+                break;
+            default:
+                break;
+        }
+        return r;
+    }
+
 } // namespace EIXX_NAMESPACE
 
