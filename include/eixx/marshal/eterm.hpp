@@ -67,7 +67,7 @@ namespace {
     template <typename Alloc> struct enum_type<epid<Alloc>,   Alloc> { typedef epid<Alloc>   type; };
     template <typename Alloc> struct enum_type<port<Alloc>,   Alloc> { typedef port<Alloc>   type; };
     template <typename Alloc> struct enum_type<ref<Alloc>,    Alloc> { typedef ref<Alloc>    type; };
-    template <typename Alloc> struct enum_type<var,    Alloc>        { typedef var    type; };
+    template <typename Alloc> struct enum_type<var,    Alloc>        { typedef var type; };
     template <typename Alloc> struct enum_type<tuple<Alloc>,  Alloc> { typedef tuple<Alloc>  type; };
     template <typename Alloc> struct enum_type<list<Alloc>,   Alloc> { typedef list<Alloc>   type; };
     template <typename Alloc> struct enum_type<trace<Alloc>,  Alloc> { typedef trace<Alloc>  type; };

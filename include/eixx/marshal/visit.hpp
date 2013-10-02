@@ -40,7 +40,7 @@ namespace marshal {
 
     template <typename Alloc> class tuple;
     template <typename Alloc> class list;
-    template <typename Alloc> class var;
+    class var;
 
     template <typename ResultType, typename Visitor>
     struct wrap {

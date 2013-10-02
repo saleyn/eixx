@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/visit.hpp>
 //#include <eixx/marshal/tuple.hpp>
 //#include <eixx/marshal/list.hpp>
-//#include <eixx/marshal/var.hpp>
+#include <eixx/marshal/var.hpp>
 #include <ei.h>
 
 namespace EIXX_NAMESPACE {
