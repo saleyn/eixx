@@ -84,7 +84,7 @@ Here's an example use of the eixx library:
                 varbind binding;
 
                 // Pattern match the message and bind From and Cmd variables
-                if (s_pattern.match(dist_msg->msg(), &binding)) {
+                if (dist_msg->msg().match(s_pattern, &binding)) {
                     const eterm* cmd = binding->find("Cmd");
                     std::cout << "Got a command " << *cmd << std::endl;
                     // Process command, e.g.:
