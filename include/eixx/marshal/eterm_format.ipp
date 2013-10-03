@@ -49,24 +49,45 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ctype.h>
 #include <vector>
 #include <iostream>
+#include <eixx/marshal/defaults.hpp>
+#include <eixx/eterm_exception.hpp>
+#include <boost/concept_check.hpp>
 //#include <boost/scope_exit.hpp>
 
 namespace EIXX_NAMESPACE {
 namespace marshal {
 
-    template <typename Alloc>
-    struct vector : public std::vector<eterm<Alloc>, Alloc> {
-        explicit vector(const Alloc& a_alloc = Alloc())
-            : std::vector<eterm<Alloc>, Alloc> (a_alloc)
-        {}
-    };
+    namespace {
 
-    enum {
-          ERL_OK                = 0
-        , ERL_FMT_ERR           = -1
-        , ERL_MAX_ENTRIES       = 255  /* Max entries in a tuple/list term */
-        , ERL_MAX_NAME_LENGTH   = 255  /* Max length of variable names */
-    };
+        template <typename Alloc>
+        struct vector : public std::vector<eterm<Alloc>, Alloc> {
+            typedef std::vector<eterm<Alloc>, Alloc> base;
+
+            explicit vector(const Alloc& a_alloc = Alloc()) : base(a_alloc)
+            {}
+
+            eterm<Alloc> to_tuple(Alloc& a_alloc) {
+                eterm<Alloc>& term = (eterm<Alloc>&)*this->begin();
+                auto t = tuple<Alloc>(&term, this->size(), a_alloc);
+                return eterm<Alloc>(t);
+            }
+
+            eterm<Alloc> to_list(Alloc& a_alloc) {
+                eterm<Alloc>& term = (eterm<Alloc>&)*this->begin();
+                auto t = list<Alloc>(&term, this->size(), a_alloc);
+                return eterm<Alloc>(t);
+            }
+
+            const eterm<Alloc>& operator[] (size_t idx) const {
+                return (const eterm<Alloc>&)*(base::begin()+idx);
+            }
+
+            const eterm<Alloc>& back() const {
+                return (const eterm<Alloc>&)*(base::end()-1);
+            }
+        };
+
+    } // namespace
 
     static void skip_ws_and_comments(const char** fmt) {
         bool inside_comment = false;
@@ -124,111 +145,90 @@ namespace marshal {
 
     } /* pvariable */
 
-    static char *patom(const char **fmt, char *buf)
+    static atom patom(const char **fmt)
     {
-        const char* start = *fmt;
-        char c;
-        int len;
-
         skip_ws_and_comments(fmt);
 
-        while (1) {
-            c = *(*fmt)++;
-            if (isalnum((int) c) || (c == '_') || (c == '@'))
-                continue;
-            else
-                break;
-        }
-        (*fmt)--;
-        len = *fmt - start;
-        memcpy(buf, start, len);
-        buf[len] = 0;
+        const char* start = *fmt, *p = start;
 
-        return buf;
+        for(char c = *p; c && (isalnum(c) || c == '_' || c == '@'); c = *(++p));
 
+        *fmt = p;
+
+        return atom(start, p - start);
     } /* patom */
+
+    static atom pquotedatom(const char **fmt)
+    {
+        ++(*fmt); /* skip first quote */
+        //skip_ws_and_comments(fmt);
+
+        const char* start = *fmt, *p = start;
+
+        for (char c = *p; c && (c != '\'' || *(p-1) == '\\') ; c = *(++p));
+
+        if (*p != '\'')
+            throw err_format_exception("Error parsing quotted atom", start);
+
+        *fmt = p+1; /* skip last quote */
+        int len = p - start;
+
+        return atom(start, len);
+
+    } /* pquotedatom */
 
     /* Check if integer or float
      */
-    static char *pdigit(const char **fmt, char *buf)
+    template <class Alloc>
+    static eterm<Alloc> pdigit(const char **fmt)
     {
-        const char* start = *fmt;
-        char c;
-        int len,dotp=0;
+        const char* start = *fmt, *p = start;
+        bool dotp = false;
+        int  base = 10;
 
         skip_ws_and_comments(fmt);
 
-        while (1) {
-            c = *(*fmt)++;
-            if (isdigit((int) c) || c == '-')
+        if (*p == '-') p++;
+
+        for (char c = *p; c; c = *(++p)) {
+            if (isdigit(c))
                 continue;
-            else if (!dotp && (c == '.')) {
-                dotp = 1;
-                continue;
-            }
-            else
+            else if (c == '.' && !dotp)
+                dotp = true;
+            else if (c == '#') {
+                base = strtol(start, NULL, 10);
+                start = p+1;
+            } else
                 break;
         }
-        (*fmt)--;
-        len = *fmt - start;
-        memcpy(buf, start, len);
-        buf[len] = 0;
 
-        return buf;
-
+        *fmt = p;
+        if (dotp) {
+            auto d = strtod(start, NULL);
+            return d;
+        }
+        auto n = strtol(start, NULL, base);
+        return n;
     } /* pdigit */
 
-    static char *pstring(const char **fmt, char *buf)
+    template <class Alloc>
+    static eterm<Alloc> pstring(const char **fmt, Alloc& alloc)
     {
         const char* start = ++(*fmt); /* skip first quote */
-        char c;
-        int len;
+        const char* p = start;
 
         // skip_ws_and_comments(fmt);
 
-        while (1) {
-            c = *(*fmt)++;
-            if (c == '"') {
-                if (*((*fmt)-1) == '\\')
-                    continue;
-                else
-                    break;
-            } else
-                continue;
-        }
-        len = *fmt - 1 - start; /* skip last quote */
-        memcpy(buf, start, len);
-        buf[len] = 0;
+        for (char c = *p; c && (c != '"' || *(p-1) == '\\'); c = *(++p));
 
-        return buf;
+        if (*p != '"')
+            throw err_format_exception("Error parsing string", start);
 
+        *fmt = p+1; /* skip last quote */
+        int len = p - start;
+
+        return eterm<Alloc>(string<Alloc>(start, len, alloc));
     } /* pstring */
-
-    static char *pquotedatom(const char **fmt, char *buf)
-    {
-        const char* start = ++(*fmt); /* skip first quote */
-        char c;
-        int len;
-
-        skip_ws_and_comments(fmt);
-
-        while (1) {
-            c = *(*fmt)++;
-            if (c == '\'') {
-                if (*((*fmt)-1) == '\\')
-                    continue;
-                else
-                    break;
-            } else
-                continue;
-        }
-        len = *fmt - 1 - start; /* skip last quote */
-        memcpy(buf, start, len);
-        buf[len] = 0;
-
-        return buf;
-
-    } /* pquotedatom */
 
 
     /// @todo Implement support for parsing tail list expressions in the form
@@ -244,64 +244,34 @@ namespace marshal {
      *   w  -  A pointer to some arbitrary term
      */
     template <class Alloc>
-    static int pformat(const char** fmt, va_list* pap, 
-                       vector<Alloc>& v, Alloc& a_alloc)
+    static eterm<Alloc> pformat(const char** fmt, va_list* pap, Alloc& a_alloc)
     {
-        int rc=ERL_OK;
-
-        /* this next section hacked to remove the va_arg calls */
         skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
-            case 'w':
-                v.push_back(*va_arg(*pap, eterm<Alloc>*));
-                break;
-
-            case 'a':
-                v.push_back(eterm<Alloc>(atom(va_arg(*pap, char*))));
-                break;
-
-            case 's':
-                v.push_back(eterm<Alloc>(string<Alloc>(va_arg(*pap, char*), a_alloc)));
-                break;
-
-            case 'i':
-                v.push_back(eterm<Alloc>(va_arg(*pap, int)));
-                break;
-
-            case 'l':
-                v.push_back(eterm<Alloc>(va_arg(*pap, long)));
-                break;
-
-            case 'u':
-                v.push_back(eterm<Alloc>((long)va_arg(*pap, unsigned long)));
-                break;
-
-            case 'f':
-                v.push_back(eterm<Alloc>(va_arg(*pap, double)));
-                break;
-
-            default:
-                rc = ERL_FMT_ERR;
-                break;
+            case 'w': return *va_arg(*pap, eterm<Alloc>*);
+            case 'a': return atom(va_arg(*pap, char*));
+            case 's': return string<Alloc>(va_arg(*pap, char*), a_alloc);
+            case 'i': return va_arg(*pap, int);
+            case 'l': return va_arg(*pap, long);
+            case 'u': return (long)va_arg(*pap, unsigned long);
+            case 'f': return va_arg(*pap, double);
+            default:  throw err_format_exception("Error parsing string", *fmt-1);
         }
-
-        return rc;
-
     } /* pformat */
 
     template <class Alloc>
-    static int ptuple(const char** fmt, va_list* pap, 
+    static bool ptuple(const char** fmt, va_list* pap,
                       vector<Alloc>& v, Alloc& a_alloc)
     {
-        int res=ERL_FMT_ERR;
+        bool res = false;
 
         skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
 
             case '}':
-                res = ERL_OK;
+                res = true;
                 break;
 
             case ',':
@@ -314,16 +284,6 @@ namespace marshal {
                 if (v.back().type() != UNDEFINED)
                     res = ptuple(fmt, pap, v, a_alloc);
                 break;
-
-              /*
-                if (isupper(**fmt)) {
-                v[size++] = erl_mk_var(pvariable(fmt, wbuf));
-                res = ptuple(fmt, pap, v);
-                }
-                else if ((v[size++] = eformat(fmt, pap)) != (ErlTerm *) NULL)
-                res = ptuple(fmt, pap, v);
-                break;
-              */
             }
 
         } /* switch */
@@ -333,17 +293,17 @@ namespace marshal {
     } /* ptuple */
 
     template <class Alloc>
-    static int plist(const char** fmt, va_list* pap,
+    static bool plist(const char** fmt, va_list* pap,
                      vector<Alloc>& v, Alloc& a_alloc)
     {
-        int res=ERL_FMT_ERR;
+        bool res = false;
 
         skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
 
             case ']':
-                res = ERL_OK;
+                res = true;
                 break;
 
             case ',':
@@ -357,14 +317,14 @@ namespace marshal {
                     v.push_back(eterm<Alloc>(a));
                     skip_ws_and_comments(fmt);
                     if (**fmt == ']')
-                        res = ERL_OK;
+                        res = true;
                     break;
                 }
                 break;
 
             default: {
                 (*fmt)--;
-                eterm<Alloc> et = eformat(fmt, pap, a_alloc);
+                auto et = eformat(fmt, pap, a_alloc);
                 if (et.type() != UNDEFINED) {
                     v.push_back(et);
                     res = plist(fmt, pap, v, a_alloc);
@@ -389,58 +349,43 @@ namespace marshal {
         skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
-            case '{':
-                if (ptuple(fmt, pap, v, alloc) != ERL_OK)
+            case '{': {
+                if (!ptuple(fmt, pap, v, alloc))
                     throw err_format_exception("Error parsing tuple", *fmt);
-                ret.set( eterm<Alloc>(tuple<Alloc>(&v[0], v.size(), alloc)) );
+                ret = v.to_tuple(alloc);
                 break;
-
+            }
             case '[':
                 if (**fmt == ']') {
                     (*fmt)++;
-                    ret.set( eterm<Alloc>(list<Alloc>(0, alloc)) );
-                } else if (plist(fmt, pap, v, alloc) == ERL_OK) {
-                    ret.set( eterm<Alloc>(list<Alloc>(&v[0], v.size(), alloc)) );
-                } else {
+                    ret = v.to_list(alloc);
+                } else if (!plist(fmt, pap, v, alloc))
                     throw err_format_exception("Error parsing list", *fmt);
-                }
+                ret = v.to_list(alloc);
                 break;
 
             case '$': /* char-value? */
-                ret.set( eterm<Alloc>((int)(*(*fmt)++)) );
+                ret = eterm<Alloc>((int)(*(*fmt)++));
                 break;
 
             case '~':
-                if (pformat(fmt, pap, v, alloc) != ERL_OK)
-                    throw err_format_exception("Error parsing term", *fmt);
-                ret.set(v[0]);
+                ret = pformat(fmt, pap, alloc);
                 break;
 
             default: {
-                char wbuf[BUFSIZ];  /* now local to this function for reentrancy */
-
                 (*fmt)--;
-                if (islower((int)**fmt)) {         /* atom  ? */
-                    char* a = patom(fmt, wbuf);
-                    ret.set( eterm<Alloc>(atom(a)) );
-                } else if (isupper((int)**fmt) || (**fmt == '_')) {
-                    var v = pvariable(fmt);
-                    ret.set( eterm<Alloc>(v) );
-                } else if (isdigit((int)**fmt) || **fmt == '-') {    /* integer/float ? */
-                    char* digit = pdigit(fmt, wbuf);
-                    if (strchr(digit,(int) '.') == NULL)
-                        ret.set( eterm<Alloc>(atoi((const char *) digit)) );
-                    else
-                        ret.set( eterm<Alloc>(atof((const char *) digit)) );
-                } else if (**fmt == '"') {      /* string ? */
-                    char* str = pstring(fmt, wbuf);
-                    ret.set( eterm<Alloc>(string<Alloc>(str, alloc)) );
-                } else if (**fmt == '\'') {     /* quoted atom ? */
-                    char* qatom = pquotedatom(fmt, wbuf);
-                    ret.set( eterm<Alloc>(atom(qatom)) );
-                }
+                if (islower(**fmt))         /* atom ? */
+                    ret = patom(fmt);
+                else if (isupper(**fmt) || (**fmt == '_'))
+                    ret = pvariable(fmt);
+                else if (isdigit(**fmt) || **fmt == '-') /* int|float ? */
+                    ret = pdigit<Alloc>(fmt);
+                else if (**fmt == '"')      /* string ? */
+                    ret = pstring(fmt, alloc);
+                else if (**fmt == '\'')     /* quoted atom ? */
+                    ret = pquotedatom(fmt);
+                break;
             }
-            break;
         }
 
         if (ret.empty())
@@ -450,6 +395,67 @@ namespace marshal {
 
     } /* eformat */
 
+    template <class Alloc>
+    static void eformat(atom& mod, atom& fun, eterm<Alloc>& args,
+                        const char** fmt, va_list* pap, const Alloc& a_alloc = Alloc())
+    {
+        Alloc alloc(a_alloc);
+        vector<Alloc> v(alloc);
+
+        skip_ws_and_comments(fmt);
+
+        const char* start = *fmt, *p = start;
+        const char* q = strchr(p, ':');
+
+        if (!q)
+            throw err_format_exception("Module name not found", p);
+
+        mod = atom(p, q - p);
+
+        p = q+1;
+
+        q = strchr(p, '(');
+
+        if (!q)
+            throw err_format_exception("Function name not found", p);
+
+        fun = atom(p, q - p);
+
+        p = q+1;
+
+        skip_ws_and_comments(&p);
+
+        if (*p == '\0')
+            throw err_format_exception("Invalid argument syntax", p);
+        else if (*p == ')')
+            ++p;
+        else while(true) {
+            v.push_back(eformat(&p, pap, a_alloc));
+            skip_ws_and_comments(&p);
+
+            char c = *p++;
+
+            if (c == '\0')
+                throw err_format_exception("Arguments list not closed", &c);
+            else if (c == ')')
+                break;
+            if (c != ',')
+                throw err_format_exception("Arguments must be comma-delimited", &c);
+        }
+
+        skip_ws_and_comments(&p);
+
+        if (*p != '\0') {
+            if (*p == '.') {
+                ++p; skip_ws_and_comments(&p);
+            }
+        }
+
+        if (*p != '\0')
+            throw err_format_exception("Invalid MFA format", p);
+
+        args = v.to_list(alloc);
+    }
 
 } // namespace marshal
 } // namespace EIXX_NAMESPACE

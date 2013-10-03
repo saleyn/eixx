@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/static_assert.hpp>
 #include <eixx/marshal/defaults.hpp>
 #include <eixx/marshal/visit_encode_size.hpp>
+#include <initializer_list>
 
 namespace EIXX_NAMESPACE {
 namespace marshal {
@@ -105,7 +106,7 @@ public:
 
     iterator begin()             { iterator it(empty() ? NULL : head()); return it; }
     iterator end()               { return iterator::end(); }
-    
+
     const_iterator begin() const { const_iterator it(empty() ? NULL : head()); return it; }
     const_iterator end()   const { return iterator::end(); }
 
@@ -125,20 +126,27 @@ public:
         l_header->tail          = NULL;
     }
 
-    list(const list<Alloc>& a)
-        : base_t(a.get_allocator()), m_blob(a.m_blob)
-    {
+    list(const list<Alloc>& a) : base_t(a.get_allocator()), m_blob(a.m_blob) {
         BOOST_ASSERT(a.initialized());
         if (m_blob) m_blob->inc_rc();
     } 
+
+    list(list<Alloc>&& a) : base_t(a.get_allocator()), m_blob(a.m_blob) {
+        a.m_blob = nullptr;
+    }
 
     explicit list(const cons_t* a_head, int a_len = -1, const Alloc& alloc = Alloc())
         throw (err_bad_argument);
 
     template <int N>
-    list(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc());
+    list(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc())
+        : list(items, N, alloc) {}
 
-    list(const eterm<Alloc> items[], size_t a_size, const Alloc& alloc = Alloc());
+    list(const eterm<Alloc>* items, size_t a_size, const Alloc& alloc = Alloc())
+        : base_t(alloc) { init(items, a_size, alloc); }
+
+    list(std::initializer_list<eterm<Alloc>> items, const Alloc& alloc = Alloc())
+        : list(items.begin(), items.size(), alloc) {}
 
     /**
      * Decode the list from a binary buffer.
@@ -186,6 +194,14 @@ public:
 
     list<Alloc> tail(size_t idx) const throw(err_bad_argument);
 
+    list<Alloc>& operator= (const list<Alloc>& rhs) {
+        BOOST_ASSERT(rhs.initialized());
+        release();
+        m_blob = rhs.m_blob;
+        if (m_blob) m_blob->inc_rc();
+        return *this;
+    }
+
     bool operator== (const list<Alloc>& rhs) const {
         const_iterator it1  = begin(), it2  = rhs.begin(),
                        end1 = end(),   end2 = rhs.end();
@@ -216,7 +232,7 @@ public:
 
     bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const
         throw (err_invalid_term, err_unbound_variable);
-    
+
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* vars = NULL) const;
 
     static list<Alloc> make(const Alloc& a = Alloc()) {

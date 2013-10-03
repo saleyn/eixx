@@ -35,9 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_BASIC_OTP_CONNECTION_HPP_
 #define _EIXX_BASIC_OTP_CONNECTION_HPP_
 
+#include <memory>
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/connect/transport_otp_connection.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
 namespace EIXX_NAMESPACE {
 namespace connect {
@@ -46,7 +46,7 @@ template <typename Alloc, typename Mutex> class basic_otp_node;
 
 template <typename Alloc, typename Mutex>
 class basic_otp_connection
-    : public boost::enable_shared_from_this<basic_otp_connection<Alloc,Mutex> > {
+    : public std::enable_shared_from_this<basic_otp_connection<Alloc,Mutex> > {
 public:
     typedef basic_otp_connection<Alloc,Mutex> self;
     typedef connection<basic_otp_connection<Alloc,Mutex>, Alloc> connection_type;
@@ -95,8 +95,8 @@ private:
             return;
         m_reconnect_timer.expires_from_now(boost::posix_time::seconds(m_reconnect_secs));
         m_reconnect_timer.async_wait(
-            boost::bind(&self::timer_reconnect, this->shared_from_this(),
-            boost::asio::placeholders::error));
+            std::bind(&self::timer_reconnect, this->shared_from_this(),
+            std::placeholders::_1));
     }
 
     void timer_reconnect(const boost::system::error_code& ec) {
@@ -115,7 +115,7 @@ private:
     }
 
 public:
-    typedef boost::shared_ptr<basic_otp_connection<Alloc,Mutex> > pointer;
+    typedef std::shared_ptr<basic_otp_connection<Alloc,Mutex> > pointer;
 
     boost::asio::io_service&     io_service()             { return m_io_service;      }
     connection_type*             transport()              { return m_transport.get(); }

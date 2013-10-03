@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE( test_eterm_format_const )
 {
     allocator_t alloc;
 
-    eterm et = eterm::format(alloc, 
-        "[~i, 10, 2.5, abc, \"efg\", {~f, ~i}, ~a]", 
+    eterm et = eterm::format(alloc,
+        "[~i, 10, 2.5, abc, \"efg\", {~f, ~i}, ~a]",
           1,                         2.1, 10, "xx");
 
     BOOST_REQUIRE_EQUAL(LIST, et.type());
@@ -124,4 +124,67 @@ BOOST_AUTO_TEST_CASE( test_eterm_format_compound )
     BOOST_REQUIRE_EQUAL("[1,[{\"ab\",2},{xx,3}],{2.1,10},xyz,abc]", et.to_string());
 }
 
+BOOST_AUTO_TEST_CASE( test_eterm_var_type )
+{
+    BOOST_REQUIRE_EQUAL(UNDEFINED,  eterm::format("B").to_var().type());
+    BOOST_REQUIRE_EQUAL(LONG,       eterm::format("B::int()").to_var().type());
+    BOOST_REQUIRE_EQUAL(LONG,       eterm::format("B::byte()").to_var().type());
+    BOOST_REQUIRE_EQUAL(LONG,       eterm::format("B::char()").to_var().type());
+    BOOST_REQUIRE_EQUAL(LONG,       eterm::format("B::integer()").to_var().type());
+    BOOST_REQUIRE_EQUAL(STRING,     eterm::format("B::string()").to_var().type());
+    BOOST_REQUIRE_EQUAL(ATOM,       eterm::format("B::atom()").to_var().type());
+    BOOST_REQUIRE_EQUAL(DOUBLE,     eterm::format("B::float()").to_var().type());
+    BOOST_REQUIRE_EQUAL(DOUBLE,     eterm::format("B::double()").to_var().type());
+    BOOST_REQUIRE_EQUAL(BINARY,     eterm::format("B::binary()").to_var().type());
+    BOOST_REQUIRE_EQUAL(BOOL,       eterm::format("B::bool()").to_var().type());
+    BOOST_REQUIRE_EQUAL(BOOL,       eterm::format("B::boolean()").to_var().type());
+    BOOST_REQUIRE_EQUAL(LIST,       eterm::format("B::list()").to_var().type());
+    BOOST_REQUIRE_EQUAL(TUPLE,      eterm::format("B::tuple()").to_var().type());
+    BOOST_REQUIRE_EQUAL(PID,        eterm::format("B::pid()").to_var().type());
+    BOOST_REQUIRE_EQUAL(REF,        eterm::format("B::ref()").to_var().type());
+    BOOST_REQUIRE_EQUAL(REF,        eterm::format("B::reference()").to_var().type());
+    BOOST_REQUIRE_EQUAL(PORT,       eterm::format("B::port()").to_var().type());
+}
 
+BOOST_AUTO_TEST_CASE( test_eterm_mfa_format )
+{
+    atom m, f;
+    eterm args;
+
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b()"));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b()."));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b()\t"));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b()\t ."));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b() "));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b()\n."));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b( %comment\n)."));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b().%comment"));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b(10)"));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b(10)."));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "aa:bb(10)"));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b(10,20)."));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b(~i).", 10));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b(~f,~i).", 20.0, 10));
+    BOOST_REQUIRE_NO_THROW(eterm::format(m, f, args, "a:b([~i,1], {ok,'a'}).", 10));
+}
+
+BOOST_AUTO_TEST_CASE( test_eterm_mfa_format_bad )
+{
+    atom m, f;
+    eterm args;
+
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b(1, %comment\n"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b(1, %comment 2)."), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "("), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, ")"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "."), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "aa"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a("), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b("), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a.b()"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b(10 20)"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b(10. 20)"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b(10.(20)"), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b(~i,~i]", 10, 20), err_format_exception);
+    BOOST_REQUIRE_THROW(eterm::format(m, f, args, "a:b([[~i,20],]", 10), err_format_exception);
+}

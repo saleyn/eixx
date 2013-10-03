@@ -1,17 +1,17 @@
 //----------------------------------------------------------------------------
-/// \file  binary.ipp
+/// \file  array_variadic_init.hpp
 //----------------------------------------------------------------------------
-/// \brief Implementation of binary class member functions.
+/// \brief Copies variadic parameters to an array
 //----------------------------------------------------------------------------
-// Copyright (c) 2010 Serge Aleynikov <saleyn@gmail.com>
-// Created: 2010-09-20
+// Copyright (c) 2013 Serge Aleynikov <saleyn@gmail.com>
+// Created: 2013-10-05
 //----------------------------------------------------------------------------
 /*
 ***** BEGIN LICENSE BLOCK *****
 
 This file is part of the eixx (Erlang C++ Interface) Library.
 
-Copyright (C) 2010 Serge Aleynikov <saleyn@gmail.com>
+Copyright (C) 2013 Serge Aleynikov <saleyn@gmail.com>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -29,45 +29,40 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ***** END LICENSE BLOCK *****
 */
+#ifndef _EIXX_ARRAY_VARIADIC_INIT_HPP_
+#define _EIXX_ARRAY_VARIADIC_INIT_HPP_
 
-#include <memory>
-#include <eixx/marshal/endian.hpp>
-#include <ei.h>
+#include <eixx/marshal/eterm.hpp>
 
 namespace EIXX_NAMESPACE {
 namespace marshal {
+namespace detail {
 
-template <class Alloc>
-binary<Alloc>::binary(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
-    throw (err_decode_exception)
-{
-    const char* s  = buf + idx;
-    const char* s0 = s;
+    namespace {
+        template <std::size_t I, typename Alloc, typename Head, typename... Tail>
+        struct init_array {
+            static void set(eterm<Alloc>* a_array, const Head& v, const Tail&... tail) {
+                a_array[I] = eterm<Alloc>(v);
+                init_array<I+1, Tail...>::set(a_array, tail...);
+            }
+        };
 
-    if (get8(s) != ERL_BINARY_EXT)
-        throw err_decode_exception("Error decoding binary", idx);
+        template <std::size_t I, typename Alloc, typename Head>
+        struct init_array<I, Alloc, Head> {
+            static void set(eterm<Alloc>* a_array, const Head& v) {
+                a_array[I] = eterm<Alloc>(v);
+            }
+        };
+    }
 
-    size_t sz = get32be(s);
-    m_blob = new blob<char, Alloc>(sz, a_alloc);
-    ::memcpy(m_blob->data(),s,sz);
+    template <typename Alloc, typename... Args>
+    void initialize(eterm<Alloc>* a_target, Args... args)
+    {
+        init_array<0, Args...>::set(a_target, args...);
+    }
 
-    idx += s + sz - s0;
-    BOOST_ASSERT((size_t)idx <= size);
-}
-
-template <class Alloc>
-void binary<Alloc>::encode(char* buf, int& idx, size_t size) const
-{
-    char* s  = buf + idx;
-    char* s0 = s;
-    put8(s,ERL_BINARY_EXT);
-    size_t n = this->size();
-    put32be(s, n);
-    memmove(s, this->data(), n);
-    s += n;
-    idx += s-s0;
-    BOOST_ASSERT((size_t)idx <= size);
-}
-
+} // namespace detail
 } // namespace marshal
 } // namespace EIXX_NAMESPACE
+
+#endif // _EIXX_ARRAY_VARIADIC_INIT_HPP_

@@ -129,9 +129,11 @@ class err_format_exception: public eterm_exception {
     const char* m_pos;
     const char* m_start;
 public:
-    err_format_exception(const std::string &msg, const char* pos)
+    err_format_exception(
+        const std::string &msg, const char* pos, const char* start = nullptr)
         : eterm_exception(msg)
         , m_pos(pos)
+        , m_start(start)
     {}
 
     const char* what() const throw() {

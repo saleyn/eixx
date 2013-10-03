@@ -41,20 +41,7 @@ namespace EIXX_NAMESPACE {
 namespace marshal {
 
 template <class Alloc>
-template <int N> 
-inline list<Alloc>::list(const eterm<Alloc> (&items)[N], const Alloc& alloc)
-    : base_t(alloc) {
-    init(items, N, alloc);
-}
-
-template <class Alloc>
-inline list<Alloc>::list(const eterm<Alloc> items[], size_t N, const Alloc& alloc)
-    : base_t(alloc) {
-    init(items, N, alloc);
-}
-
-template <class Alloc>
-void list<Alloc>::init(const eterm<Alloc> items[], size_t N, const Alloc& alloc) {
+void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) {
     size_t n = N > 0 ? N : 1;
     m_blob = new blob_t(sizeof(header_t) + n*sizeof(cons_t), alloc);
 
@@ -65,17 +52,17 @@ void list<Alloc>::init(const eterm<Alloc> items[], size_t N, const Alloc& alloc)
     l_header->alloc_size    = n;
     l_header->size          = N;
 
-    for (size_t i=0; i < N; i++) {
-        BOOST_ASSERT(items[i].initialized());
-        new (&hd[i].node) eterm<Alloc>(items[i]);
-        hd[i].next = &hd[i+1];
+    for(auto p = items, *end = items+N; p != end; ++p, ++hd) {
+        BOOST_ASSERT(p->initialized());
+        new (&hd->node) eterm<Alloc>(*p);
+        hd->next = hd+1;
     }
 
     if (N == 0)
         l_header->tail = NULL;
     else {
-        l_header->tail = &hd[n-1];
-        hd[N-1].next   = NULL;
+        l_header->tail = hd-1;
+        l_header->tail->next = NULL;
     }
 }
 
@@ -127,15 +114,15 @@ list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
     l_header->size        = arity;
 
     cons_t* hd = l_header->head;
-    for (int i=0; i < arity; i++) {
+    for (cons_t* end = hd+arity; hd != end; ++hd) {
         eterm<Alloc> et(buf, idx, size, a_alloc);
-        new (&hd[i].node) eterm<Alloc>(et);
-        hd[i].next = &hd[i+1];
+        new (&hd->node) eterm<Alloc>(et);
+        hd->next = hd+1;
     }
     if (arity == 0) {
         l_header->tail = NULL;
     } else {
-        l_header->tail = &hd[arity-1];
+        l_header->tail = hd-1;
         l_header->tail->next = NULL;
         if (*(buf+idx) != ERL_NIL_EXT)
             throw err_decode_exception("Not a NIL list!", idx);

@@ -150,7 +150,7 @@ namespace util {
         }
 
         /// Lookup an atom in the atom table by index.
-        const string_t& lookup(size_t n) const { return (*this)[n]; }
+        const string_t& get(int n) const { return (*this)[n]; }
 
         /// Lookup an atom in the atom table by index.
         const string_t& operator[] (int n) const {
@@ -163,30 +163,30 @@ namespace util {
         /// atom in the atom table.
         /// @throws std::runtime_error if atom table is full.
         /// @throws err_bad_argument if atom size is longer than MAXATOMLEN
-        int lookup(const char* a_atom, size_t n) { return lookup(std::string(a_atom, n)); }
-        int lookup(const char* a_atom)           { return lookup(std::string(a_atom)); }
-        int lookup(const std::string& a_atom)
+        int lookup(const char* a_name, size_t n) { return lookup(std::string(a_name, n)); }
+        int lookup(const char* a_name)           { return lookup(std::string(a_name)); }
+        int lookup(const std::string& a_name)
             throw(std::runtime_error, err_bad_argument)
         {
-            if (a_atom.size() == 0)
+            if (a_name.size() == 0)
                 return 0;
-            if (a_atom.size() > MAXATOMLEN)
+            if (a_name.size() > MAXATOMLEN)
                 throw err_bad_argument("Atom size is too long!");
-            size_t bucket = m_index.bucket(a_atom.c_str());
-            int n = find_value(bucket, a_atom.c_str());
+            size_t bucket = m_index.bucket(a_name.c_str());
+            int n = find_value(bucket, a_name.c_str());
             if (n >= 0)
                 return n;
 
             lock_guard<Mutex> guard(m_lock);
-            n = find_value(bucket, a_atom.c_str());
+            n = find_value(bucket, a_name.c_str());
             if (n >= 0)
                 return n;
             
             n = m_atoms.size();
             if ((size_t)(n+1) == m_atoms.capacity())
                 throw std::runtime_error("Atom hash table is full!");
-            m_atoms.push_back(a_atom);
-            m_index[a_atom.c_str()] = n;
+            m_atoms.push_back(a_name);
+            m_index[a_name.c_str()] = n;
             return n;
         }
     private:

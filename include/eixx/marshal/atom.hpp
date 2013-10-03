@@ -76,6 +76,9 @@ class atom
 public:
     static util::atom_table<>& atom_table();
 
+    /// Returns empty atom
+    static const atom null;
+
     /// Create an empty atom
     atom() : m_index(0) {
         BOOST_STATIC_ASSERT(sizeof(atom) == 4);

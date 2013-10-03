@@ -15,12 +15,12 @@ namespace error {
     namespace detail {
 
         struct timer_category : public boost::system::error_category {
-            const char* name() const { return "asio.timer"; }
+            const char* name() const noexcept { return "asio.timer"; }
 
             std::string message(int value) const {
-                if (value == error::timeout)
-                    return "Operation timed out";
-                return "asio.timer error";
+                return value == error::timeout
+                    ? "Operation timed out"
+                    : "asio.timer error";
             }
         };
 
@@ -31,8 +31,13 @@ namespace error {
         return instance;
     }
 
-    static const boost::system::error_category& timer_category
-        = boost::asio::error::get_timer_category();
+//     static const boost::system::error_category& timer_category
+//         = boost::asio::error::get_timer_category();
+
+    inline boost::system::error_code make_error_code(boost::asio::error::timer_errors e) {
+        return boost::system::error_code(
+            static_cast<int>(e), boost::asio::error::get_timer_category());
+    }
 
 } // namespace error
 } // namespace asio
@@ -43,12 +48,9 @@ namespace system {
         static const bool value = true;
     };
 
-    inline boost::system::error_code make_error_code(boost::asio::error::timer_errors e) {
-        return boost::system::error_code(
-            static_cast<int>(e), boost::asio::error::get_timer_category());
-    }
-
 } // namespace system
+
+#include <boost/asio.hpp>
 
 namespace asio {
 
@@ -64,7 +66,7 @@ namespace asio {
                 //if (ec == error::operation_aborted)
                 //    return;
                 system::error_code e = ec == system::error_code()
-                        ? system::make_error_code(error::timeout)
+                        ? make_error_code(error::timeout)
                         : ec;
                 m_h(e);
             }

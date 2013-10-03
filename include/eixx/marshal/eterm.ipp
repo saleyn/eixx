@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ***** END LICENSE BLOCK *****
 */
+#include <stdarg.h>
 #include <eixx/marshal/visit.hpp>
 #include <eixx/marshal/visit_encode_size.hpp>
 #include <eixx/marshal/visit_encoder.hpp>
@@ -66,19 +67,19 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
     if (m_type != rhs.type())
         return false;
     switch (m_type) {
-        case LONG:   return vt.i == rhs.to_long();
-        case DOUBLE: return vt.d == rhs.to_double();
-        case BOOL:   return vt.b == rhs.to_bool();
-        case ATOM:   return vt.p == rhs.vt.p;  // We just need to check for the same value 
-        case STRING: { const string<Alloc>& t = vt; return t == rhs.to_str();   }
-        case BINARY: { const binary<Alloc>& t = vt; return t == rhs.to_binary();}
-        case PID:    { const epid<Alloc>&   t = vt; return t == rhs.to_pid();   }
-        case PORT:   { const port<Alloc>&   t = vt; return t == rhs.to_port();  }
-        case REF:    { const ref<Alloc>&    t = vt; return t == rhs.to_ref();   }
-        case VAR:    { const var&           t = vt; return t == rhs.to_var();   }
-        case TUPLE:  { const tuple<Alloc>&  t = vt; return t == rhs.to_tuple(); }
-        case LIST:   { const list<Alloc>&   t = vt; return t == rhs.to_list();  }
-        case TRACE:  { const trace<Alloc>&  t = vt; return t == rhs.to_trace(); }
+        case LONG:   return vt.i    == rhs.vt.i;
+        case DOUBLE: return vt.d    == rhs.vt.d;
+        case BOOL:   return vt.b    == rhs.vt.b;
+        case ATOM:   return vt.a    == rhs.vt.a;
+        case VAR:    return vt.v    == rhs.vt.v;
+        case STRING: return vt.s    == rhs.vt.s;
+        case BINARY: return vt.bin  == rhs.vt.bin;
+        case PID:    return vt.pid  == rhs.vt.pid;
+        case PORT:   return vt.prt  == rhs.vt.prt;
+        case REF:    return vt.r    == rhs.vt.r;
+        case TUPLE:  return vt.t    == rhs.vt.t;
+        case LIST:   return vt.l    == rhs.vt.l;
+        case TRACE:  return vt.trc  == rhs.vt.trc;
         default: {
             std::stringstream s; s << "Undefined term_type (" << m_type << ')';
             throw err_invalid_term(s.str());
@@ -90,7 +91,7 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
 template <typename Alloc>
 std::string eterm<Alloc>::to_string(size_t a_size_limit, const varbind<Alloc>* binding) const {
     if (m_type == UNDEFINED)
-        return "";
+        return std::string();
     std::ostringstream out;
     visit_eterm_stringify<Alloc> visitor(out, binding);
     visitor.apply_visitor(*this);
@@ -126,10 +127,13 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
     switch (type) {
     case ERL_ATOM_EXT: {
         int b;
-        if (ei_decode_boolean(a_buf, &idx, &b) < 0)
+        int i = idx; // TODO: Eliminate this variable when there's is a fix for the bug in ei_decode_boolean
+        if (ei_decode_boolean(a_buf, &i, &b) < 0)
             new (this) eterm<Alloc>(atom(a_buf, idx, a_size));
-        else
+        else {
+            idx = i;
             new (this) eterm<Alloc>((bool)b);
+        }
         break;
     }
     case ERL_LARGE_TUPLE_EXT:
@@ -276,42 +280,70 @@ bool eterm<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
 }
 
 template <class Alloc>
+eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char** fmt, va_list* pap)
+    throw (err_format_exception)
+{
+    try {
+        return eformat<Alloc>(fmt, pap, a_alloc);
+    } catch (err_format_exception& e) {
+        e.start(*fmt);
+        throw;
+    } catch (...) {
+        throw err_format_exception("Error parsing expression", *fmt, *fmt);
+    }
+}
+
+template <class Alloc>
+void eterm<Alloc>::format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& args,
+    const char** fmt, va_list* pap) throw (err_format_exception)
+{
+    try {
+        eformat<Alloc>(m, f, args, fmt, pap, a_alloc);
+    } catch (err_format_exception& e) {
+        e.start(*fmt);
+        throw;
+    } catch (...) {
+        throw err_format_exception("Error parsing expression", *fmt, *fmt);
+    }
+}
+
+template <class Alloc>
 eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char* fmt, ...)
     throw (err_format_exception)
 {
-    const char** l_fmt = &fmt;
     va_list ap;
     va_start(ap, fmt);
-    //BOOST_SCOPE_EXIT( (&ap) ) { va_end(ap); } BOOST_SCOPE_EXIT_END;
-    try {
-        eterm<Alloc> res( eformat<Alloc>(l_fmt, &ap, a_alloc) );
-        va_end(ap);
-        return res;
-    } catch (err_format_exception& e) {
-        va_end(ap);
-        e.start(*l_fmt);
-        throw;
-    }
+    try { return format(a_alloc, &fmt, &ap); } catch (...) { va_end(ap); throw; }
+    va_end(ap);
 }
 
 template <class Alloc>
 eterm<Alloc> eterm<Alloc>::format(const char* fmt, ...)
     throw (err_format_exception)
 {
-    const char** l_fmt = &fmt;
     va_list ap;
     va_start(ap, fmt);
-    //BOOST_SCOPE_EXIT( (&ap) ) { va_end(ap); } BOOST_SCOPE_EXIT_END;
-    try {
-        Alloc alloc;
-        eterm<Alloc> res = eformat<Alloc>(l_fmt, &ap, alloc);
-        va_end(ap);
-        return res;
-    } catch (err_format_exception& e) {
-        va_end(ap);
-        e.start(*l_fmt);
-        throw;
-    }
+    try { return format(Alloc(), &fmt, &ap); } catch (...) { va_end(ap); throw; }
+    va_end(ap);
+}
+
+template <class Alloc>
+void eterm<Alloc>::format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& args,
+    const char* fmt, ...) throw (err_format_exception)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    try { format(a_alloc, m, f, args, &fmt, &ap); } catch (...) { va_end(ap); throw; }
+    va_end(ap);
+}
+template <class Alloc>
+void eterm<Alloc>::format(atom& m, atom& f, eterm<Alloc>& args, const char* fmt, ...)
+    throw (err_format_exception)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    try { format(Alloc(), m, f, args, &fmt, &ap); } catch (...) { va_end(ap); throw; }
+    va_end(ap);
 }
 
 } // namespace marshal

@@ -74,14 +74,14 @@ namespace EIXX_NAMESPACE {
         , LONG              = 1
         , DOUBLE            = 2
         , BOOL              = 3
-        // ATOM is the first compound item having a constructor
         , ATOM              = 4
-        , STRING            = 5
-        , BINARY            = 6
-        , PID               = 7
-        , PORT              = 8
-        , REF               = 9
-        , VAR               = 10
+        , VAR               = 5
+        // STRING is the first compound item that requires destruction
+        , STRING            = 6
+        , BINARY            = 7
+        , PID               = 8
+        , PORT              = 9
+        , REF               = 10
         , TUPLE             = 11
         , LIST              = 12
         , TRACE             = 13
@@ -99,10 +99,10 @@ namespace EIXX_NAMESPACE {
     ///             Outputs:  ::bool()
     const char* type_to_type_string(eterm_type a_type, bool a_prefix=false);
 
-    /// Converts a string to eterm type
+    /// Converts a string to eterm type (e.g. "binary" -> eterm_type::BINARY)
     eterm_type type_string_to_type(const char* s, size_t n);
 
-    /// Converts a string \a s to eterm type
+    /// Converts a string \a s to eterm type (e.g. "binary" -> eterm_type::BINARY)
     inline eterm_type type_string_to_type(const char* s) {
         return type_string_to_type(s, strlen(s));
     }

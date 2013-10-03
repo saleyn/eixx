@@ -83,9 +83,8 @@ void tcp_connection<Handler, Alloc>::connect(
     tcp::resolver::query q(remote_hostname(), epmd_port);
     m_state = CS_WAIT_RESOLVE;
     m_resolver.async_resolve(q,
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_resolve, shared_from_this(),
-                    boost::asio::placeholders::error,
-                    boost::asio::placeholders::iterator));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_resolve, shared_from_this(),
+                    std::placeholders::_1, std::placeholders::_2));
 }
 
 template <class Handler, class Alloc>
@@ -104,8 +103,8 @@ void tcp_connection<Handler, Alloc>::handle_resolve(
     m_peer_endpoint = *ep_iterator;
     m_state = CS_WAIT_EPMD_CONNECT;
     m_socket.async_connect(m_peer_endpoint,
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_epmd_connect, shared_from_this(),
-            boost::asio::placeholders::error, ++ep_iterator));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_connect, shared_from_this(),
+            std::placeholders::_1, ++ep_iterator));
 }
 
 template <class Handler, class Alloc>
@@ -131,15 +130,15 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
 
         m_state = CS_WAIT_EPMD_WRITE_DONE;
         boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_epmd, len+2),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_epmd_write, shared_from_this(),
-                        boost::asio::placeholders::error));
+            std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_write, shared_from_this(),
+                        std::placeholders::_1));
     } else if (ep_iterator != boost::asio::ip::tcp::resolver::iterator()) {
         // The connection failed. Try the next endpoint in the list.
         m_socket.close();
         m_peer_endpoint = *ep_iterator;
         m_socket.async_connect(m_peer_endpoint,
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_epmd_connect, shared_from_this(),
-                boost::asio::placeholders::error, ++ep_iterator));
+            std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_connect, shared_from_this(),
+                std::placeholders::_1, ++ep_iterator));
     } else {
         std::stringstream str; str << "Error connecting to epmd at host '" 
             << this->remote_node() << "': " << err.message();
@@ -164,9 +163,9 @@ void tcp_connection<Handler, Alloc>::handle_epmd_write(const boost::system::erro
     m_epmd_wr = m_buf_epmd;
     boost::asio::async_read(m_socket, boost::asio::buffer(m_buf_epmd, sizeof(m_buf_epmd)),
         boost::asio::transfer_at_least(2),
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_epmd_read_header, shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_read_header, shared_from_this(),
+            std::placeholders::_1,
+            std::placeholders::_2));
 }
 
 template <class Handler, class Alloc>
@@ -216,9 +215,9 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_epmd_wr, sizeof(m_buf_epmd)-bytes_transferred),
             boost::asio::transfer_at_least(need_bytes),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_epmd_read_body, shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_read_body, shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
     } else {
         handle_epmd_read_body(boost::system::error_code(), 0);
     }
@@ -274,8 +273,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
     m_state = CS_WAIT_CONNECT;
 
     m_socket.async_connect(m_peer_endpoint,
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_connect, shared_from_this(),
-            boost::asio::placeholders::error));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_connect, shared_from_this(),
+            std::placeholders::_1));
 }
 
 template <class Handler, class Alloc>
@@ -330,8 +329,8 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
 
     m_state = CS_WAIT_WRITE_CHALLENGE_DONE;
     boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_node, siz),
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_write_name, shared_from_this(),
-                    boost::asio::placeholders::error));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_write_name, shared_from_this(),
+                    std::placeholders::_1));
 }
 
 template <class Handler, class Alloc>
@@ -348,9 +347,9 @@ void tcp_connection<Handler, Alloc>::handle_write_name(const boost::system::erro
     m_state = CS_WAIT_STATUS;
     boost::asio::async_read(m_socket, boost::asio::buffer(m_buf_node, sizeof(m_buf_node)),
         boost::asio::transfer_at_least(2),
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_read_status_header, shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_read_status_header, shared_from_this(),
+            std::placeholders::_1,
+            std::placeholders::_2));
 }
 
 template <class Handler, class Alloc>
@@ -384,9 +383,9 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
             boost::asio::transfer_at_least(need_bytes),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_read_status_body, shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            std::bind(&tcp_connection<Handler, Alloc>::handle_read_status_body, shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
     } else {
         handle_read_status_body(boost::system::error_code(), 0);
     }
@@ -427,9 +426,9 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
     else
         boost::asio::async_read(m_socket, boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
             boost::asio::transfer_at_least(2),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_header, shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_header, shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
 }
 
 template <class Handler, class Alloc>
@@ -461,9 +460,9 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
             boost::asio::transfer_at_least(need_bytes),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_body, shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_body, shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
     } else {
         handle_read_challenge_body(boost::system::error_code(), 0);
     }
@@ -528,8 +527,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
 
     m_state = CS_WAIT_WRITE_CHALLENGE_REPLY_DONE;
     boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_node, siz),
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_write_challenge_reply, shared_from_this(),
-                    boost::asio::placeholders::error));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_write_challenge_reply, shared_from_this(),
+                    std::placeholders::_1));
 }
 
 template <class Handler, class Alloc>
@@ -546,9 +545,9 @@ void tcp_connection<Handler, Alloc>::handle_write_challenge_reply(const boost::s
     m_state = CS_WAIT_CHALLENGE_ACK;
     boost::asio::async_read(m_socket, boost::asio::buffer(m_buf_node, sizeof(m_buf_node)),
         boost::asio::transfer_at_least(2),
-        boost::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header, shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+        std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header, shared_from_this(),
+            std::placeholders::_1,
+            std::placeholders::_2));
 }
 
 template <class Handler, class Alloc>
@@ -583,10 +582,10 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header(
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_node_wr, (m_buf_node+1)-m_node_wr),
             boost::asio::transfer_at_least(need_bytes),
-            boost::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body,
+            std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body,
                 shared_from_this(),
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+                std::placeholders::_1,
+                std::placeholders::_2));
     } else {
         handle_read_challenge_ack_body(boost::system::error_code(), 0);
     }

@@ -56,6 +56,14 @@ template <class Alloc>
 static eterm<Alloc> eformat(const char** fmt, va_list* args, const Alloc& a_alloc = Alloc())
     throw(err_format_exception);
 
+/**
+ * Parse a format string in the form "Module:Function(Args...)" into corresponding
+ * \a mod, \a fun, \a args
+ */
+template <class Alloc>
+static void eformat(atom& mod, atom& fun, eterm<Alloc>& args,
+                    const char** fmt, va_list* pa, const Alloc& a_alloc = Alloc());
+
 } // namespace marshal
 } // namespace EIXX_NAMESPACE
 

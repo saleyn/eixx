@@ -146,9 +146,9 @@ private:
         const std::string& a_remote_node, const std::string& a_cookie)
         throw(std::runtime_error);
 
-    boost::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
-        boost::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();
-        return *reinterpret_cast<boost::shared_ptr<tcp_connection<Handler, Alloc> >*>(&p);
+    std::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
+        std::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();
+        return *reinterpret_cast<std::shared_ptr<tcp_connection<Handler, Alloc> >*>(&p);
     }
 
     /// Set the socket to non-blocking mode and issue on_connect() callback.

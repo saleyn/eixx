@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _IMPL_TUPLE_HPP_
 
 #include <ostream>
+#include <initializer_list>
 #include <boost/static_assert.hpp>
 #include <eixx/marshal/alloc_base.hpp>
 #include <eixx/marshal/varbind.hpp>
@@ -59,6 +60,16 @@ class tuple {
     size_t get_init_size() const {
         BOOST_ASSERT(m_blob);
         return m_blob->data()[m_blob->size()-1].to_long()-1;
+    }
+
+    void release() { release(m_blob); m_blob = nullptr; }
+
+    void release(blob<eterm<Alloc>, Alloc>* p) {
+        if (p && p->release(false)) {
+            for(size_t i=0, n=size(); i < n; i++)
+                p->data()[i].~eterm();
+            p->free();
+        }
     }
 
 protected:
@@ -88,18 +99,24 @@ public:
         m_blob->inc_rc();
     }
 
-    template <int N>
-    tuple(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc()) {
-        new (this) tuple<Alloc>(items, N, alloc);
+    tuple(tuple<Alloc>&& a) : m_blob(a.m_blob) {
+        a.m_blob = nullptr;
     }
 
-    tuple(const eterm<Alloc> items[], size_t a_size, const Alloc& alloc = Alloc())
+    template <int N>
+    tuple(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc())
+        : tuple(items, N, alloc) {}
+
+    tuple(const eterm<Alloc>* items, size_t a_size, const Alloc& alloc = Alloc())
         : m_blob(new blob<eterm<Alloc>, Alloc>(a_size+1, alloc)) {
         for(size_t i=0; i < a_size; i++) {
             new (&m_blob->data()[i]) eterm<Alloc>(items[i]);
         }
         set_init_size(a_size);
     }
+
+    tuple(std::initializer_list<eterm<Alloc>> list, const Alloc& alloc = Alloc())
+        : tuple(list.begin(), list.size(), alloc) {}
 
     /**
      * Decode the tuple from a binary buffer.
@@ -108,19 +125,25 @@ public:
         throw(err_decode_exception);
 
     ~tuple() {
-        if (m_blob && m_blob->release(false)) {
-            for(size_t i=0, n=size(); i < n; i++)
-                m_blob->data()[i].~eterm();
-            m_blob->free();
-        }
+        release();
     }
 
     tuple<Alloc>& operator= (const tuple<Alloc>& rhs) {
         if (this != &rhs) {
-            blob<eterm<Alloc>, Alloc>* p = m_blob;
+            auto p = m_blob;
             m_blob = rhs.m_blob;
-            m_blob->inc_rc();
-            if (p) p->release();
+            if (m_blob) m_blob->inc_rc();
+            release(p);
+        }
+        return *this;
+    }
+
+    tuple<Alloc>& operator= (tuple<Alloc>&& rhs) {
+        if (this != &rhs) {
+            auto p = m_blob;
+            m_blob = rhs.m_blob;
+            rhs.m_blob = nullptr;
+            release(p);
         }
         return *this;
     }
@@ -181,7 +204,7 @@ public:
 
     bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const
         throw (err_invalid_term, err_unbound_variable);
-    
+
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* vars = NULL) const;
 
     template <class T1>

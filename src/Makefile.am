@@ -76,7 +76,8 @@ libeixx_la_hdr3_HEADERS  = $(eixx_hdrs3:%=../include/@PACKAGE@/%)
 libeixx_la_hdr4dir		 = $(includedir)/@PACKAGE@/util
 libeixx_la_hdr4_HEADERS  = $(eixx_hdrs4:%=../include/@PACKAGE@/%)
 
-libeixx_la_SOURCES  = am.cpp atom.cpp defaults.cpp basic_otp_node_local.cpp \
+libeixx_la_SOURCES  = am.cpp atom.cpp defaults.cpp ref.cpp \
+					  basic_otp_node_local.cpp \
 					  $(eixx_headers:%=../include/@PACKAGE@/%)
 libeixx_la_LTADD    = -version-info 0:1 -shared
 libeixx_la_LIBS     = $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)

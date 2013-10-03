@@ -1,7 +1,7 @@
 #include <eixx/alloc_std.hpp>
 #include <eixx/eixx.hpp>
+#include <functional>
 #include <iostream>
-#include <boost/bind.hpp>
 
 #define BOOST_REQUIRE
 
@@ -28,18 +28,23 @@ void on_status(otp_node& a_node, const otp_connection* a_con,
 otp_mailbox *g_io_server, *g_main;
 static atom g_rem_node;
 
+static const atom S  = atom("S");
+static const atom N1 = atom("N1");
+static const atom N2 = atom("N2");
+static const atom N3 = atom("N3");
+
 void on_io_request(otp_mailbox& a_mbox, boost::system::error_code& ec) {
     if (ec == boost::asio::error::operation_aborted) {
         eixx::transport_msg* p;
         while ((p = a_mbox.receive()) != NULL) {
-            boost::scoped_ptr<eixx::transport_msg> l_tmsg(p);
+            std::unique_ptr<eixx::transport_msg> l_tmsg(p);
 
             static eterm s_put_chars = eterm::format("{io_request,_,_,{put_chars,S}}");
 
             varbind l_binding;
             if (s_put_chars.match(l_tmsg->msg(), &l_binding))
                 std::cerr << "I/O request from server: "
-                          << l_binding["S"]->to_string() << std::endl;
+                          << l_binding[S]->to_string() << std::endl;
             else
                 std::cerr << "I/O server got a message: " << l_tmsg->msg() << std::endl;
         }
@@ -53,20 +58,20 @@ void on_main_msg(otp_mailbox& a_mbox, boost::system::error_code& ec) {
     if (ec == boost::asio::error::operation_aborted) {
         eixx::transport_msg* p;
         while ((p = a_mbox.receive()) != NULL) {
-            boost::scoped_ptr<eixx::transport_msg> l_tmsg(p);
+            std::unique_ptr<eixx::transport_msg> l_tmsg(p);
 
             const eterm& l_msg = l_tmsg->msg();
 
-            static eterm s_now_pattern  = eterm::format("{rex, {N1, N2, N3}}");
-            static eterm s_stop         = atom("stop");
+            static const eterm s_now_pattern  = eterm::format("{rex, {N1, N2, N3}}");
+            static const eterm s_stop         = atom("stop");
 
             varbind l_binding;
 
             if (s_now_pattern.match(l_msg, &l_binding)) {
                 struct timeval tv = 
-                    { l_binding["N1"]->to_long() * 1000000 +
-                      l_binding["N1"]->to_long(),
-                      l_binding["N1"]->to_long() };
+                    { l_binding[N1]->to_long() * 1000000 +
+                      l_binding[N2]->to_long(),
+                      l_binding[N3]->to_long() };
                 struct tm tm;
                 localtime_r(&tv.tv_sec, &tm);
                 printf("Server time: %02d:%02d:%02d.%06ld\n",

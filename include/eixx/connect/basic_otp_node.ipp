@@ -116,7 +116,7 @@ void basic_otp_node<Alloc, Mutex>::connect(
         m_connections[a_remote_node] = con;
     } else {
         std::string e;
-        m_io_service.post(boost::bind(h, &*it->second, e));
+        m_io_service.post(std::bind(h, &*it->second, e));
     }
 }
 

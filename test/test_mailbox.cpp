@@ -40,16 +40,14 @@ BOOST_AUTO_TEST_CASE( test_mailbox )
 {
     boost::asio::io_service io;
     otp_node node(io, "a");
-    atom am_io_server("io_server");
-    atom am_main("main");
+    const atom am_io_server("io_server");
+    const atom am_main("main");
 
     //std::cerr << "mailbox count " << node.registry().count() << std::endl;
     {
         otp_mailbox::pointer a(node.create_mailbox(am_io_server));
         otp_mailbox::pointer b(node.create_mailbox(am_main));
         //BOOST_REQUIRE_NE(*a.get(), *b.get());
-
-        
 
         otp_mailbox* ag = node.get_mailbox(atom("io_server"));
         otp_mailbox* bg = node.get_mailbox(atom("main"));
@@ -61,7 +59,7 @@ BOOST_AUTO_TEST_CASE( test_mailbox )
             BOOST_REQUIRE_EQUAL(*a, *ag);
             BOOST_REQUIRE_EQUAL(*b, *bg);
         }
-        
+
         //node.registry().erase(a.get());
         //node.registry().erase(b.get());
     }

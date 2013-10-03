@@ -33,11 +33,11 @@
 #ifndef _EIXX_TRANSPORT_OTP_CONNECTION_HPP_
 #define _EIXX_TRANSPORT_OTP_CONNECTION_HPP_
 
+#include <memory>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/algorithm/string.hpp>
 #include <eixx/util/common.hpp>
 #include <eixx/util/string_util.hpp>
@@ -65,7 +65,7 @@ const char* connection_type_to_str(connection_type a_type);
 template <typename Handler, typename Alloc>
 class connection
     : private boost::noncopyable
-    , public boost::enable_shared_from_this< connection<Handler, Alloc> >
+    , public std::enable_shared_from_this< connection<Handler, Alloc> >
 {
 protected:
     static const size_t         s_header_size;
@@ -161,8 +161,8 @@ protected:
                     m_handler->report_status(REPORT_INFO, s.str());
                 }
             async_write(buffers, boost::asio::transfer_all(), 
-                boost::bind(&connection<Handler, Alloc>::handle_write, this->shared_from_this(),
-                    boost::asio::placeholders::error));
+                std::bind(&connection<Handler, Alloc>::handle_write, this->shared_from_this(),
+                    std::placeholders::_1));
         }
     }
 
@@ -210,7 +210,7 @@ protected:
 
         boost::asio::const_buffer b(data, sz);
         m_io_service.post(
-            boost::bind(&connection<Handler, Alloc>::do_write, this->shared_from_this(), b));
+            std::bind(&connection<Handler, Alloc>::do_write, this->shared_from_this(), b));
     }
 
     /// Get connection type from string. If successful the string is 
@@ -253,9 +253,8 @@ protected:
         async_read(
             buffers,
             boost::asio::transfer_at_least(s_header_size),
-            boost::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(), 
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+            std::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(), 
+                std::placeholders::_1, std::placeholders::_2));
     }
 
     template <class MutableBuffers, class CompletionCondition, class ReadHandler>
@@ -266,7 +265,7 @@ protected:
 
 public:
     typedef Handler handler_type;
-    typedef boost::shared_ptr<connection<Handler, Alloc> > pointer;
+    typedef std::shared_ptr<connection<Handler, Alloc> > pointer;
 
     /// Create a connection object given of specific type and connect to peer
     /// endpoint given by \a a_addr.

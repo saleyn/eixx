@@ -28,7 +28,7 @@ template <class Connection>
 class channel_manager : private boost::noncopyable
 {
 public:
-    typedef boost::shared_ptr<Connection> channel_ptr;
+    typedef std::shared_ptr<Connection> channel_ptr;
 
     /// Add the specified channel to the manager and start it.
     void start(channel_ptr c, bool a_connected = false) {
@@ -46,7 +46,7 @@ public:
     /// Stop all channels.
     void stop_all() {
         std::for_each(m_channels.begin(), m_channels.end(),
-            boost::bind(&Connection::stop, _1));
+            std::bind(&Connection::stop, _1));
         m_channels.clear();
     }
 
@@ -70,7 +70,7 @@ class server : private boost::noncopyable
 {
 public:
     typedef Handler handler_type;
-    typedef boost::shared_ptr<server<Handler> > pointer;
+    typedef std::shared_ptr<server<Handler> > pointer;
 
     /// Construct the server to listen on the specified TCP address and port, and
     /// serve up files from the given directory.
@@ -129,7 +129,7 @@ public:
     virtual void stop() {
         // Post a call to the stop function so that server::stop() is safe to call
         // from any thread.
-        m_io_service.post(boost::bind(&server::handle_stop, this));
+        m_io_service.post(std::bind(&server::handle_stop, this));
     }
 
     // Event handlers
@@ -222,7 +222,7 @@ public:
         m_acceptor.listen();
         m_acceptor.async_accept(
             static_cast<tcp_channel<Handler>&>(*m_new_channel).socket(),
-            boost::bind(&tcp_server<Handler>::handle_accept,
+            std::bind(&tcp_server<Handler>::handle_accept,
                         this, boost::asio::placeholders::error));
     }
 
@@ -241,7 +241,7 @@ private:
                         m_new_channel->handler(), channel<Handler>::TCP);
             m_acceptor.async_accept(
                 static_cast<tcp_channel<Handler>&>(*m_new_channel).socket(),
-                boost::bind(&tcp_server<Handler>::handle_accept,
+                std::bind(&tcp_server<Handler>::handle_accept,
                             this, boost::asio::placeholders::error));
         }
     }
@@ -303,7 +303,7 @@ public:
         // Open the acceptor
         m_acceptor.async_accept(
             static_cast<uds_channel<Handler>&>(*m_new_channel).socket(),
-            boost::bind(&uds_server<Handler>::handle_accept,
+            std::bind(&uds_server<Handler>::handle_accept,
                         this, boost::asio::placeholders::error));
     }
 
@@ -322,7 +322,7 @@ private:
                         m_new_channel->handler(), channel<Handler>::UDS);
             m_acceptor.async_accept(
                 static_cast<uds_channel<Handler>&>(*m_new_channel).socket(),
-                boost::bind(&uds_server<Handler>::handle_accept,
+                std::bind(&uds_server<Handler>::handle_accept,
                             this, boost::asio::placeholders::error));
         }
     }

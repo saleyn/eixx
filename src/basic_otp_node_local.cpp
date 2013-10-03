@@ -1,9 +1,9 @@
 /*
 ***** BEGIN LICENSE BLOCK *****
 
-This file is part of the EPI (Erlang Plus Interface) Library.
+This file is part of the eixx (Erlang C++ Interface) Library.
 
-Copyright (C) 2005 Hector Rivas Gandara <keymon@gmail.com>
+Copyright (C) 2010 Serge Aleynikov <saleyn@gmail.com>
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public

@@ -39,6 +39,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace EIXX_NAMESPACE {
 namespace marshal {
+namespace detail {
+    extern const uint32_t s_ref_ids[3];
+} // namespace detail
 
 /**
  * Representation of erlang Pids.
@@ -77,8 +80,11 @@ class ref {
             m_blob->release();
     }
 
-    ref() {}
 public:
+    static const ref<Alloc> null;
+
+    ref() : m_blob(nullptr) {}
+
     /**
      * Create an Erlang ref from its components.
      * If node string size is greater than MAX_NODE_LENGTH or = 0,
@@ -128,17 +134,31 @@ public:
     ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
         throw(err_decode_exception);
 
-    ref(const ref& rhs) : m_blob(rhs.m_blob) { m_blob->inc_rc(); }
+    ref(const ref& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
+    ref(ref&& rhs) : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
 
     ~ref() { release(); }
 
-    void operator= (const ref& rhs) { release(); m_blob = rhs.m_blob; m_blob->inc_rc(); }
+    ref& operator= (const ref& rhs) {
+        if (this != &rhs) {
+            release(); m_blob = rhs.m_blob;
+            if (m_blob) m_blob->inc_rc();
+        }
+        return *this;
+    }
+
+    ref& operator= (ref&& rhs) {
+        if (this != &rhs) {
+            release(); m_blob = rhs.m_blob; rhs.m_blob = nullptr;
+        }
+        return *this;
+    }
 
     /**
      * Get the node name from the REF.
      * @return the node name from the REF.
      */
-    const atom& node() const { return m_blob->data()->node; }
+    atom node() const { return m_blob ? m_blob->data()->node : atom::null; }
 
     /**
      * Get an id number from the REF.
@@ -154,17 +174,17 @@ public:
      * Get the id array from the REF.
      * @return the id array number from the REF.
      */
-    const uint32_t* ids() const { return m_blob->data()->ids; }
+    const uint32_t* ids() const { return m_blob ? m_blob->data()->ids : detail::s_ref_ids; }
 
     /**
      * Get the creation number from the REF.
      * @return the creation number from the REF.
      */
-    int creation() const { return m_blob->data()->creation; }
+    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
 
     bool operator==(const ref<Alloc>& t) const {
         return node() == t.node() &&
-               memcmp(ids(), t.ids(), COUNT*sizeof(uint32_t)) == 0 &&
+               ::memcmp(ids(), t.ids(), COUNT*sizeof(uint32_t)) == 0 &&
                creation() == t.creation();
     }
 
@@ -187,7 +207,7 @@ public:
 
     void encode(char* buf, int& idx, size_t size) const;
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=nullptr) const {
         return out << *this;
     }
 };

@@ -36,10 +36,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_BASIC_OTP_MAILBOX_HPP_
 
 #include <boost/asio.hpp>
+#include <eixx/util/async_wait_timeout.hpp>
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/connect/transport_msg.hpp>
 #include <eixx/connect/verbose.hpp>
-#include <eixx/util/async_wait_timeout.hpp>
 #include <list>
 #include <set>
 
@@ -87,7 +87,7 @@ template <typename Alloc, typename Mutex>
 class basic_otp_mailbox
 {
 public:
-    typedef boost::shared_ptr<basic_otp_mailbox<Alloc, Mutex> > pointer;
+    typedef std::shared_ptr<basic_otp_mailbox<Alloc, Mutex> > pointer;
 
     typedef boost::function<
         void (basic_otp_mailbox<Alloc, Mutex>&, boost::system::error_code&)
@@ -178,7 +178,7 @@ public:
 	void deliver(const transport_msg<Alloc>& a_msg) {
         transport_msg<Alloc>* l_msg = new transport_msg<Alloc>(a_msg);
         m_io_service.post(
-            boost::bind(
+            std::bind(
                 &basic_otp_mailbox<Alloc, Mutex>::do_deliver, this, l_msg));
     }
 
@@ -359,14 +359,14 @@ async_receive(receive_handler_type h, long msec_timeout) throw (std::runtime_err
 
     if (msec_timeout < 0)
         m_deadline_timer.async_wait(
-            boost::bind(
+            std::bind(
                 &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer,
-                this, h, boost::asio::placeholders::error));
+                this, h, std::placeholders::_1));
     else
         m_deadline_timer.async_wait_timeout(
-            boost::bind(
+            std::bind(
                 &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer,
-                this, h, boost::asio::placeholders::error),
+                this, h, std::placeholders::_1),
             msec_timeout);
 }
 

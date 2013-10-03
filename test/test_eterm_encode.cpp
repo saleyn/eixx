@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE( test_encode_trace )
 
 BOOST_AUTO_TEST_CASE( test_encode_rpc )
 {
-    static const char s_expected[] = {
+    static const unsigned char s_expected[] = {
         131,104,2,103,100,0,14,69,67,71,46,72,49,46,48,48,49,64,102,49,54,0,0,0,1,
         0,0,0,0,0,104,5,100,0,4,99,97,108,108,100,0,7,101,99,103,95,97,112,105,100,
         0,11,114,101,103,95,112,114,111,99,101,115,115,108,0,0,0,5,100,0,3,69,67,71,

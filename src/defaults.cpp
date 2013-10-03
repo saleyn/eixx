@@ -51,6 +51,7 @@ namespace EIXX_NAMESPACE {
         switch (s[0]) {
             case 'i':
                 if (strncmp(p,"nt",m) == 0)         r = LONG;
+                if (strncmp(p,"nteger",m) == 0)     r = LONG;
                 break;
             case 'd':
                 if (strncmp(p,"ouble",m) == 0)      r = DOUBLE;
@@ -61,6 +62,11 @@ namespace EIXX_NAMESPACE {
             case 'b':
                 if      (strncmp(p,"ool",m) == 0)   r = BOOL;
                 else if (strncmp(p,"inary",m) == 0) r = BINARY;
+                else if (strncmp(p,"oolean",m)== 0) r = BOOL;
+                else if (strncmp(p,"yte",m) == 0)   r = LONG;
+                break;
+            case 'c':
+                if (strncmp(p,"har",m) == 0)        r = LONG;
                 break;
             case 'a':
                 if (strncmp(p,"tom",m) == 0)        r = ATOM;
@@ -73,7 +79,8 @@ namespace EIXX_NAMESPACE {
                 else if (strncmp(p,"ort",m) == 0)   r = PORT;
                 break;
             case 'r':
-                if (strncmp(p,"ef",m) == 0)         r = REF;
+                if      (strncmp(p,"ef",m) == 0)       r = REF;
+                else if (strncmp(p,"eference",m) == 0) r = REF;
                 break;
             case 'v':
                 if (strncmp(p,"ar",m) == 0)         r = VAR;

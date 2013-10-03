@@ -60,12 +60,12 @@ protected:
 public:
     typedef const char* const_iterator;
 
-    string() : m_blob(NULL) {}
+    string() : m_blob(nullptr) {}
 
     string(const char* s, const Alloc& a = Alloc()) {
         BOOST_ASSERT(s);
         if (!s[0]) {
-            m_blob = NULL;
+            m_blob = nullptr;
             return;
         }
         m_blob = new blob<char, Alloc>(strlen(s)+1, a);
@@ -74,7 +74,7 @@ public:
     }
     string(const std::string& s, const Alloc& a = Alloc()) {
         if (s.empty()) {
-            m_blob = NULL;
+            m_blob = nullptr;
             return;
         }
         m_blob = new blob<char, Alloc>(s.size()+1, a);
@@ -83,7 +83,7 @@ public:
     }
     string(const char* s, size_t n, const Alloc& a = Alloc()) {
         if (n == 0) {
-            m_blob = NULL;
+            m_blob = nullptr;
             return;
         }
         m_blob = new blob<char, Alloc>(n+1, a);
@@ -94,6 +94,10 @@ public:
         if (m_blob) m_blob->inc_rc();
     }
 
+    string(string<Alloc>&& s) : m_blob(s.m_blob) {
+        s.m_blob = nullptr;
+    }
+
     string(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
         throw(err_decode_exception);
 
@@ -101,10 +105,22 @@ public:
         release();
     }
 
-    void operator= (const string<Alloc>& s) {
-        release(); 
-        m_blob = s.m_blob;
-        if (m_blob) m_blob->inc_rc();
+    string<Alloc>& operator= (const string<Alloc>& s) {
+        if (this != &s) {
+            release();
+            m_blob = s.m_blob;
+            if (m_blob) m_blob->inc_rc();
+        }
+        return *this;
+    }
+
+    string<Alloc>& operator= (string<Alloc>&& s) {
+        if (this != &s) {
+            release();
+            m_blob = s.m_blob;
+            s.m_blob = nullptr;
+        }
+        return *this;
     }
 
     void operator= (const std::string& s) {

@@ -72,6 +72,8 @@ class epid {
         {}
     };
 
+    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(void*));
+
     blob<pid_blob, Alloc>* m_blob;
 
     void release() {
@@ -100,9 +102,11 @@ class epid {
     void decode(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
         throw (err_decode_exception, err_bad_argument);
 
-    epid() {}
-
 public:
+
+    static const epid null;
+
+    epid() : m_blob(nullptr) {}
 
     /**
      * Create an Erlang pid from its components using provided allocator.
@@ -139,50 +143,63 @@ public:
     }
 
     epid(const epid& rhs) : m_blob(rhs.m_blob) {
-        m_blob->inc_rc();
-        #ifdef EIXX_DEBUG
-        std::cerr << "Copied pid " << *this
-                  << " [addr=" << this << ", blob=" << m_blob
-                  << ", rc=" << m_blob->use_count() << ']' << std::endl;
-        #endif
+        if (m_blob) {
+            m_blob->inc_rc();
+            #ifdef EIXX_DEBUG
+            std::cerr << "Copied pid " << *this
+                    << " [addr=" << this << ", blob=" << m_blob
+                    << ", rc=" << m_blob->use_count() << ']' << std::endl;
+            #endif
+        }
     }
+
+    epid(epid&& rhs) : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
 
     ~epid() { release(); }
 
-    void operator= (const epid& rhs) {
-        release(); m_blob = rhs.m_blob; m_blob->inc_rc();
-        #ifdef EIXX_DEBUG
-        std::cerr << "Copied pid " << *this
-                  << " [addr=" << this << ", blob=" << m_blob
-                  << ", rc=" << m_blob->use_count() << ']' << std::endl;
-        #endif
+    epid& operator= (const epid& rhs) {
+        if (this != &rhs) {
+            release();
+            m_blob = rhs.m_blob;
+            if (!m_blob) m_blob->inc_rc();
+        }
+        return *this;
+    }
+
+    epid& operator= (epid&& rhs) {
+        if (this != &rhs) {
+            release();
+            m_blob = rhs.m_blob;
+            rhs.m_blob = nullptr;
+        }
+        return *this;
     }
 
     /**
      * Get the node name from the PID.
      * @return the node name from the PID.
      **/
-    const atom& node() const { return m_blob->data()->node; }
+    atom node() const { return m_blob ? m_blob->data()->node : atom::null; }
 
     /**
      * Get the id number from the PID.
      * @return the id number from the PID.
      **/
-    int id() const { return m_blob->data()->u.s.id; }
+    int id() const { return m_blob ? m_blob->data()->u.s.id : 0; }
 
     /**
      * Get the serial number from the PID.
      * @return the serial number from the PID.
      **/
-    int serial() const { return m_blob->data()->u.s.serial; }
+    int serial() const { return m_blob ? m_blob->data()->u.s.serial : 0; }
 
     /**
      * Get the creation number from the PID.
      * @return the creation number from the PID.
      **/
-    int creation() const { return m_blob->data()->u.s.creation; }
+    int creation() const { return m_blob ? m_blob->data()->u.s.creation : 0; }
 
-    uint32_t id_internal() const { return m_blob->data()->u.i & 0x7FFFFFFF; }
+    uint32_t id_internal() const { return m_blob ? m_blob->data()->u.i & 0x7FFFFFFF : 0; }
 
     bool operator== (const epid<Alloc>& rhs) const {
         return id_internal() == rhs.id_internal() && node() == rhs.node();

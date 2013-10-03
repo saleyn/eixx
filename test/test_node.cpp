@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ***** END LICENSE BLOCK *****
 */
 
+#include <eixx/util/async_wait_timeout.hpp>
 #include <boost/test/unit_test.hpp>
 #include "test_alloc.hpp"
 #include <eixx/eixx.hpp>
@@ -38,7 +39,7 @@ using namespace eixx;
 
 BOOST_AUTO_TEST_CASE( test_node )
 {
-    std::string l_hostname("gbox-car-00"), l_resolved;
+    std::string l_hostname("localhost"), l_resolved;
     boost::asio::io_service svc;
     boost::asio::ip::tcp::resolver resolver(svc);
     boost::asio::ip::tcp::resolver::query query(l_hostname, "");

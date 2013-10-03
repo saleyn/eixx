@@ -51,27 +51,27 @@ namespace marshal {
  **/
 class var
 {
-    uint32_t m_type;
-    atom     m_name;
+    atom    m_name;
+    int     m_type;
 
-    bool check_type(eterm_type t) const { return is_any() || t == type(); }
+    bool check_type(eterm_type t) const {
+        return is_any() || m_type == UNDEFINED || t == m_type;
+    }
 
     typedef util::atom_table<>::string_t string_t;
+
+    eterm_type set(eterm_type t) { return m_name == am_ANY_ ? UNDEFINED : t; }
+
 public:
-    var(eterm_type t = UNDEFINED)
-        { m_type = t; m_name = am_ANY_;  }
-    var(const char* s, eterm_type t = UNDEFINED)
-        { m_type = t; m_name = atom(s); }
-    var(const std::string& s, eterm_type t = UNDEFINED)
-        { m_type = t; m_name = atom(s); }
+    var(eterm_type t = UNDEFINED)                   : var(am_ANY_, t) {}
+    var(const atom& s, eterm_type t = UNDEFINED)    : m_name(s) { m_type = set(t); }
+
+    var(const char* s, eterm_type t = UNDEFINED)            : var(atom(s), t) {}
+    var(const std::string& s, eterm_type t = UNDEFINED)     : var(atom(s), t) {}
     template <typename Alloc>
-    var(const string<Alloc>& s, eterm_type t = UNDEFINED)
-        { m_type = t; m_name = atom(s); }
-    var(const char* s, size_t n, eterm_type t = UNDEFINED)
-        { m_type = t; m_name = atom(s, n); }
-    var(const atom& s, eterm_type t = UNDEFINED)
-        { m_type = t; m_name = s; }
-    var(const var& v) { m_type = v.m_type; m_name = v.m_name; }
+    var(const string<Alloc>& s, eterm_type t = UNDEFINED)   : var(atom(s), t) {}
+    var(const char* s, size_t n, eterm_type t = UNDEFINED)  : var(atom(s, n), t) {}
+    var(const var& v)                                       : var(v.name(), v.type()) {}
 
     const char*             c_str()         const { return m_name.c_str(); }
     const string_t&         str()           const { return m_name.to_string(); }
@@ -94,7 +94,7 @@ public:
 
     void encode(char* buf, int& idx, size_t size) const {
         throw err_encode_exception("Cannot encode vars!");
-    }    
+    }
 
     template <typename Alloc>
     const eterm<Alloc>*
@@ -117,8 +117,9 @@ public:
     bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const
         throw (err_unbound_variable)
     {
+        if (is_any()) return true;
         if (!binding) return false;
-        const eterm<Alloc>* value = binding ? binding->find(name()) : NULL;
+        const eterm<Alloc>* value = binding->find(name());
         if (value)
             return check_type(value->type()) ? value->match(pattern, binding) : false;
         if (!check_type(pattern.type()))

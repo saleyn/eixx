@@ -23,18 +23,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <eixx/marshal/eterm.hpp>
-#include <eixx/marshal/atom.hpp>
-//#include <boost/pool/detail/singleton.hpp>
+#include <eixx/marshal/ref.hpp>
 
 namespace EIXX_NAMESPACE {
 
-    util::atom_table<>& marshal::atom::atom_table() {
-        //return boost::details::pool::singleton_default<detail::atom_table<> >::instance();
-        static util::atom_table<> s_atom_table;
-        return s_atom_table;
-    }
-
-    const atom marshal::atom::null = atom();
+    const uint32_t marshal::detail::s_ref_ids[] = {0, 0, 0};
 
 } // namespace EIXX_NAMESPACE
 

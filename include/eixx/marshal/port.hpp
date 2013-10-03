@@ -73,8 +73,11 @@ class port {
         new (m_blob->data()) port_blob(node, id & 0x0fffffff, creation & 0x03);
     }
 
-    port() {}
 public:
+    static const port<Alloc> null;
+
+    port() : m_blob(nullptr) {}
+
     /**
      * Create an Erlang port from its components.
      * If node string size is greater than MAX_NODE_LENGTH or = 0,
@@ -113,29 +116,43 @@ public:
     port(const char *buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
         throw (err_decode_exception);
 
-    port(const port& rhs) : m_blob(rhs.m_blob) { m_blob->inc_rc(); }
+    port(const port& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
+    port(port&& rhs)      : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
 
     ~port() { release(); }
 
-    void operator= (const port& rhs) { release(); m_blob = rhs.m_blob; m_blob->inc_rc(); }
+    port& operator= (const port& rhs) {
+        if (this != &rhs) {
+            release(); m_blob = rhs.m_blob;
+            if (m_blob) m_blob->inc_rc();
+        }
+        return *this;
+    }
+
+    port& operator= (port&& rhs) {
+        if (this != &rhs) {
+            release(); m_blob = rhs.m_blob; rhs.m_blob = nullptr;
+        }
+        return *this;
+    }
 
     /**
      * Get the node name from the PORT.
      * @return the node name from the PORT.
      **/
-    const atom& node() const { return m_blob->data()->node; }
+    atom node() const { return m_blob ? m_blob->data()->node : atom::null; }
 
     /**
      * Get the id number from the PORT.
      * @return the id number from the PORT.
      **/
-    int id() const { return m_blob->data()->id; }
+    int id() const { return m_blob ? m_blob->data()->id : 0; }
 
     /**
      * Get the creation number from the PORT.
      * @return the creation number from the PORT.
      **/
-    int creation() const { return m_blob->data()->creation; }
+    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
 
     bool operator== (const port<Alloc>& t) const {
         return id() == t.id() && node() == t.node() && creation() == t.creation();

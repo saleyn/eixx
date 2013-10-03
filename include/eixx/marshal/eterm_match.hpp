@@ -183,10 +183,7 @@ public:
                varbind<Alloc>* a_binding = NULL) const 
     {
         bool res = false;
-        for(typename std::list<eterm_pattern_action<Alloc>, Alloc>::const_iterator 
-                it = m_pattern_list.begin(), end = m_pattern_list.end();
-                it != end; ++it)
-        {
+        for(auto it = m_pattern_list.begin(), end = m_pattern_list.end(); it != end; ++it) {
             if (it->operator() (a_term, a_binding)) {
                 res = true;
                 break;

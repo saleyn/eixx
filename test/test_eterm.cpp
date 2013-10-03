@@ -32,20 +32,20 @@ using namespace eixx;
 
 BOOST_AUTO_TEST_CASE( test_atomable )
 {
-    {
-        marshal::detail::atom_table<> t(10);
-        BOOST_REQUIRE_EQUAL(0u, t.lookup(""));
-        BOOST_REQUIRE_EQUAL(1u, t.lookup("abc"));
-        BOOST_REQUIRE_EQUAL(2u, t.lookup("aaaaa"));
-        BOOST_REQUIRE_EQUAL(1u, t.lookup("abc"));
-    }
+	util::atom_table<> t(10);
+	BOOST_REQUIRE_EQUAL(0, t.lookup(std::string()));
+	BOOST_REQUIRE_EQUAL(0, t.lookup(""));
+	int n = t.lookup("abc");
+	BOOST_REQUIRE(0 < n);
+	BOOST_REQUIRE(0 < t.lookup("aaaaa"));
+	BOOST_REQUIRE_EQUAL(n, t.lookup("abc"));
 }
 
 BOOST_AUTO_TEST_CASE( test_atom )
 {
     {
         atom a("");
-        BOOST_REQUIRE_EQUAL(0u, a.index());
+        BOOST_REQUIRE_EQUAL(0, a.index());
         BOOST_REQUIRE_EQUAL(atom(), a);
     }
     {
@@ -107,6 +107,12 @@ BOOST_AUTO_TEST_CASE( test_binary )
     { binary et("Abc", 3, alloc); }
     { binary et("Abc", 3); }
     { binary et("Abc", 3, alloc); }
+    {
+        binary et{1,2,109};
+        BOOST_REQUIRE_EQUAL(3u, et.size());
+        BOOST_REQUIRE_EQUAL("<<1,2,109>>", eterm(et).to_string());
+        BOOST_REQUIRE_EQUAL("<<>>", eterm(binary({}, alloc)).to_string());
+    }
 
     {
         const uint8_t buf[] = {ERL_BINARY_EXT,0,0,0,3,97,98,99};
@@ -592,28 +598,16 @@ BOOST_AUTO_TEST_CASE( test_varbind )
 {
     allocator_t alloc;
 
-    {
-        string a("Atom", alloc);
-        eterm ea(a);
+    varbind binding1;
+    binding1.bind(atom("Name"),  20.0);
+    binding1.bind(atom("Long"),  123);
+    varbind binding2;
+    binding2.bind(atom("Name"),  atom("test"));
+    binding2.bind(atom("Other"), "vasya");
 
-        eterm list[] = { 
-            ea,
-            eterm(123)
-        };
+    binding1.merge(binding2);
 
-        {
-            varbind binding1;
-            binding1.bind(a, list[0]);
-            binding1.bind("Long", list[1]);
-            varbind binding2;
-            binding2.bind("Atom", eterm(atom("test")));
-            binding2.bind(string("Other", alloc), list[0]);
-
-            binding1.merge(binding2);
-
-            BOOST_REQUIRE_EQUAL(3ul, binding1.count());
-        }
-    }
+    BOOST_REQUIRE_EQUAL(3ul, binding1.count());
 }
 
 eterm f() {

@@ -347,9 +347,9 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
     boost::asio::mutable_buffers_1 buffers(m_rd_end, rd_capacity());
     async_read(
         buffers, boost::asio::transfer_at_least(need_bytes),
-        boost::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(),
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+        std::bind(&connection<Handler, Alloc>::handle_read, this->shared_from_this(),
+            std::placeholders::_1,
+            std::placeholders::_2));
 }
 
 /// Decode distributed Erlang message.  The message must be fully
@@ -485,7 +485,7 @@ send(const transport_msg<Alloc>& a_msg)
 
     boost::asio::const_buffer b(data, len);
     m_io_service.post(
-        boost::bind(&connection<Handler, Alloc>::do_write, this->shared_from_this(), b));
+        std::bind(&connection<Handler, Alloc>::do_write, this->shared_from_this(), b));
 }
 
 } // namespace connect
