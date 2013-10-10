@@ -33,7 +33,7 @@ namespace EIXX_NAMESPACE {
 namespace connect {
 
 namespace {
-    std::string get_default_cookie() {
+    atom get_default_cookie() {
         const char* home = getenv("HOME") ? getenv("HOME") : "";
         if (home) {
             std::stringstream s;
@@ -50,15 +50,17 @@ namespace {
                 file >> cookie;
                 size_t n = cookie.find('\n');
                 if (n != std::string::npos) cookie.erase(n);
-                return cookie;
+                if (cookie.size() > EI_MAX_COOKIE_SIZE)
+                    throw err_bad_argument("Cookie size too long", cookie.size());
+                return atom(cookie);
             }
         }
-        return "no_cookie";
+        return atom();
     }
 
 } // namespace
 
-std::string basic_otp_node_local::s_default_cookie = get_default_cookie();
+atom        basic_otp_node_local::s_default_cookie = get_default_cookie();
 std::string basic_otp_node_local::s_localhost      = boost::asio::ip::host_name();
 
 basic_otp_node_local::basic_otp_node_local(
@@ -72,10 +74,10 @@ void basic_otp_node_local::set_nodename(
     const std::string& a_nodename, const std::string& a_cookie)
     throw (std::runtime_error, err_bad_argument)
 {
-    m_cookie = a_cookie.empty() ? s_default_cookie : a_cookie;
-
     if (m_cookie.size() > EI_MAX_COOKIE_SIZE)
         throw err_bad_argument("Cookie size too long", m_cookie.size());
+
+    m_cookie = a_cookie.empty() ? s_default_cookie : atom(a_cookie);
 
     std::string::size_type pos = a_nodename.find('@');
 

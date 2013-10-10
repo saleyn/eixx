@@ -96,7 +96,7 @@ class basic_otp_node: public basic_otp_node_local {
             static const size_t s_max_node_connections = init_default_hash_size();
             return s_max_node_connections;
         }
-        
+
         atom_con_hash_fun(conn_hash_map* a_map) : map(*a_map) {}
 
         size_t operator()(const atom& data) const {
@@ -121,10 +121,10 @@ class basic_otp_node: public basic_otp_node_local {
     friend class basic_otp_connection<Alloc, Mutex>;
 
     void on_disconnect_internal(const connection_t& a_con,
-        const std::string& a_remote_node, const boost::system::error_code& err)
+        atom a_remote_nodename, const boost::system::error_code& err)
     {
         if (on_disconnect)
-            on_disconnect(*this, a_con, a_remote_node, err);
+            on_disconnect(*this, a_con, a_remote_nodename, err);
     }
 
     void report_status(report_level a_level, const connection_t* a_con, const std::string& s);
@@ -160,8 +160,8 @@ public:
      * @throws eterm_exception if there is an error in transport creation
      */
     basic_otp_node(boost::asio::io_service& a_io_svc,
-                   const atom& a_nodename = atom(),
-                   const std::string& a_cookie = "",
+                   const std::string& a_nodename = std::string(),
+                   const std::string& a_cookie = std::string(),
                    const Alloc& a_alloc = Alloc(),
                    int8_t a_creation = -1)
         throw (err_bad_argument, err_connection, eterm_exception);
@@ -256,8 +256,8 @@ public:
      * and is not started.
      */
     template <typename CompletionHandler>
-    void connect(CompletionHandler h, const atom& a_remote_node,
-                 const std::string& a_cookie = "", size_t a_reconnect_secs = 0)
+    void connect(CompletionHandler h, atom a_remote_node,
+                 atom a_cookie = atom(), size_t a_reconnect_secs = 0)
         throw(err_connection);
 
     /**
@@ -269,15 +269,15 @@ public:
      * and is not started.
      */
     template <typename CompletionHandler>
-    void connect(CompletionHandler h, const atom& a_remote_node, size_t a_reconnect_secs = 0)
+    void connect(CompletionHandler h, atom a_remote_nodename, size_t a_reconnect_secs = 0)
         throw(err_connection)
     {
-        connect(h, a_remote_node, "", a_reconnect_secs);
+        connect(h, a_remote_nodename, atom(), a_reconnect_secs);
     }
 
     /// Get connection identified by the \a a_node name.
     /// @throws err_connection if not connected to \a a_node._
-    connection_t& connection(const atom& a_nodename) const {
+    connection_t& connection(atom a_nodename) const {
         typename conn_hash_map::const_iterator l_con = m_connections.find(a_nodename);
         if (l_con == m_connections.end())
             throw err_connection("Not connected to node", a_nodename);
@@ -288,8 +288,8 @@ public:
      * Callback invoked on disconnect from a peer node
      */
     boost::function<
-        //    OtpNode      OtpConnection     RemoteNodeName         ErrorCode
-        void (self&, const connection_t&, const std::string&, const boost::system::error_code&)
+        //    OtpNode      OtpConnection  RemoteNodeName         ErrorCode
+        void (self&, const connection_t&, atom, const boost::system::error_code&)
     > on_disconnect; 
 
     /**

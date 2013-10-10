@@ -106,16 +106,16 @@ void on_connect(otp_connection* a_con, const std::string& a_error) {
 
     // Make sure that remote node has a process registered as "test".
     // Try sending a message to it.
-    g_main->send_rpc(a_con->remote_node(), "erlang", "now", list::make());
+    g_main->send_rpc(a_con->remote_nodename(), "erlang", "now", list::make());
 
     // Send an rpc request to print a string. The remote 
-    g_io_server->send_rpc_cast(a_con->remote_node(), atom("io"), atom("put_chars"),
+    g_io_server->send_rpc_cast(a_con->remote_nodename(), atom("io"), atom("put_chars"),
         list::make("This is a test string"), &g_io_server->self());
 }
 
 void on_disconnect(
     otp_node& a_node, const otp_connection& a_con,
-    const std::string& a_remote_node, const boost::system::error_code& err)
+    atom a_remote_node, const boost::system::error_code& err)
 {
     std::cout << "Disconnected from remote node " << a_remote_node << std::endl;
     if (a_con.reconnect_timeout() == 0)
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
     g_main      = l_node.create_mailbox("main");
     g_rem_node  = atom(l_remote);
 
-    l_node.connect(&on_connect, l_remote, reconnect_secs);
+    l_node.connect(&on_connect, g_rem_node, reconnect_secs);
 
     //otp_connection::connection_type* l_transport = a_con->transport();
     g_io_server->async_receive(&on_io_request);

@@ -62,19 +62,19 @@ public:
         throw (std::runtime_error, err_bad_argument);
 
     /// Get node name in the form <tt>node@host</tt>.
-    const atom& nodename()  const { return m_nodename; }
+    atom                nodename()  const { return m_nodename; }
 
     /// Get node name in the form <tt>node@host.name.com</tt>.
-    const std::string& longname()  const { return m_longname; }
+    const std::string&  longname()  const { return m_longname; }
 
     /// Get name of the node without hostname
-    const std::string& alivename() const { return m_alivename; }
+    const std::string&  alivename() const { return m_alivename; }
 
     /// Get host name
-    const std::string& hostname()  const { return m_hostname; }
+    const std::string&  hostname()  const { return m_hostname; }
 
     /// Get cookie
-    const std::string& cookie()    const { return m_cookie; }
+    atom                cookie()    const { return m_cookie; }
 
     /// Set the cookie
     void cookie(const std::string& a_cookie) { m_cookie = a_cookie; }
@@ -87,9 +87,9 @@ protected:
     std::string m_longname;
     std::string m_alivename;
     std::string m_hostname;
-    std::string m_cookie;
+    atom        m_cookie;
 
-    static std::string s_default_cookie; // Default cookie
+    static atom        s_default_cookie; // Default cookie
     static std::string s_localhost;      // localhost name
 };
 

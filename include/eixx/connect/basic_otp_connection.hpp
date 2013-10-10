@@ -59,7 +59,7 @@ private:
     typename connection_type::pointer   m_transport;
     basic_otp_node<Alloc,Mutex>*        m_node;
     atom                                m_remote_nodename;
-    std::string                         m_cookie;
+    atom                                m_cookie;
     const Alloc&                        m_alloc;
     connect_completion_handler          m_on_connect_status;
     bool                                m_connected;
@@ -68,14 +68,16 @@ private:
     bool                                m_abort;
 
     basic_otp_connection(
-            connect_completion_handler h,
-            boost::asio::io_service& a_svc,
-            basic_otp_node<Alloc,Mutex>* a_node, const atom& a_remote_node,
-            const std::string& a_cookie, int a_reconnect_secs = 0,
-            const Alloc& a_alloc = Alloc())
+            connect_completion_handler      h,
+            boost::asio::io_service&        a_svc,
+            basic_otp_node<Alloc,Mutex>*    a_node,
+            atom                            a_remote_nodename,
+            atom                            a_cookie,
+            int                             a_reconnect_secs = 0,
+            const Alloc&                    a_alloc = Alloc())
         : m_io_service(a_svc)
         , m_node(a_node)
-        , m_remote_nodename(a_remote_node)
+        , m_remote_nodename(a_remote_nodename)
         , m_cookie(a_cookie)
         , m_alloc(a_alloc)
         , m_connected(false)
@@ -86,8 +88,8 @@ private:
         BOOST_ASSERT(a_node != NULL);
         m_on_connect_status = h;
         m_transport = connection_type::create(
-            m_io_service, this, a_node->nodename().to_string(),
-            a_remote_node.to_string(), a_cookie, a_alloc);
+            m_io_service, this, a_node->nodename(),
+            a_remote_nodename, a_cookie, a_alloc);
     }
 
     void reconnect() {
@@ -110,8 +112,8 @@ private:
         }
 
         m_transport = connection_type::create(
-            m_io_service, this, m_node->nodename().to_string(),
-            m_remote_nodename.to_string(), m_cookie, m_alloc);
+            m_io_service, this, m_node->nodename(),
+            m_remote_nodename, m_cookie, m_alloc);
     }
 
 public:
@@ -121,7 +123,7 @@ public:
     connection_type*             transport()              { return m_transport.get(); }
     verbose_type                 verbose()          const { return m_node->verbose(); }
     basic_otp_node<Alloc,Mutex>* node()                   { return m_node;            }
-    const atom&                  remote_node()      const { return m_remote_nodename; }
+    atom                         remote_nodename()  const { return m_remote_nodename; }
 
     bool  connected()                               const { return m_connected;       }
     int   reconnect_timeout()                       const { return m_reconnect_secs;  }
@@ -130,15 +132,16 @@ public:
     void reconnect_timeout(size_t a_reconnect_secs) { m_reconnect_secs = a_reconnect_secs; }
 
     static pointer
-    connect(connect_completion_handler h,
-            boost::asio::io_service& a_svc,
-            basic_otp_node<Alloc,Mutex>* a_node, const atom& a_remote_node,
-            const std::string& a_cookie,
-            int a_reconnect_secs = 0,
-            const Alloc& a_alloc = Alloc())
+    connect(connect_completion_handler      h,
+            boost::asio::io_service&        a_svc,
+            basic_otp_node<Alloc,Mutex>*    a_node,
+            atom                            a_remote_nodename,
+            atom                            a_cookie,
+            int                             a_reconnect_secs = 0,
+            const Alloc&                    a_alloc = Alloc())
     {
         pointer p(new basic_otp_connection<Alloc,Mutex>(
-            h, a_svc, a_node, a_remote_node, a_cookie, a_reconnect_secs, a_alloc));
+            h, a_svc, a_node, a_remote_nodename, a_cookie, a_reconnect_secs, a_alloc));
         return p;
     }
 
@@ -156,7 +159,7 @@ public:
             if (m_abort)
                 return;
             else
-                throw err_connection("Not connected to node", remote_node());
+                throw err_connection("Not connected to node", remote_nodename());
         } else if (m_connected)
             m_transport->send(a_msg);
         // If not connected, the message sending will be ignored
@@ -172,7 +175,7 @@ public:
             m_on_connect_status(this, std::string());
         if (unlikely(verbose() > VERBOSE_NONE)) {
             report_status(REPORT_INFO,
-                "Connected to node: " + a_con->remote_node());
+                "Connected to node: " + a_con->remote_nodename().to_string());
         }
     }
 
@@ -186,7 +189,8 @@ public:
             m_on_connect_status(this, a_error);
         else if (unlikely(verbose() > VERBOSE_NONE)) {
             std::stringstream s;
-            s << "Failed to connect to node " << a_con->remote_node() << ": " << a_error;
+            s << "Failed to connect to node "
+              << a_con->remote_nodename() << ": " << a_error;
             report_status(REPORT_ERROR, s.str());
         }
         reconnect();
@@ -197,12 +201,12 @@ public:
 
         if (unlikely(verbose() > VERBOSE_DEBUG)) {
             std::stringstream s;
-            s << "Disconnected from node: " << a_con->remote_node()
+            s << "Disconnected from node: " << a_con->remote_nodename()
               << " (" << err.message() << ')';
             report_status(REPORT_ERROR, s.str());
         }
         if (m_node)
-            m_node->on_disconnect_internal(*this, a_con->remote_node(), err);
+            m_node->on_disconnect_internal(*this, a_con->remote_nodename(), err);
 
         m_transport.reset();
         reconnect();
@@ -210,7 +214,7 @@ public:
 
     void on_error(connection_type* a_con, const std::string& s) {
         std::stringstream str;
-        str << "Error in communication with node: " << a_con->remote_node()
+        str << "Error in communication with node: " << a_con->remote_nodename()
                   << "\n  " << s;
         report_status(REPORT_ERROR, str.str());
     }

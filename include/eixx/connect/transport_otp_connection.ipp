@@ -59,15 +59,14 @@ typename connection<Handler, Alloc>::pointer
 connection<Handler, Alloc>::create(
     boost::asio::io_service& a_svc,
     Handler*            a_h,
-    const std::string&  a_this_node,
-    const std::string&  a_node,
-    const std::string&  a_cookie,
+    atom                a_this_node,
+    atom                a_node,
+    atom                a_cookie,
     const Alloc&        a_alloc)
 {
-    if (a_this_node.find('@') == std::string::npos)
-        THROW_RUNTIME_ERROR("Invalid name of this node: " << a_this_node);
+    BOOST_ASSERT(a_this_node.to_string().find('@') != std::string::npos);
 
-    std::string addr(a_node);
+    std::string addr(a_node.to_string());
 
     connection_type con_type = parse_connection_type(addr);
 
@@ -91,7 +90,7 @@ connection<Handler, Alloc>::create(
         default:   THROW_RUNTIME_ERROR("Not implemented! (proto=" << con_type << ')');
     }
 
-    p->connect(a_this_node, addr, a_cookie);
+    p->connect(a_this_node, a_node, a_cookie);
     return p;
 }
 
@@ -186,16 +185,13 @@ handle_write(const boost::system::error_code& err)
         // We use operation_aborted as a user-initiated connection reset,
         // therefore check to substitute the error since bytes_transferred == 0
         // means a connection loss.
-        boost::system::error_code e =
-            err == boost::asio::error::operation_aborted
+        boost::system::error_code e = err == boost::asio::error::operation_aborted
             ? boost::asio::error::not_connected : err;
         stop(e);
         return;
     }
-    for (std::deque<boost::asio::const_buffer>::iterator
-                it  = m_out_msg_queue[writing_queue()].begin(),
-                end = m_out_msg_queue[writing_queue()].end();
-            it != end; ++it) {
+    auto& q = m_out_msg_queue[writing_queue()];
+    for (auto it  = q.begin(), end = q.end(); it != end; ++it) {
         const char* p = boost::asio::buffer_cast<const char*>(*it);
         // Don't forget to adjust for the header magic byte.
         BOOST_ASSERT(*(p - 1) == s_header_magic);

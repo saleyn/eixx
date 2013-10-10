@@ -41,10 +41,10 @@ namespace connect {
 template <typename Alloc, typename Mutex>
 basic_otp_node<Alloc, Mutex>::basic_otp_node(
     boost::asio::io_service& a_io_svc,
-    const atom& a_nodename, const std::string& a_cookie,
+    const std::string& a_nodename, const std::string& a_cookie,
     const Alloc& a_alloc, int8_t a_creation)
     throw (err_bad_argument, err_connection, eterm_exception)
-    : basic_otp_node_local(a_nodename.to_string(), a_cookie)
+    : basic_otp_node_local(a_nodename, a_cookie)
     , m_creation((a_creation < 0 ? time(NULL) : (int)a_creation) & 0x03)  // Creation counter
     , m_pid_count(1)
     , m_port_count(1)
@@ -102,14 +102,13 @@ ref<Alloc> basic_otp_node<Alloc, Mutex>::create_ref() {
 template <typename Alloc, typename Mutex>
 template <typename CompletionHandler>
 void basic_otp_node<Alloc, Mutex>::connect(
-    CompletionHandler h, const atom& a_remote_node, const std::string& a_cookie,
-    size_t a_reconnect_secs)
+    CompletionHandler h, atom a_remote_node, atom a_cookie, size_t a_reconnect_secs)
     throw(err_connection)
 {
     lock_guard<Mutex> guard(m_lock);
     typename conn_hash_map::iterator it = m_connections.find(a_remote_node);
     if (it == m_connections.end()) {
-        const std::string& l_cookie = a_cookie.empty() ? cookie() : a_cookie;
+        atom l_cookie = a_cookie.empty() ? cookie() : a_cookie;
         typename connection_t::pointer con(
             connection_t::connect(h, m_io_service, this, a_remote_node,
                                   l_cookie, a_reconnect_secs));
@@ -160,7 +159,7 @@ void basic_otp_node<Alloc, Mutex>::deliver(const transport_msg<Alloc>& a_msg)
     throw (err_bad_argument, err_no_process, err_connection)
 {
     try {
-        const eterm<Alloc>& l_to = a_msg.to();
+        const eterm<Alloc>& l_to = a_msg.recipient();
         basic_otp_mailbox<Alloc, Mutex>* l_mbox = get_mailbox(l_to);
         l_mbox->deliver(a_msg);
     } catch (std::exception& e) {

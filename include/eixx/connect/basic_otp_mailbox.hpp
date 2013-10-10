@@ -377,22 +377,22 @@ do_deliver(transport_msg<Alloc>* a_msg)
     try {
         switch (a_msg->type()) {
             case transport_msg<Alloc>::LINK:
-                BOOST_ASSERT(a_msg->to_pid() == self());
-                m_links.insert(a_msg->from_pid());
+                BOOST_ASSERT(a_msg->recipient_pid() == self());
+                m_links.insert(a_msg->sender_pid());
                 delete a_msg;
                 return;
 
             case transport_msg<Alloc>::UNLINK:
-                BOOST_ASSERT(a_msg->to_pid() == self());
-                m_links.erase(a_msg->from_pid());
+                BOOST_ASSERT(a_msg->recipient_pid() == self());
+                m_links.erase(a_msg->sender_pid());
                 delete a_msg;
                 return;
 
             case transport_msg<Alloc>::MONITOR_P:
-                BOOST_ASSERT((a_msg->to().type() == PID && a_msg->to_pid() == self())
-                           || a_msg->to().to_atom() == m_name);
+                BOOST_ASSERT((a_msg->recipient().type() == PID && a_msg->recipient_pid() == self())
+                           || a_msg->recipient().to_atom() == m_name);
                 m_monitors.insert(
-                    std::pair<ref<Alloc>, epid<Alloc> >(a_msg->get_ref(), a_msg->from_pid()));
+                    std::pair<ref<Alloc>, epid<Alloc> >(a_msg->get_ref(), a_msg->sender_pid()));
                 delete a_msg;
                 return;
 
@@ -408,8 +408,8 @@ do_deliver(transport_msg<Alloc>* a_msg)
 
             case transport_msg<Alloc>::EXIT2:
             case transport_msg<Alloc>::EXIT2_TT:
-                BOOST_ASSERT(a_msg->to_pid() == self());
-                m_links.erase(a_msg->from_pid());
+                BOOST_ASSERT(a_msg->recipient_pid() == self());
+                m_links.erase(a_msg->sender_pid());
                 m_queue.push_back(a_msg);
                 break;
 

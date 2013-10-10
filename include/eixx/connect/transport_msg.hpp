@@ -110,9 +110,9 @@ public:
     }
 
     /// Return the term representing the message sender. The sender is
-    /// usually a pid, except for MONITOR_P_EXIT message type for which 
+    /// usually a pid, except for MONITOR_P_EXIT message type for which
     /// the sender can be either pid or atom name.
-    const eterm<Alloc>& from() const {
+    const eterm<Alloc>& sender() const {
         switch (m_type) {
             case REG_SEND:
             case LINK:
@@ -134,14 +134,14 @@ public:
 
     /// This function may only raise exception for MONITOR_P_EXIT
     /// message types if the message sender is given by name rather than by pid.
-    const epid<Alloc>& from_pid() const throw (err_wrong_type) {
-        return from().to_pid();
+    const epid<Alloc>& sender_pid() const throw (err_wrong_type) {
+        return sender().to_pid();
     }
 
     /// Return the term representing the message sender. The sender is
     /// usually a pid, except for MONITOR_P|DEMONITOR_P message type for which 
     /// the sender can be either pid or atom name.
-    const eterm<Alloc>& to() const {
+    const eterm<Alloc>& recipient() const {
         switch (m_type) {
             case REG_SEND:
                 return m_cntrl[3];
@@ -167,12 +167,12 @@ public:
 
     /// This function may only raise exception for MONITOR_P|DEMONITOR_P
     /// message types if the message sender is given by name rather than by pid.
-    const epid<Alloc>& to_pid() const throw (err_wrong_type) {
-        return to().to_pid();
+    const epid<Alloc>& recipient_pid() const throw (err_wrong_type) {
+        return recipient().to_pid();
     }
 
-    const atom& to_name() const throw (err_wrong_type) {
-        return to().to_atom();
+    const atom& recipient_name() const throw (err_wrong_type) {
+        return recipient().to_atom();
     }
 
     const eterm<Alloc>& trace_token() const throw (err_wrong_type) {
@@ -221,8 +221,8 @@ public:
 
     /// Set the current message to represent a SEND message containing \a a_msg to
     /// be sent to \a a_to pid.
-    void set_send(const epid<Alloc>& a_to, const eterm<Alloc>& a_msg, 
-        const Alloc& a_alloc = Alloc())
+    void set_send(const epid<Alloc>& a_to, const eterm<Alloc>& a_msg,
+                  const Alloc& a_alloc = Alloc())
     {
         const trace<Alloc>* token = trace<Alloc>::tracer(marshal::TRACE_GET);
         if (unlikely(token)) {
@@ -238,8 +238,8 @@ public:
 
     /// Set the current message to represent a REG_SEND message containing
     /// \a a_msg to be sent from \a a_from pid to \a a_to registered mailbox.
-    void set_reg_send(const epid<Alloc>& a_from, const atom& a_to, const eterm<Alloc>& a_msg,
-        const Alloc& a_alloc = Alloc())
+    void set_reg_send(const epid<Alloc>& a_from, const atom& a_to,
+                      const eterm<Alloc>& a_msg, const Alloc& a_alloc = Alloc())
     {
         const trace<Alloc>* token = trace<Alloc>::tracer(marshal::TRACE_GET);
         if (unlikely(token)) {
@@ -255,9 +255,10 @@ public:
 
     /// Set the current message to represent a LINK message.
     void set_link(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
-        const Alloc& a_alloc = Alloc())
+                  const Alloc& a_alloc = Alloc())
     {
-        const tuple<Alloc>& l_cntrl = tuple<Alloc>::make(ERL_LINK, a_from, a_to, a_alloc);
+        const tuple<Alloc>& l_cntrl =
+            tuple<Alloc>::make(ERL_LINK, a_from, a_to, a_alloc);
         set(LINK, l_cntrl, NULL);
     }
 
@@ -265,7 +266,8 @@ public:
     void set_unlink(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
         const Alloc& a_alloc = Alloc())
     {
-        const tuple<Alloc>& l_cntrl = tuple<Alloc>::make(ERL_UNLINK, a_from, a_to, a_alloc);
+        const tuple<Alloc>& l_cntrl =
+            tuple<Alloc>::make(ERL_UNLINK, a_from, a_to, a_alloc);
         set(UNLINK, l_cntrl, NULL);
     }
 
@@ -313,7 +315,7 @@ public:
     }
 
     /// Set the current message to represent a MONITOR_EXIT message.
-    void set_monitor_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to, 
+    void set_monitor_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
         const ref<Alloc>& a_ref, const eterm<Alloc>& a_reason,
         const Alloc& a_alloc = Alloc())
     {

@@ -142,8 +142,7 @@ private:
     uint32_t     m_remote_challenge;
     uint32_t     m_our_challenge;
 
-    void connect(const std::string& a_this_node, 
-        const std::string& a_remote_node, const std::string& a_cookie)
+    void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
         throw(std::runtime_error);
 
     std::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
@@ -159,10 +158,16 @@ private:
     void start();
 
     std::string remote_alivename() const {
-        return this->remote_node().substr(0, this->remote_node().find('@'));
+        auto s = this->remote_nodename().to_string();
+        auto n = s.find('@');
+        BOOST_ASSERT(n != std::string::npos);
+        return s.substr(0, s.find('@'));
     }
     std::string remote_hostname() const {
-        return this->remote_node().substr(this->remote_node().find('@')+1);
+        auto s = this->remote_nodename().to_string();
+        auto n = s.find('@');
+        BOOST_ASSERT(n != std::string::npos);
+        return s.substr(s.find('@')+1);
     }
 
     void handle_resolve(

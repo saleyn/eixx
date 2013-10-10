@@ -76,9 +76,9 @@ protected:
     /// The handler used to process the incoming request.
     Handler*                    m_handler;
     connection_type             m_type;
-    std::string                 m_remote_node;
-    std::string                 m_this_node;
-    std::string                 m_cookie;
+    atom                        m_remote_nodename;
+    atom                        m_this_node;
+    atom                        m_cookie;
 
     Alloc                       m_allocator;
 
@@ -220,18 +220,18 @@ protected:
     static connection_type parse_connection_type(std::string& s) 
         throw(std::runtime_error);
 
-    /// Establish connection to \a a_remote_node. The call is non-blocking -
+    /// Establish connection to \a a_remote_nodename. The call is non-blocking -
     /// it will immediately returned, and Handler's on_connect() or 
     /// on_error() callback will be invoked on successful/failed connection
     /// status.
-    virtual void connect(const std::string& a_this_node, 
-                         const std::string& a_remote_node,
-                         const std::string& a_cookie)
+    virtual void connect(atom   a_this_node,
+                         atom   a_remote_nodename,
+                         atom   a_cookie)
         throw(std::runtime_error)
     {
-        m_this_node   = a_this_node;
-        m_remote_node = a_remote_node;
-        m_cookie      = a_cookie;
+        m_this_node         = a_this_node;
+        m_remote_nodename   = a_remote_nodename;
+        m_cookie            = a_cookie;
     }
 
     /// Set the socket to non-blocking mode and issue on_connect() callback.
@@ -281,12 +281,12 @@ public:
     /// \endverbatim
     /// @param a_cookie security cookie.
     static pointer create(
-        boost::asio::io_service& a_svc,
-        handler_type*      a_h,
-        const std::string& a_this_node,
-        const std::string& a_node,
-        const std::string& a_cookie,
-        const Alloc&       a_alloc = Alloc());
+        boost::asio::io_service&    a_svc,
+        handler_type*               a_h,
+        atom                        a_this_node,
+        atom                        a_node,
+        atom                        a_cookie,
+        const Alloc&                a_alloc = Alloc());
 
     virtual ~connection() {
         if (handler()->verbose() >= VERBOSE_TRACE)
@@ -324,12 +324,12 @@ public:
     virtual int native_socket() = 0;
 
     /// Address of connected peer.
-    virtual std::string         peer_address() const    { return ""; }
-    const   std::string&        remote_node()  const    { return m_remote_node; }
-    const   std::string&        this_node()    const    { return m_this_node; }
-    const   std::string&        cookie()       const    { return m_cookie; }
-    Handler*                    handler()               { return m_handler; }
-    boost::asio::io_service&    io_service()            { return m_io_service; }
+    virtual std::string         peer_address()      const   { return ""; }
+    atom                        remote_nodename()   const   { return m_remote_nodename; }
+    atom                        local_nodename()    const   { return m_this_node; }
+    atom                        cookie()            const   { return m_cookie; }
+    Handler*                    handler()                   { return m_handler; }
+    boost::asio::io_service&    io_service()                { return m_io_service; }
 
     /// Send a message \a a_msg to the remote node.
     void send(const transport_msg<Alloc>& a_msg);

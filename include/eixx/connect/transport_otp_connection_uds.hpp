@@ -81,21 +81,22 @@ private:
     boost::asio::local::stream_protocol::socket m_socket;
     std::string m_uds_filename;
 
-    void connect(const std::string& a_this_node, 
-        const std::string& a_remote_node, const std::string& a_cookie)
+    void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
         throw(std::runtime_error)
     {
-        base_t::connect(a_this_node, a_remote_node, a_cookie);
+        base_t::connect(a_this_node, a_remote_nodename, a_cookie);
 
         boost::system::error_code err;
-        boost::asio::local::stream_protocol::endpoint endpoint(a_remote_node);
+        boost::asio::local::stream_protocol::endpoint endpoint(a_remote_nodename.to_string());
         m_socket.connect(endpoint, err);
         if (err)
             THROW_RUNTIME_ERROR("Error connecting to: " << m_uds_filename 
                 << ':' << err.message());
-        size_t n = a_remote_node.find_last_of('/');
-        this->m_remote_node = (n != std::string::npos) ? a_remote_node.substr(n+1) : a_remote_node;
-        m_uds_filename = a_remote_node;
+        auto s = a_remote_nodename.to_string();
+        auto n = s.find_last_of('/');
+        if (n != std::string::npos) s.erase(n);
+        this->m_remote_nodename = atom(s);
+        m_uds_filename = a_remote_nodename.to_string();
         this->start();
     }
 
