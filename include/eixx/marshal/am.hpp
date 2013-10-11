@@ -52,8 +52,9 @@ namespace EIXX_NAMESPACE {
 	extern const atom am_gen_cast;
 	extern const atom am_io_lib;
 	extern const atom am_latin1;
-	extern const atom am_noproc;
 	extern const atom am_noconnection;
+	extern const atom am_noproc;
+	extern const atom am_normal;
 	extern const atom am_ok;
 	extern const atom am_request;
 	extern const atom am_rex;

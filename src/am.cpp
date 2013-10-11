@@ -38,8 +38,9 @@ namespace EIXX_NAMESPACE {
     const atom am_gen_cast          = atom("$gen_cast");
     const atom am_io_lib            = atom("io_lib");
     const atom am_latin1            = atom("latin1");
-    const atom am_noproc            = atom("noproc");
     const atom am_noconnection      = atom("noconnection");
+    const atom am_noproc            = atom("noproc");
+    const atom am_normal            = atom("normal");
     const atom am_ok                = atom("ok");
     const atom am_request           = atom("request");
     const atom am_rex               = atom("rex");

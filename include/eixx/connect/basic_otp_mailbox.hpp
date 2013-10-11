@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/connect/transport_msg.hpp>
 #include <eixx/connect/verbose.hpp>
+#include <chrono>
 #include <list>
 #include <set>
 
@@ -104,6 +105,8 @@ private:
     std::map<ref<Alloc>, epid<Alloc> >      m_monitors;
     queue_type                              m_queue;
     boost::asio::deadline_timer_ex          m_deadline_timer;
+    std::chrono::time_point<
+        std::chrono::system_clock>          m_free_time;    // Cache time of this mbox
     boost::function<
         void (receive_handler_type f,
               boost::system::error_code&)>  m_deadline_handler;
@@ -128,7 +131,7 @@ public:
 
     /// @param a_reg_remove when true the mailbox's pid is removed from registry.
     ///          Only pass false when invoking from the registry on destruction.
-    void close(const eterm<Alloc>& a_reason = atom("normal"), bool a_reg_remove = true) {
+    void close(const eterm<Alloc>& a_reason = am_normal, bool a_reg_remove = true) {
         m_deadline_timer.cancel();
         if (a_reg_remove)
             m_node.close_mailbox(this);

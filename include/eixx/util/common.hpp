@@ -18,6 +18,9 @@
 #include <boost/interprocess/detail/atomic.hpp>
 #include <boost/version.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/assert.hpp>
+#include <eixx/util/compiler_hints.hpp>
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif

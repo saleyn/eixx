@@ -36,16 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define EIXX_NAMESPACE eixx
 #endif
 
-// Branch prediction optimization (see http://lwn.net/Articles/255364/)
-#ifndef NO_HINT_BRANCH_PREDICTION
-#  define unlikely(expr) __builtin_expect(!!(expr), 0)
-#  define likely(expr)   __builtin_expect(!!(expr), 1)
-#else
-#  define unlikely(expr) (expr)
-#  define likely(expr)   (expr)
-#endif
-
 #include <string.h>
+#include <eixx/util/compiler_hints.hpp>
 
 namespace EIXX_NAMESPACE {
     namespace marshal {
