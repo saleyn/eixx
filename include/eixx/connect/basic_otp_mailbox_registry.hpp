@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/connect/basic_otp_mailbox.hpp>
 #include <eixx/util/hashtable.hpp>
+#include <queue>
 
 namespace EIXX_NAMESPACE {
 namespace connect {
@@ -45,18 +46,24 @@ using detail::lock_guard;
 
 template <typename Alloc, typename Mutex>
 class basic_otp_mailbox_registry {
-    basic_otp_node<Alloc, Mutex>& m_owner_node;
-    mutable Mutex m_lock;
+    typedef basic_otp_mailbox<Alloc, Mutex>     mailbox_type;
+    typedef mailbox_type*                       mailbox_ptr;
 
-    typedef basic_otp_mailbox<Alloc, Mutex> mailbox_type;
-    typedef mailbox_type*                   mailbox_ptr;
-
+    basic_otp_node<Alloc, Mutex>&               m_owner_node;
     // These are made mutable so that intrinsic cleanup is possible
     // of orphant entries.
-    mutable std::map<atom, mailbox_ptr>        m_by_name;
-    mutable std::map<epid<Alloc>, mailbox_ptr> m_by_pid;
+    mutable Mutex                               m_lock;
+    mutable std::map<atom, mailbox_ptr>         m_by_name;
+    mutable std::map<epid<Alloc>, mailbox_ptr>  m_by_pid;
+
+    // Cache of freed mailboxes
+    static std::queue<mailbox_ptr>              s_free_list;
 public:
-    basic_otp_mailbox_registry(basic_otp_node<Alloc, Mutex>& a_owner) : m_owner_node(a_owner) {}
+    basic_otp_mailbox_registry(basic_otp_node<Alloc, Mutex>& a_owner)
+        : m_owner_node(a_owner)
+    {
+
+    }
 
     ~basic_otp_mailbox_registry() {
         clear();

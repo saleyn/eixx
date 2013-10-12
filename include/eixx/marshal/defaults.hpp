@@ -32,11 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_DEFAULTS_HPP
 #define _EIXX_DEFAULTS_HPP
 
-#ifndef EIXX_NAMESPACE
-#define EIXX_NAMESPACE eixx
-#endif
-
 #include <string.h>
+#include <eixx/namespace.hpp>
 #include <eixx/util/compiler_hints.hpp>
 
 namespace EIXX_NAMESPACE {

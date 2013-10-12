@@ -4,7 +4,6 @@
 #include <boost/asio.hpp>
 
 namespace boost {
-
 namespace asio {
 namespace error {
 
@@ -46,5 +45,6 @@ namespace system {
     };
 
 } // namespace system
+} // namespace boost
 
 #endif // _EIXX_TIMEOUT_HPP_

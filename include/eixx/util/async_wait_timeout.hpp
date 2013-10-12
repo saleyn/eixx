@@ -2,7 +2,9 @@
 #define _ASYNC_WAIT_TIMEOUT_HPP_
 
 #include <eixx/util/timeout.hpp>
+#include <boost/asio/basic_deadline_timer.hpp>
 
+namespace boost {
 namespace asio {
 
     class deadline_timer_ex : public basic_deadline_timer<boost::posix_time::ptime>
@@ -52,8 +54,7 @@ namespace asio {
         }
     };
 
-    } // namespace asio
-
+} // namespace asio
 } // namespace boost
 
 #endif // _ASYNC_WAIT_TIMEOUT_HPP_

@@ -32,8 +32,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_ALLOC_POOL_HPP_
 #define _EIXX_ALLOC_POOL_HPP_
 
+#include <eixx/namespace.hpp>  // definition of EIXX_NAMESPACE
 #include <boost/pool/pool_alloc.hpp>
-#include <eixx/marshal/defaults.hpp>  // definition of EIXX_NAMESPACE
 
 #define EIXX_USE_ALLOCATOR
 
