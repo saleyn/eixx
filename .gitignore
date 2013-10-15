@@ -40,3 +40,4 @@ test/Makefile.in
 test/test_eterm
 test/*.o
 test/test_perf
+test/test_connect

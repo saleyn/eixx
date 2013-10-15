@@ -81,7 +81,7 @@ class tcp_connection
 {
 public:
     typedef connection<Handler, Alloc> base_t;
-    
+
     tcp_connection(boost::asio::io_service& a_svc, Handler* a_h, const Alloc& a_alloc)
         : connection<Handler, Alloc>(TCP, a_svc, a_h, a_alloc)
         , m_socket(a_svc)

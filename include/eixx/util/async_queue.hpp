@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <chrono>
 #include <stdexcept>
 #include <functional>
+#include <limits>
 #include <boost/lockfree/queue.hpp>
 #include <boost/asio/system_timer.hpp>
 #include <boost/asio.hpp>
@@ -57,7 +58,7 @@ struct async_queue : std::enable_shared_from_this<async_queue<T, Alloc>>
 {
     typedef boost::lockfree::queue<
         T, boost::lockfree::allocator<Alloc>,
-        boost::lockfree::capacity<255>
+        boost::lockfree::capacity<256>
     > queue_type;
 
     typedef std::function<
@@ -70,52 +71,65 @@ private:
     boost::asio::system_timer       m_timer;
     bool                            m_is_canceled;
 
+    int dec_repeat_count(int n) {
+        return n == std::numeric_limits<int>::max() || !n ? n : n-1;
+    }
+
     // Dequeue up to m_batch_size of items and for each one call
     // m_wait_handler
-    void process_queue(async_handler h, std::chrono::milliseconds repeat) {
-        if (h == nullptr) return;
+    void process_queue(const async_handler& h, const boost::system::error_code& ec,
+                       std::chrono::milliseconds repeat, int repeat_count) {
+        if (h == nullptr || m_is_canceled) return;
 
         // Process up to m_batch_size items waiting on the queue.
         // For each dequeued item call m_wait_handler
 
         int  i = 0;        // Number of handler invocations
 
-        bool canceled = m_is_canceled;
+        bool canceled = ec;
 
-        if (!canceled)
-            for (; i < m_batch_size; i++) {
-                T value;
-                if (m_queue.pop(value))
-                    if (!h(value, boost::system::error_code())) // If handler returns false - break
-                        break;
+        T value;
+        while (i < m_batch_size && m_queue.pop(value)) {
+            i++;
+            repeat_count = dec_repeat_count(repeat_count);
+            if (!h(value, boost::system::error_code())) {
+                canceled = true;
+                break;
             }
+        }
 
-        // If we haven't processed any data and the operation was canceled
-        // invoke the callback to see if we need to remove the handler
-        if (!i && canceled) {
+        // If we reached the batch size and queue has more data
+        // to process - give up the time slice and reschedule the handler
+        if (i == m_batch_size && !m_queue.empty()) {
+            m_io.post([this, h, repeat, repeat_count]() {
+                (*this->shared_from_this())(
+                    h, boost::asio::error::operation_aborted, repeat, repeat_count);
+            });
+        } else if (!i && canceled) {
+            // If we haven't processed any data and the timer was canceled.
+            // Invoke the callback to see if we need to remove the handler.
             T dummy;
-            h(dummy, boost::asio::error::eof);
-        } else if (!canceled) {
-            if (i == m_batch_size && !m_queue.empty()) {
-                // There's more data to process, reschedule the handler
-                m_io.post([this, h, repeat]() {
-                    (*this->shared_from_this())(h, boost::asio::error::operation_aborted, repeat);
+            if (!h(dummy, ec))
+                return;
+        }
+
+        int n = dec_repeat_count(repeat_count);
+
+        // If requested repeated timer, schedule new timer invocation
+        if (repeat > std::chrono::milliseconds(0) && n > 0) {
+            m_timer.expires_from_now(repeat);
+            m_timer.async_wait(
+                [this, h, repeat, n]
+                (const boost::system::error_code& ec) {
+                    (*this->shared_from_this())(h, ec, repeat, n);
                 });
-            } else if (repeat > std::chrono::milliseconds(0)) {
-                m_timer.expires_from_now(repeat);
-                m_timer.async_wait(
-                    [this, h, repeat]
-                    (const boost::system::error_code& ec) {
-                        (*this->shared_from_this())(h, ec, repeat);
-                    });
-            }
         }
     }
 
     // Called by io_service on timeout of m_timer
-    void operator() (async_handler h, const boost::system::error_code& ec,
-                     std::chrono::milliseconds repeat) {
-        process_queue(h, repeat);
+    void operator() (const async_handler& h, const boost::system::error_code& ec,
+                     std::chrono::milliseconds repeat, int repeat_count) {
+        process_queue(h, ec, repeat, repeat_count);
     }
 
 public:
@@ -133,12 +147,18 @@ public:
     }
 
     void reset() {
-        m_is_canceled = true;
+        cancel();
+
         T value;
         while (m_queue.pop(value));
 
-        m_timer.cancel();
         m_is_canceled = false;
+    }
+
+    void cancel() {
+        m_is_canceled = true;
+        boost::system::error_code ec;
+        m_timer.cancel(ec);
     }
 
     bool canceled() const { return m_is_canceled; }
@@ -151,7 +171,8 @@ public:
 
         if (!notify) return true;
 
-        m_timer.cancel();
+        boost::system::error_code ec;
+        m_timer.cancel(ec);
 
         return true;
     }
@@ -161,38 +182,41 @@ public:
         return m_queue.pop(value);
     }
 
-    bool async_dequeue(async_handler a_on_data,
+    bool async_dequeue(const async_handler& a_on_data, int repeat_count = 0) {
+        return async_dequeue(a_on_data, std::chrono::milliseconds(-1), repeat_count);
+    }
+
+    bool async_dequeue(const async_handler& a_on_data,
         std::chrono::milliseconds a_wait_duration = std::chrono::milliseconds(-1),
-        bool repeat = false)
+        int repeat_count = 0)
     {
         if (m_is_canceled) return false;
 
         T value;
-        if (m_queue.pop(value)) {
-            a_on_data(value, boost::system::error_code());
-            return true;
-        } else if (a_wait_duration == std::chrono::milliseconds(0))
+        if (m_queue.pop(value))
+            return a_on_data(value, boost::system::error_code());
+        else if (a_wait_duration == std::chrono::milliseconds(0))
             return false;
 
-        m_timer.cancel();
         std::chrono::milliseconds timeout =
             a_wait_duration < std::chrono::milliseconds(0)
                 ? std::chrono::milliseconds::max()
                 : a_wait_duration;
 
-        auto repeat_msec = repeat ? timeout : std::chrono::milliseconds(0);
+        auto rep = repeat_count < 0 ? std::numeric_limits<int>::max() : repeat_count;
+        auto repeat_msec = rep  > 0 ? timeout : std::chrono::milliseconds(0);
+        boost::system::error_code ec;
+        m_timer.cancel(ec);
         m_timer.expires_from_now(timeout);
         m_timer.async_wait(
-            [this, &a_on_data, repeat_msec]
-            (const boost::system::error_code& ec) {
-                (*this)(a_on_data, ec, repeat_msec);
+            [this, &a_on_data, repeat_msec, rep]
+            (const boost::system::error_code& e) {
+                (*this->shared_from_this())(a_on_data, e, repeat_msec, rep);
             }
         );
 
         return false;
     }
-
-    void cancel_async() { m_timer.cancel(); }
 };
 
 } // namespace util
