@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <boost/asio.hpp>
 #include <eixx/util/async_wait_timeout.hpp>
+#include <eixx/util/async_queue.hpp>
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/connect/transport_msg.hpp>
 #include <eixx/connect/verbose.hpp>
@@ -90,11 +91,13 @@ class basic_otp_mailbox
 public:
     typedef std::shared_ptr<basic_otp_mailbox<Alloc, Mutex> > pointer;
 
-    typedef boost::function<
-        void (basic_otp_mailbox<Alloc, Mutex>&, boost::system::error_code&)
+    typedef std::function<
+        void (basic_otp_mailbox<Alloc, Mutex>&,
+              transport_msg<Alloc>*&,
+              ::boost::system::error_code&)
     > receive_handler_type;
 
-    typedef std::list<transport_msg<Alloc>*> queue_type;
+    typedef util::async_queue<transport_msg<Alloc>*, Alloc> queue_type;
 
 private:
     boost::asio::io_service&                m_io_service;
@@ -103,26 +106,25 @@ private:
     atom                                    m_name;
     std::set<epid<Alloc> >                  m_links;
     std::map<ref<Alloc>, epid<Alloc> >      m_monitors;
-    queue_type                              m_queue;
-    boost::asio::deadline_timer_ex          m_deadline_timer;
+    std::shared_ptr<queue_type>             m_queue;
     std::chrono::time_point<
-        std::chrono::system_clock>          m_free_time;    // Cache time of this mbox
-    boost::function<
-        void (receive_handler_type f,
-              boost::system::error_code&)>  m_deadline_handler;
+        std::chrono::system_clock>          m_time_freed;   // Cache time of this mbox
+    receive_handler_type                    m_handler;      // Called on async_receive
 
     void do_deliver(transport_msg<Alloc>* a_msg);
 
-    void do_on_deadline_timer(receive_handler_type f, boost::system::error_code& ec);
+    bool operator() (transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec);
 
 public:
     basic_otp_mailbox(
             basic_otp_node<Alloc, Mutex>& a_node, const epid<Alloc>& a_self,
-            const atom& a_name = atom(), boost::asio::io_service* a_svc = NULL)
+            const atom& a_name = atom(), int a_queue_size = 255,
+            boost::asio::io_service* a_svc = NULL, const Alloc& a_alloc = Alloc())
         : m_io_service(a_svc ? *a_svc : a_node.io_service())
         , m_node(a_node), m_self(a_self)
         , m_name(a_name)
-        , m_deadline_timer(m_io_service)
+        , m_queue(new queue_type(m_io_service, a_queue_size, a_alloc))
+        , m_time_freed(std::chrono::microseconds(0))
     {}
 
     ~basic_otp_mailbox() {
@@ -131,12 +133,7 @@ public:
 
     /// @param a_reg_remove when true the mailbox's pid is removed from registry.
     ///          Only pass false when invoking from the registry on destruction.
-    void close(const eterm<Alloc>& a_reason = am_normal, bool a_reg_remove = true) {
-        m_deadline_timer.cancel();
-        if (a_reg_remove)
-            m_node.close_mailbox(this);
-        break_links(a_reason);
-    }
+    void close(const eterm<Alloc>& a_reason = am_normal, bool a_reg_remove = true);
 
     basic_otp_node<Alloc, Mutex>&   node()          const { return m_node;       }
     /// Pid associated with this mailbox.
@@ -145,20 +142,24 @@ public:
     const atom&                     name()          const { return m_name;       }
     boost::asio::io_service&        io_service()    const { return m_io_service; }
     /// Queue of pending received messages.
-    queue_type&                     queue()               { return m_queue;      }
+    //queue_type&                     queue()               { return m_queue;      }
     /// Indicates if mailbox doesn't have any pending messages
     bool                            empty()         const { return m_queue.empty(); }
 
-    void name(const atom& a_name) { m_name = a_name; }
+    void register(const atom& a_name) {
+        if (m_node.
+        m_name = a_name;
+
+    }
 
     bool operator== (const basic_otp_mailbox& rhs) const { return self() == rhs.self(); }
     bool operator!= (const basic_otp_mailbox& rhs) const { return self() != rhs.self(); }
 
-    std::ostream& dump(std::ostream& out) const {
-        out << "#Mbox{pid=" << self();
-        if (m_name != atom()) out << ", name=" << m_name;
-        return out << '}';
-    }
+    /// Clear mailbox's queue of awaiting messages
+    void clear() { m_queue->reset(); }
+
+    /// Print pid and regname of the mailbox to the given stream
+    std::ostream& dump(std::ostream& out) const;
 
     /// Find the first message in the mailbox matching a pattern.
     /// Return the message, and if \a a_binding is not NULL set the binding variables.
@@ -170,19 +171,52 @@ public:
     /// Dequeue the next message from the mailbox.  The call is non-blocking and
     /// returns NULL if no messages are waiting.
     transport_msg<Alloc>* receive() {
-        if (m_queue.empty())
-            return NULL;
-        transport_msg<Alloc>* p = m_queue.front();
-        m_queue.pop_front();
-        return p;
+        transport_msg<Alloc>* m;
+        return m_queue->dequeue(m) ? m : nullptr;
+    }
+
+    /**
+     * Call a handler on asynchronous delivery of message(s).
+     *
+     * The call is non-blocking. If returns Upon timeout
+     * or delivery of a message to the mailbox the handler \a h will be
+     * invoked.  The handler must have a signature with two arguments:
+     * \verbatim
+     * void handler(basic_otp_mailbox<Alloc, Mutex>& a_mailbox,
+     *              transport_msg<Alloc>*& a_msg,
+     *              ::boost::system::error_code& a_errc);
+     * \endverbatim
+     * In case of timeout the error will be set to non-zero value
+     *
+     * @param h is the handler to call upon arrival of a message
+     * @param a_timeout is the timeout interval to wait for message (-1 = infinity)
+     * @param a_repeat_count is the number of messages to wait (-1 = infinite)
+     * @return true if the message was synchronously received
+     **/
+    bool async_receive(receive_handler_type h,
+                       std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
+                       int a_repeat_count = 0
+                      )
+        throw (std::runtime_error);
+
+    /**
+     * Cancel pending asynchronous receive operation
+     */
+    void cancel_async_receive() {
+        m_handler = nullptr;
+        m_queue->cancel();
     }
 
     /// Deliver a message to this mailbox. The call is thread-safe.
 	void deliver(const transport_msg<Alloc>& a_msg) {
-        transport_msg<Alloc>* l_msg = new transport_msg<Alloc>(a_msg);
-        m_io_service.post(
-            std::bind(
-                &basic_otp_mailbox<Alloc, Mutex>::do_deliver, this, l_msg));
+        transport_msg<Alloc>* p = new transport_msg<Alloc>(a_msg);
+        m_queue->enqueue(p);
+    }
+
+    /// Deliver a message to this mailbox. The call is thread-safe.
+    void deliver(transport_msg<Alloc>&& a_msg) {
+        transport_msg<Alloc>* p = new transport_msg<Alloc>(std::move(a_msg));
+        m_queue->enqueue(p);
     }
 
     /// Send a message \a a_msg to a pid \a a_to.
@@ -196,26 +230,6 @@ public:
     /// Send a message \a a_msg to the process registered as \a a_to on remote node \a a_node.
     void send(const atom& a_node, const atom& a_to, const eterm<Alloc>& a_msg) {
         m_node.send(self(), a_node, a_to, a_msg);
-    }
-
-    /**
-     * Get a message from this mailbox. The call is non-blocking. Upon timeout
-     * or delivery of a message to the mailbox the handler \a h will be
-     * invoked.  The handler must have a signature with two arguments:
-     * \verbatim
-     * void handler(transport_msg& a_msg, boost::system::error_code& ec);
-     * \endverbatim
-     * In case of timeout the error will be set to: <tt>asio::error::timeout</tt>
-     * that is defined in <tt>eixx/util/async_wait_timeout.hpp</tt>.
-     **/
-    void async_receive(receive_handler_type h, long msec_timeout = -1)
-        throw (std::runtime_error);
-
-    /**
-     * Cancel pending asynchronous receive operation
-     */
-    void cancel_async_receive() {
-        m_deadline_timer.cancel();
     }
 
     /**
@@ -308,6 +322,41 @@ public:
 
 template <typename Alloc, typename Mutex>
 void basic_otp_mailbox<Alloc, Mutex>::
+close(const eterm<Alloc>& a_reason = am_normal, bool a_reg_remove = true) {
+    m_handler = nullptr;
+    m_queue->reset();
+    m_time_freed = std::chrono::system_clock::now();
+    if (a_reg_remove)
+        m_node.close_mailbox(this);
+    break_links(a_reason);
+    m_name = atom();
+}
+
+template <typename Alloc, typename Mutex>
+bool basic_otp_mailbox<Alloc, Mutex>::
+operator() (transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec)
+{
+    if (m_time_freed != std::chrono::microseconds(0) || !m_handler)
+        return false;
+    m_handler(*this, a_msg, ec);
+    if (a_msg) {
+        delete a_msg;
+        a_msg = NULL;
+    }
+    return true;
+}
+
+template <typename Alloc, typename Mutex>
+bool basic_otp_mailbox<Alloc, Mutex>::
+async_receive(receive_handler_type h, std::chrono::milliseconds a_timeout,
+              int a_repeat_count) throw (std::runtime_error)
+{
+    m_handler = h;
+    return m_queue->async_dequeue(*this, a_timeout, a_repeat_count);
+}
+
+template <typename Alloc, typename Mutex>
+void basic_otp_mailbox<Alloc, Mutex>::
 break_links(const eterm<Alloc>& a_reason)
 {
     for (typename std::set<epid<Alloc> >::const_iterator
@@ -336,41 +385,6 @@ match(const eterm<Alloc>& a_pattern, varbind* a_binding)
         }
     }
     return NULL;
-}
-
-template <typename Alloc, typename Mutex>
-void basic_otp_mailbox<Alloc, Mutex>::
-do_on_deadline_timer(receive_handler_type f, boost::system::error_code& ec)
-{
-    m_deadline_timer.expires_at(boost::asio::deadline_timer_ex::time_type());
-
-    f(*this, ec); // In case of timeout ec would contain boost::asio::error::timeout
-}
-
-template <typename Alloc, typename Mutex>
-void basic_otp_mailbox<Alloc, Mutex>::
-async_receive(receive_handler_type h, long msec_timeout) throw (std::runtime_error)
-{
-    m_deadline_timer.cancel();
-
-    // expires_at() == boost::posix_time::not_a_date_time
-    /*
-    if (m_deadline_timer.expires_at() != boost::asio::deadline_timer_ex::time_type())
-        throw eterm_exception(
-            "Another receive() is already scheduled for mailbox", self());
-    */
-
-    if (msec_timeout < 0)
-        m_deadline_timer.async_wait(
-            std::bind(
-                &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer,
-                this, h, std::placeholders::_1));
-    else
-        m_deadline_timer.async_wait_timeout(
-            std::bind(
-                &basic_otp_mailbox<Alloc,Mutex>::do_on_deadline_timer,
-                this, h, std::placeholders::_1),
-            msec_timeout);
 }
 
 template <typename Alloc, typename Mutex>
@@ -430,6 +444,14 @@ do_deliver(transport_msg<Alloc>* a_msg)
     // upon executing mailbox->async_receive(Handler, Timeout).
     if (m_deadline_timer.expires_at() != boost::asio::deadline_timer_ex::time_type())
         m_deadline_timer.cancel();
+}
+
+template <typename Alloc, typename Mutex>
+std::ostream& basic_otp_mailbox<Alloc, Mutex>::
+dump(std::ostream& out) const {
+    out << "#Mbox{pid=" << self();
+    if (m_name != atom()) out << ", name=" << m_name;
+    return out << '}';
 }
 
 } // namespace connect

@@ -76,6 +76,14 @@ public:
         , NO_EXCEPTION_MASK = (uint32_t)EXCEPTION-1
     };
 
+private:
+    // Note that the m_type is mutable so that we can call set_error_flag() on
+    // constant objects.
+    mutable transport_msg_type  m_type;
+    tuple<Alloc>                m_cntrl;
+    eterm<Alloc>                m_msg;
+
+public:
     transport_msg() : m_type(UNDEFINED) {}
 
     transport_msg(int a_msgtype, const tuple<Alloc>& a_cntrl, const eterm<Alloc>* a_msg = NULL)
@@ -88,6 +96,12 @@ public:
     transport_msg(const transport_msg& rhs)
         : m_type(rhs.m_type), m_cntrl(rhs.m_cntrl), m_msg(rhs.m_msg)
     {}
+
+    transport_msg(transport_msg&& rhs)
+        : m_type(rhs.m_type), m_cntrl(std::move(rhs.m_cntrl)), m_msg(std::move(rhs.m_msg))
+    {
+        rhs.m_type = UNDEFINED;
+    }
 
     /// Return a string representation of the transport message type.
     const char* type_string() const;
@@ -386,12 +400,6 @@ public:
     }
 
 private:
-    // Note that the m_type is mutable so that we can call set_error_flag() on
-    // constant objects.
-    mutable transport_msg_type  m_type;
-    tuple<Alloc>                m_cntrl;
-    eterm<Alloc>                m_msg;
-
     void set_exit_internal(int a_type, int a_trace_type,
         const epid<Alloc>& a_from, const epid<Alloc>& a_to,
         const eterm<Alloc>& a_reason, const Alloc& a_alloc = Alloc())

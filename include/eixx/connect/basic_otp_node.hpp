@@ -226,13 +226,15 @@ public:
 
     /// Get a mailbox registered by a given atom name.
     basic_otp_mailbox<Alloc, Mutex>*
-    get_mailbox(const atom& a_name)         const { return m_mailboxes.get(a_name); }
+    get_mailbox(atom a_name)                const { return m_mailboxes.get(a_name); }
 
     /// Get a mailbox registered by a given epid.
     basic_otp_mailbox<Alloc, Mutex>*
     get_mailbox(const epid<Alloc>& a_pid)   const { return m_mailboxes.get(a_pid); }
 
-    const mailbox_registry_t& registry() const { return m_mailboxes; }
+    const mailbox_registry_t& registry()    const { return m_mailboxes; }
+
+    bool register_mailbox(atom a_name)
 
     /// Create a new unique pid
     epid<Alloc> create_pid();

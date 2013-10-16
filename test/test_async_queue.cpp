@@ -52,10 +52,13 @@ BOOST_AUTO_TEST_CASE( test_async_queue )
     std::shared_ptr<async_queue<int>> q(new async_queue<int>(io));
 
     bool res = q->async_dequeue(
-        [](int& a, const boost::system::error_code& ec) { i = a; return false; },
+        [](int& a, const boost::system::error_code& ec) {
+            throw std::exception(); // This handler is never called
+            return false;
+        },
         std::chrono::milliseconds(0));
 
-    BOOST_REQUIRE(!res);
+    BOOST_REQUIRE(res); // Returns true because there was no async dispatch
 
     for (i = 10; i < 13; i++)
         BOOST_REQUIRE(q->enqueue(i));
@@ -86,8 +89,9 @@ BOOST_AUTO_TEST_CASE( test_async_queue )
 
     io.run();
 
-    BOOST_REQUIRE_EQUAL(i, b);
-    BOOST_REQUIRE_EQUAL(3, n);
+    BOOST_REQUIRE_EQUAL(3,  n);
+    BOOST_REQUIRE_EQUAL(17, a);
+    BOOST_REQUIRE_EQUAL(17, b);
 }
 
 namespace {

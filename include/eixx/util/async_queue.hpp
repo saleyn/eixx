@@ -69,7 +69,6 @@ private:
     queue_type                      m_queue;
     int                             m_batch_size;
     boost::asio::system_timer       m_timer;
-    bool                            m_is_canceled;
 
     int dec_repeat_count(int n) {
         return n == std::numeric_limits<int>::max() || !n ? n : n-1;
@@ -79,7 +78,7 @@ private:
     // m_wait_handler
     void process_queue(const async_handler& h, const boost::system::error_code& ec,
                        std::chrono::milliseconds repeat, int repeat_count) {
-        if (h == nullptr || m_is_canceled) return;
+        if (h == nullptr) return;
 
         // Process up to m_batch_size items waiting on the queue.
         // For each dequeued item call m_wait_handler
@@ -139,7 +138,6 @@ public:
         , m_queue(a_alloc)
         , m_batch_size(a_batch_size)
         , m_timer(a_io)
-        , m_is_canceled(false)
     {}
 
     ~async_queue() {
@@ -151,21 +149,17 @@ public:
 
         T value;
         while (m_queue.pop(value));
-
-        m_is_canceled = false;
     }
 
-    void cancel() {
-        m_is_canceled = true;
+    int  batch_size() const { return m_batch_size; }
+    void batch_size(int sz) { m_batch_size = sz;   }
+
+    bool cancel() {
         boost::system::error_code ec;
-        m_timer.cancel(ec);
+        return m_timer.cancel(ec);
     }
-
-    bool canceled() const { return m_is_canceled; }
 
     bool enqueue(T const& data, bool notify = true) {
-        if (m_is_canceled) return false;
-
         if (!m_queue.push(data))
             return false;
 
@@ -178,25 +172,32 @@ public:
     }
 
     bool dequeue(T& value) {
-        if (m_is_canceled) return false;
         return m_queue.pop(value);
     }
 
+    /// Call \a a_on_data handler asyncronously on next message in the queue.
+    ///
+    /// @returns true if the call was handled synchronously
     bool async_dequeue(const async_handler& a_on_data, int repeat_count = 0) {
         return async_dequeue(a_on_data, std::chrono::milliseconds(-1), repeat_count);
     }
 
+    /// Call \a a_on_data handler asyncronously on next message in the queue.
+    ///
+    /// @returns true if the call was handled synchronously
     bool async_dequeue(const async_handler& a_on_data,
         std::chrono::milliseconds a_wait_duration = std::chrono::milliseconds(-1),
         int repeat_count = 0)
     {
-        if (m_is_canceled) return false;
-
         T value;
-        if (m_queue.pop(value))
-            return a_on_data(value, boost::system::error_code());
-        else if (a_wait_duration == std::chrono::milliseconds(0))
-            return false;
+        if (m_queue.pop(value)) {
+            if (!a_on_data(value, boost::system::error_code()))
+                return true;
+            if (repeat_count > 0) --repeat_count;
+        }
+
+        if (a_wait_duration == std::chrono::milliseconds(0) || !repeat_count)
+            return true;
 
         std::chrono::milliseconds timeout =
             a_wait_duration < std::chrono::milliseconds(0)

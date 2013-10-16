@@ -114,7 +114,7 @@ public:
 
     /// Copy atom from another atom.  This is a constant time 
     /// SMP safe operation.
-    atom(const atom& s) throw() : m_index(s.m_index) {}
+    atom(atom s) throw() : m_index(s.m_index) {}
 
     /// Decode an atom from a binary buffer encoded in 
     /// Erlang external binary format.
