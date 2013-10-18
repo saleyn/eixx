@@ -60,12 +60,10 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
             s += len;
 
             uint8_t  l_creation = get8(s) & 0x03;
-            uint32_t l_ids[COUNT];
+            uint32_t l_id0 = get32be(s);
+            uint64_t l_id1 = get32be(s) | ((uint64_t)get32be(s) << 32);
 
-            for (size_t i = 0; i < COUNT; i++)
-                l_ids[i] = get32be(s);
-
-            init(l_node, l_ids, l_creation, a_alloc);
+            init(l_node, l_id0, l_id1, l_creation, a_alloc);
 
             idx += s-s0;
             break;
@@ -92,9 +90,17 @@ void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
     s += n;
 
     /* now the integers */
-    put8(s, (creation() & 0x03)); /* 2 bits */
-    for (size_t i=0; i < COUNT; ++i)
-        put32be(s, ids()[i]);
+    if (m_blob) {
+        put8(s,    m_blob->data()->u.s.creation); /* 2 bits */
+        put32be(s, id0());
+        put32be(s, id1() & 0xFFFF);
+        put32be(s, (id1() >> 32) & 0xFFFF);
+    } else {
+        put8(s, 0); /* 2 bits */
+        put32be(s, 0u);
+        put32be(s, 0u);
+        put32be(s, 0u);
+    }
 
     idx += s-s0;
     BOOST_ASSERT((size_t)idx <= size);

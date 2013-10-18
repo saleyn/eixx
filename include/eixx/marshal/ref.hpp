@@ -35,6 +35,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _IMPL_REF_HPP_
 
 #include <boost/static_assert.hpp>
+#include <boost/assert.hpp>
+#include <boost/iterator/iterator_concepts.hpp>
+#include <eixx/marshal/atom.hpp>
 #include <eixx/eterm_exception.hpp>
 
 namespace EIXX_NAMESPACE {
@@ -52,33 +55,42 @@ class ref {
     enum { COUNT = 3 };
 
     struct ref_blob {
-        uint8_t  creation;
-        atom     node;
-        uint32_t ids[COUNT];
+        atom node;
+        union {
+            uint32_t ids[COUNT+1];
+            struct {
+                uint32_t id0;
+                uint64_t id1;
+                uint32_t creation;
+            } __attribute__((__packed__)) s;
+        } u;
 
-        ref_blob(const atom& a_node, uint32_t* a_ids, uint8_t a_cre)
-            : creation(a_cre), node(a_node)
+        ref_blob(const atom& a_node, uint32_t a_id0, uint64_t a_id1, uint8_t a_cre)
+            : node(a_node)
         {
-            ids[0]   = a_ids[0] & 0x3ffff;
-            ids[1]   = a_ids[1];
-            ids[2]   = a_ids[2];
+            u.s.id0      = a_id0 & 0x3ffff;
+            u.s.id1      = a_id1;
+            u.s.creation = a_cre & 0x3;
         }
     };
 
     blob<ref_blob, Alloc>* m_blob;
 
     // Must only be called from constructor!
-    void init(const atom& node, uint32_t* ids, int creation, 
-              const Alloc& alloc) throw(err_bad_argument) 
+    void init(const atom& a_node, uint32_t a_id0, uint64_t a_id1, uint8_t a_cre,
+              const Alloc& alloc) throw(err_bad_argument)
     {
         m_blob = new blob<ref_blob, Alloc>(1, alloc);
-        new (m_blob->data()) ref_blob(node, ids, creation);
+        new (m_blob->data()) ref_blob(a_node, a_id0, a_id1, a_cre);
     }
 
     void release() {
         if (m_blob)
             m_blob->release();
     }
+
+    uint32_t id0() const { return m_blob->data()->u.s.id0; }
+    uint64_t id1() const { return m_blob->data()->u.s.id1; }
 
 public:
     static const ref<Alloc> null;
@@ -97,30 +109,30 @@ public:
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      */
     template <int N>
-    ref(const char* node, uint32_t (&ids)[N], unsigned int creation, 
+    ref(const char* node, uint32_t (&ids)[N], unsigned int creation,
         const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
-    {
-        BOOST_STATIC_ASSERT(N == 3);
-        int len = strlen(node);
-        detail::check_node_length(len);
-        atom l_node(node, len);
-        init(l_node, ids, creation, a_alloc);
-    }
+        : ref(atom(node), ids[0], ids[1], ids[2], creation, a_alloc)
+    {}
 
     template <int N>
-    ref(const atom& node, uint32_t (&ids)[N], unsigned int creation, 
+    ref(const atom& node, uint32_t (&ids)[N], unsigned int creation,
         const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
+        : ref(node, ids[0], ids[1], ids[2], creation, a_alloc)
     {
-        detail::check_node_length(node.size());
-        init(node, ids, creation, a_alloc);
+        BOOST_STATIC_ASSERT(N == 3);
     }
 
-    ref(const atom& node, uint32_t id1, uint32_t id2, uint32_t id3, unsigned int creation, 
+    ref(const atom& node, uint32_t id0, uint32_t id1, uint32_t id2, unsigned int creation,
+        const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
+        : ref(node, id0, id1 | ((uint64_t)id2 << 32), creation, a_alloc)
+    {}
+
+    // For internal use
+    ref(const atom& node, uint32_t id0, uint64_t id1, uint8_t creation,
         const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
     {
         detail::check_node_length(node.size());
-        uint32_t ids[] = { id1, id2, id3 };
-        init(node, ids, creation, a_alloc);
+        init(node, id0, id1, creation, a_alloc);
     }
 
     /**
@@ -174,31 +186,29 @@ public:
      * Get the id array from the REF.
      * @return the id array number from the REF.
      */
-    const uint32_t* ids() const { return m_blob ? m_blob->data()->ids : detail::s_ref_ids; }
+    const uint32_t* ids() const { return m_blob ? m_blob->data()->u.ids : detail::s_ref_ids; }
 
     /**
      * Get the creation number from the REF.
      * @return the creation number from the REF.
      */
-    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
+    int creation() const { return m_blob ? m_blob->data()->u.s.creation : 0; }
 
     bool operator==(const ref<Alloc>& t) const {
         return node() == t.node() &&
-               ::memcmp(ids(), t.ids(), COUNT*sizeof(uint32_t)) == 0 &&
-               creation() == t.creation();
+               ::memcmp(&m_blob->data()->u, &t.m_blob->data()->u, sizeof(ref_blob::u)) == 0;
     }
 
     /// Less operator, needed for maps
     bool operator<(const ref<Alloc>& rhs) const {
+        if (!rhs.m_blob)        return m_blob;
+        if (!m_blob)            return true;
         int n = node().compare(rhs.node());
-        if (n < 0)              return true;
-        if (n > 0)              return false;
-        if (id(0) < rhs.id(0))  return true;
-        if (id(0) > rhs.id(0))  return false;
-        if (id(1) < rhs.id(1))  return true;
-        if (id(1) > rhs.id(1))  return false;
-        if (id(2) < rhs.id(2))  return true;
-        if (id(2) > rhs.id(2))  return false;
+        if (n != 0)             return n < 0;
+        if (id0() > rhs.id0())  return true;
+        if (id0() > rhs.id0())  return false;
+        if (id1() < rhs.id1())  return true;
+        if (id1() > rhs.id1())  return false;
         return false;
     }
 
@@ -223,7 +233,7 @@ namespace std {
     template <class Alloc>
     ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::ref<Alloc>& a) {
         return out << "#Ref<" << a.node() << '.' 
-            << a.id(2) << '.' << a.id(1) << '.' << a.id(0) << '>';
+            << a.id(0) << '.' << a.id(1) << '.' << a.id(2) << '>';
     }
 
 } // namespace std

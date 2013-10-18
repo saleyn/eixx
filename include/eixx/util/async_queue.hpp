@@ -57,8 +57,10 @@ template<typename T, typename Alloc = std::allocator<char>>
 struct async_queue : std::enable_shared_from_this<async_queue<T, Alloc>>
 {
     typedef boost::lockfree::queue<
-        T, boost::lockfree::allocator<Alloc>,
-        boost::lockfree::capacity<256>
+          T
+        , boost::lockfree::allocator<Alloc>
+        , boost::lockfree::capacity<1023>
+        , boost::lockfree::fixed_sized<false>
     > queue_type;
 
     typedef std::function<
@@ -85,17 +87,16 @@ private:
 
         int  i = 0;        // Number of handler invocations
 
-        bool canceled = ec;
-
         T value;
         while (i < m_batch_size && m_queue.pop(value)) {
             i++;
             repeat_count = dec_repeat_count(repeat_count);
-            if (!h(value, boost::system::error_code())) {
-                canceled = true;
-                break;
-            }
+            if (!h(value, boost::system::error_code()))
+                return;
         }
+
+        static const auto s_timeout =
+            boost::system::errc::make_error_code(boost::system::errc::timed_out);
 
         // If we reached the batch size and queue has more data
         // to process - give up the time slice and reschedule the handler
@@ -104,18 +105,18 @@ private:
                 (*this->shared_from_this())(
                     h, boost::asio::error::operation_aborted, repeat, repeat_count);
             });
-        } else if (!i && canceled) {
+            return;
+        } else if (!i && !h(value, s_timeout)) {
             // If we haven't processed any data and the timer was canceled.
             // Invoke the callback to see if we need to remove the handler.
-            T dummy;
-            if (!h(dummy, ec))
-                return;
+            return;
         }
 
         int n = dec_repeat_count(repeat_count);
 
         // If requested repeated timer, schedule new timer invocation
         if (repeat > std::chrono::milliseconds(0) && n > 0) {
+            m_timer.cancel();
             m_timer.expires_from_now(repeat);
             m_timer.async_wait(
                 [this, h, repeat, n]
@@ -196,25 +197,32 @@ public:
             if (repeat_count > 0) --repeat_count;
         }
 
-        if (a_wait_duration == std::chrono::milliseconds(0) || !repeat_count)
+        if (!repeat_count)
             return true;
+
+        auto rep = repeat_count < 0 ? std::numeric_limits<int>::max() : repeat_count;
 
         std::chrono::milliseconds timeout =
             a_wait_duration < std::chrono::milliseconds(0)
                 ? std::chrono::milliseconds::max()
                 : a_wait_duration;
 
-        auto rep = repeat_count < 0 ? std::numeric_limits<int>::max() : repeat_count;
-        auto repeat_msec = rep  > 0 ? timeout : std::chrono::milliseconds(0);
-        boost::system::error_code ec;
-        m_timer.cancel(ec);
-        m_timer.expires_from_now(timeout);
-        m_timer.async_wait(
-            [this, &a_on_data, repeat_msec, rep]
-            (const boost::system::error_code& e) {
-                (*this->shared_from_this())(a_on_data, e, repeat_msec, rep);
-            }
-        );
+        if (timeout == std::chrono::milliseconds(0))
+            m_io.post([this, &a_on_data, timeout, rep]() {
+                (*this->shared_from_this())(
+                    a_on_data, boost::system::error_code(), timeout, rep);
+            });
+        else {
+            boost::system::error_code ec;
+            m_timer.cancel(ec);
+            m_timer.expires_from_now(timeout);
+            m_timer.async_wait(
+                [this, &a_on_data, timeout, rep]
+                (const boost::system::error_code& e) {
+                    (*this->shared_from_this())(a_on_data, e, timeout, rep);
+                }
+            );
+        }
 
         return false;
     }

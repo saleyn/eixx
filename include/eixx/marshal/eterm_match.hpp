@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/eterm.hpp>
 #include <boost/function.hpp>
 #include <list>
+#include <stdarg.h>
 
 namespace EIXX_NAMESPACE {
 namespace marshal {
@@ -57,6 +58,7 @@ class eterm_pattern_action;
 template <class Alloc>
 class eterm_pattern_matcher {
     std::list<eterm_pattern_action<Alloc>, Alloc> m_pattern_list;
+    std::list< eterm_pattern_action< Alloc >, Alloc > it;
 public:
     typedef std::list<eterm_pattern_action<Alloc>, Alloc> list_t;
     typedef typename list_t::const_iterator const_iterator;
@@ -96,11 +98,18 @@ public:
     template <int N>
     eterm_pattern_matcher(
         const struct init_struct (&a_patterns)[N], pattern_functor_t a_fun,
-        const Alloc& a_alloc = Alloc()
-    )
+        const Alloc& a_alloc = Alloc())
         : m_pattern_list(a_alloc)
     {
         init(a_patterns, N, a_fun);
+    }
+
+    eterm_pattern_matcher(
+        std::initializer_list<eterm_pattern_action<Alloc>> a_list,
+        const Alloc& a_alloc = Alloc())
+        : m_pattern_list(a_alloc)
+    {
+        std::copy(a_list.begin(), a_list.end(), m_pattern_list.begin());
     }
 
     /**
@@ -179,8 +188,8 @@ public:
      *        to every pattern.
      * @return true if any one pattern matched the term.
      */
-    bool match(const eterm<Alloc>& a_term, 
-               varbind<Alloc>* a_binding = NULL) const 
+    bool match(const eterm<Alloc>& a_term,
+               varbind<Alloc>* a_binding = NULL) const
     {
         bool res = false;
         for(auto it = m_pattern_list.begin(), end = m_pattern_list.end(); it != end; ++it) {
@@ -202,9 +211,9 @@ class eterm_pattern_action {
     typedef typename eterm_pattern_matcher<Alloc>::pattern_functor_t
         pattern_functor_t;
 
-    eterm<Alloc> m_pattern;
-    pattern_functor_t m_fun;
-    long m_opaque;
+    eterm<Alloc>        m_pattern;
+    pattern_functor_t   m_fun;
+    long                m_opaque;
 public:
     /**
      * Create a new pattern match functor.
@@ -219,6 +228,31 @@ public:
     {
         BOOST_ASSERT(m_fun != NULL);
     }
+
+    eterm_pattern_action(
+        const Alloc& a_alloc, pattern_functor_t& a_fun, long a_opaque,
+        const char* a_pat_fmt, ...)
+        : m_fun(a_fun), m_opaque(a_opaque)
+    {
+        BOOST_ASSERT(m_fun != NULL);
+        va_list ap;
+        va_start(ap, a_pat_fmt);
+        try         { m_pattern = eterm<Alloc>::format(a_alloc, &a_pat_fmt, &ap); }
+        catch (...) { va_end(ap); throw; }
+        va_end(ap);
+    }
+
+    eterm_pattern_action(const eterm_pattern_action& a_rhs)
+        : m_pattern(a_rhs.m_pattern)
+        , m_fun(a_rhs.m_fun)
+        , m_opaque(a_rhs.m_opaque)
+    {}
+
+    eterm_pattern_action(eterm_pattern_action&& a_rhs)
+        : m_pattern(std::move(a_rhs.m_pattern))
+        , m_fun(std::move(a_rhs.m_fun))
+        , m_opaque(a_rhs.m_opaque)
+    {}
 
     bool operator() (const eterm<Alloc>& a_term,
                      varbind<Alloc>* a_binding) const 

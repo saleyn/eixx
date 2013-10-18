@@ -82,37 +82,16 @@ class basic_otp_node: public basic_otp_node_local {
         atom, typename connection_t::pointer, atom_con_hash_fun
     > conn_hash_map;
 
-    class atom_con_hash_fun {
-        conn_hash_map& map;
+    class rpc_server;
 
-        static size_t init_default_hash_size() {
-            const char* p = getenv("EI_MAX_NODE_CONNECTIONS");
-            int n = (p && p[0]) ? atoi(p) : 1024;
-            if (n < 0 || n >= 64*1024) n = 1024;
-            return n;
-        }
-    public:
-        static size_t get_default_hash_size() {
-            static const size_t s_max_node_connections = init_default_hash_size();
-            return s_max_node_connections;
-        }
-
-        atom_con_hash_fun(conn_hash_map* a_map) : map(*a_map) {}
-
-        size_t operator()(const atom& data) const {
-            return data.index() % map.bucket_count();
-        }
-    };
-
-    uint8_t  m_creation;
-    uint32_t m_pid_count;
-    uint32_t m_port_count;
-    uint32_t m_serial;
-    uint32_t m_refid[3];
+    uint8_t                                     m_creation;
+    std::atomic_int                             m_pid_count;
+    std::atomic_int                             m_port_count;
+    std::atomic_uint_fast64_t                   m_refid0;
+    std::atomic_int                             m_refid1;
 
     boost::asio::io_service&                    m_io_service;
     Mutex                                       m_lock;
-    Mutex                                       m_inc_lock;
     basic_otp_mailbox_registry<Alloc, Mutex>    m_mailboxes;
     conn_hash_map                               m_connections;
     Alloc                                       m_allocator;
@@ -128,6 +107,9 @@ class basic_otp_node: public basic_otp_node_local {
     }
 
     void report_status(report_level a_level, const connection_t* a_con, const std::string& s);
+    void rpc_call(const epid<Alloc>& a_from, const ref<Alloc>& a_ref,
+        const atom& a_mod, const atom& a_fun, const list<Alloc>& a_args,
+        const eterm<Alloc>& a_gleader);
 
 protected:
     /// Publish the node port to epmd making this node known to the world.
@@ -234,7 +216,8 @@ public:
 
     const mailbox_registry_t& registry()    const { return m_mailboxes; }
 
-    bool register_mailbox(atom a_name)
+    /// Register mailbox by given name
+    bool register_mailbox(const atom& a_name, basic_otp_mailbox<Alloc, Mutex>& a_mbox);
 
     /// Create a new unique pid
     epid<Alloc> create_pid();
@@ -258,8 +241,8 @@ public:
      * and is not started.
      */
     template <typename CompletionHandler>
-    void connect(CompletionHandler h, atom a_remote_node,
-                 atom a_cookie = atom(), size_t a_reconnect_secs = 0)
+    void connect(CompletionHandler h, const atom& a_remote_node,
+                 const atom& a_cookie = atom(), size_t a_reconnect_secs = 0)
         throw(err_connection);
 
     /**
@@ -271,8 +254,8 @@ public:
      * and is not started.
      */
     template <typename CompletionHandler>
-    void connect(CompletionHandler h, atom a_remote_nodename, size_t a_reconnect_secs = 0)
-        throw(err_connection)
+    void connect(CompletionHandler h, const atom& a_remote_nodename,
+                 size_t a_reconnect_secs = 0) throw(err_connection)
     {
         connect(h, a_remote_nodename, atom(), a_reconnect_secs);
     }
@@ -280,7 +263,7 @@ public:
     /// Get connection identified by the \a a_node name.
     /// @throws err_connection if not connected to \a a_node._
     connection_t& connection(atom a_nodename) const {
-        typename conn_hash_map::const_iterator l_con = m_connections.find(a_nodename);
+        auto l_con = m_connections.find(a_nodename);
         if (l_con == m_connections.end())
             throw err_connection("Not connected to node", a_nodename);
         return *l_con->second.get();
@@ -303,6 +286,11 @@ public:
         void (self&, const connection_t*, report_level, const std::string&)
     > on_status; 
 
+    boost::function<
+        eterm<Alloc> (const epid<Alloc>& a_from, const ref<Alloc>& a_ref,
+                      const atom& a_mod, const atom& a_fun, const list<Alloc>& a_args,
+                      const eterm<Alloc>& a_gleader)
+    > on_rpc_call;
     /**
      * Accept connections from client processes.
      * This method sets the socket listener for incoming connections and
@@ -410,5 +398,6 @@ public:
 } // namespace EIXX_NAMESPACE
 
 #include <eixx/connect/basic_otp_node.ipp>
+#include <eixx/connect/detail/basic_rpc_server.hpp>
 
 #endif // _EIXX_BASIC_OTP_NODE_HPP_

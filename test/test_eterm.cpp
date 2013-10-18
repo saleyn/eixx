@@ -241,6 +241,7 @@ BOOST_AUTO_TEST_CASE( test_list4 )
     for (int i=0; i<2; ++i)
         l.push_back(eterm(atom("abc")));
     l.close();
+    BOOST_REQUIRE_EQUAL(2u, l.length());
 }
 
 BOOST_AUTO_TEST_CASE( test_double )
@@ -351,10 +352,14 @@ BOOST_AUTO_TEST_CASE( test_pid )
         BOOST_REQUIRE_EQUAL(1, et.id());
         BOOST_REQUIRE_EQUAL(2, et.serial());
         BOOST_REQUIRE_EQUAL(3, et.creation());
+
+        et = epid("abc@fc12", 1, 2, 4, alloc);
+        BOOST_REQUIRE_EQUAL(0, et.creation());
+
         eterm t(et);
         BOOST_REQUIRE(t.initialized());
         BOOST_REQUIRE_EQUAL(PID, t.type());
-        BOOST_REQUIRE_EQUAL("#Pid<abc@fc12.1.2.3>", t.to_string());
+        BOOST_REQUIRE_EQUAL("#Pid<abc@fc12.1.2.0>", t.to_string());
     }
 
     {
@@ -431,17 +436,21 @@ BOOST_AUTO_TEST_CASE( test_ref )
 {
     allocator_t alloc;
     {
-        uint32_t ids[] = {1,2,3};
-        ref et("abc@fc12", ids, 4, alloc);
+        uint32_t ids[] = {5,6,7};
+        ref et("abc@fc12", ids, 3, alloc);
         BOOST_REQUIRE_EQUAL(atom("abc@fc12"), et.node());
-        BOOST_REQUIRE_EQUAL(1u, et.id(0));
-        BOOST_REQUIRE_EQUAL(2u, et.id(1));
-        BOOST_REQUIRE_EQUAL(3u, et.id(2));
-        BOOST_REQUIRE_EQUAL(4, et.creation());
+        BOOST_REQUIRE_EQUAL(5u, et.id(0));
+        BOOST_REQUIRE_EQUAL(6u, et.id(1));
+        BOOST_REQUIRE_EQUAL(7u, et.id(2));
+        BOOST_REQUIRE_EQUAL(3, et.creation());
+
+        et = ref("abc@fc12", ids, 4, alloc);
+        BOOST_REQUIRE_EQUAL(0, et.creation());
+
         eterm t(et);
         BOOST_REQUIRE(t.initialized());
         BOOST_REQUIRE_EQUAL(REF, t.type());
-        BOOST_REQUIRE_EQUAL("#Ref<abc@fc12.3.2.1>", t.to_string());
+        BOOST_REQUIRE_EQUAL("#Ref<abc@fc12.5.6.7>", t.to_string());
     }
 
     {

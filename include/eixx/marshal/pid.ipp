@@ -51,11 +51,12 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     atom l_node(s, len);
     s += len;
 
-    int l_id       = get32be(s);
-    int l_serial   = get32be(s);
+    uint64_t i1 = get32be(s);
+    uint64_t i2 = get32be(s);
+    uint64_t l_id  = i1 | i2 << 15;
     int l_creation = get8(s);
 
-    init(l_node, l_id, l_serial, l_creation, alloc);
+    init(l_node, l_id, l_creation, alloc);
 
     idx += s - s0;
     BOOST_ASSERT((size_t)idx <= size);

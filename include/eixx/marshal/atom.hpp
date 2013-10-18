@@ -71,9 +71,9 @@ class atom
 {
     int m_index;
 
+public:
     typedef util::atom_table<>::string_t string_t;
 
-public:
     static util::atom_table<>& atom_table();
 
     /// Returns empty atom
@@ -114,7 +114,7 @@ public:
 
     /// Copy atom from another atom.  This is a constant time 
     /// SMP safe operation.
-    atom(atom s) throw() : m_index(s.m_index) {}
+    atom(const atom& s) throw() : m_index(s.m_index) {}
 
     /// Decode an atom from a binary buffer encoded in 
     /// Erlang external binary format.

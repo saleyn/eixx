@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _IMPL_PID_HPP_
 
 #include <boost/static_assert.hpp>
+#include <boost/concept_check.hpp>
 #include <eixx/eterm_exception.hpp>
 #include <eixx/marshal/atom.hpp>
 
@@ -53,13 +54,17 @@ class epid {
         // distinguishing pid values between successive node restarts.
         union u {
             struct s {
-                uint8_t  creation:  3;
-                uint16_t serial  : 13;
                 uint16_t id      : 15;
-            } s;
+                uint16_t serial  : 13;
+                uint8_t  creation:  2;
+            } __attribute__((__packed__)) s;
             uint32_t i;
 
             BOOST_STATIC_ASSERT(sizeof(s) == 4);
+
+            u(int a_id, uint8_t a_cre) {
+                i = (a_id & 0x0FFFffff) | ((a_cre & 0x3) << 28);
+            }
 
             u(uint16_t a_id, uint16_t a_ser, uint8_t a_cre) {
                 s.id = a_id & 0x7fff; s.serial = a_ser & 0x1fff; s.creation = a_cre & 0x03;
@@ -67,8 +72,8 @@ class epid {
         } u;
         atom node;
 
-        pid_blob(const atom& a_node, uint16_t a_id, uint16_t a_ser, uint8_t a_cre)
-            : u(a_id, a_ser, a_cre), node(a_node)
+        pid_blob(const atom& a_node, int a_id, int8_t a_cre)
+            : u(a_id, a_cre), node(a_node)
         {}
     };
 
@@ -88,11 +93,11 @@ class epid {
     }
 
     // Must only be called from constructor!
-    void init(const atom& node, uint16_t id, uint16_t serial, uint8_t creation, 
-              const Alloc& alloc) throw(err_bad_argument) 
+    void init(const atom& node, int id, uint8_t creation, const Alloc& alloc)
+        throw(err_bad_argument)
     {
         m_blob = new blob<pid_blob, Alloc>(1, alloc);
-        new (m_blob->data()) pid_blob(node, id, serial, creation);
+        new (m_blob->data()) pid_blob(node, id, creation);
         #ifdef EIXX_DEBUG
         std::cerr << "Initialized pid " << *this
                   << " [addr=" << this << ", blob=" << m_blob << ']' << std::endl;
@@ -121,19 +126,20 @@ public:
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      **/
     epid(const char* node, int id, int serial, int creation, const Alloc& a_alloc = Alloc()) 
-        throw(err_bad_argument) 
-    {
-        int len = strlen(node);
-        detail::check_node_length(len);
-        atom l_node(node, len);
-        init(l_node, id, serial, creation, a_alloc);
-    }
+        throw(err_bad_argument)
+        : epid(atom(node), id, serial, creation, a_alloc)
+    {}
 
     epid(const atom& node, int id, int serial, int creation, const Alloc& a_alloc = Alloc())
-        throw(err_bad_argument) 
+        throw(err_bad_argument)
+        : epid(node, (id & 0x7fff) | ((serial & 0x1fff) << 15), creation, a_alloc)
+    {}
+
+    epid(const atom& node, int id, int creation, const Alloc& a_alloc = Alloc())
+        throw(err_bad_argument)
     {
         detail::check_node_length(node.size());
-        init(node, id, serial, creation, a_alloc);
+        init(node, id, creation, a_alloc);
     }
 
     /// Decode the pid from a binary buffer.
@@ -199,7 +205,7 @@ public:
      **/
     int creation() const { return m_blob ? m_blob->data()->u.s.creation : 0; }
 
-    uint32_t id_internal() const { return m_blob ? m_blob->data()->u.i & 0x7FFFFFFF : 0; }
+    uint32_t id_internal() const { return m_blob ? m_blob->data()->u.i & 0x3FFFffff : 0; }
 
     bool operator== (const epid<Alloc>& rhs) const {
         return id_internal() == rhs.id_internal() && node() == rhs.node();

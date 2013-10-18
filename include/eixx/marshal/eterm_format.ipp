@@ -231,17 +231,21 @@ namespace marshal {
     } /* pstring */
 
 
-    /// @todo Implement support for parsing tail list expressions in the form
-    ///       "[H | T]".  Currently the pipe notation doesn't work.
-    /*
+    /**
+     * Convert a string with variables into an Erlang term.
+     *
      * The format letters are:
-     *   a  -  An atom
-     *   s  -  A string
-     *   i  -  An integer
-     *   l  -  A long integer
-     *   u  -  An unsigned long integer
-     *   f  -  A double float
-     *   w  -  A pointer to some arbitrary term
+     *   @li a  -  An atom
+     *   @li s  -  A string
+     *   @li i  -  An integer
+     *   @li l  -  A long integer
+     *   @li u  -  An unsigned long integer
+     *   @li f  -  A double float
+     *   @li w  -  A pointer to some arbitrary term
+     *   @li v  -  A pointer to an Erlang variable
+     *
+     * @todo Implement support for parsing tail list expressions in the form
+     *       "[H | T]".  Currently the pipe notation doesn't work.
      */
     template <class Alloc>
     static eterm<Alloc> pformat(const char** fmt, va_list* pap, Alloc& a_alloc)
@@ -249,6 +253,7 @@ namespace marshal {
         skip_ws_and_comments(fmt);
 
         switch (*(*fmt)++) {
+            case 'v': return *va_arg(*pap, var*);
             case 'w': return *va_arg(*pap, eterm<Alloc>*);
             case 'a': return atom(va_arg(*pap, char*));
             case 's': return string<Alloc>(va_arg(*pap, char*), a_alloc);

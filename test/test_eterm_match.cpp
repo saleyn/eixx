@@ -417,7 +417,12 @@ BOOST_AUTO_TEST_CASE( test_match_list )
 BOOST_AUTO_TEST_CASE( test_match_list_tail )
 {
     BOOST_WARN_MESSAGE(false, "SKIPPING test_match_list_tail - needs extension to list matching!");
+    BOOST_REQUIRE(true); // don't print the warning
     return;
+
+    static const atom A("A");
+    static const atom O("O");
+    static const atom T("T");
 
     eterm pattern = eterm::format("[{A, O} | T]");
     eterm term    = eterm::format("[{a, 1}, {b, ok}, {c, 2.0}]");
@@ -425,9 +430,9 @@ BOOST_AUTO_TEST_CASE( test_match_list_tail )
     varbind vars;
     // Match [{a, 1} | T]
     BOOST_REQUIRE(pattern.match(term, &vars));
-    const eterm* name  = vars.find("A");
-    const eterm* value = vars.find("O");
-    const eterm* tail  = vars.find("T");
+    const eterm* name  = vars.find(A);
+    const eterm* value = vars.find(O);
+    const eterm* tail  = vars.find(T);
 
     BOOST_REQUIRE(name  != NULL);
     BOOST_REQUIRE(value != NULL);
@@ -441,9 +446,9 @@ BOOST_AUTO_TEST_CASE( test_match_list_tail )
     // Match [{b, ok} | T]
     vars.clear();
     BOOST_REQUIRE(term.match(*tail, &vars));
-    name  = vars.find("A");
-    value = vars.find("O");
-    tail  = vars.find("T");
+    name  = vars.find(A);
+    value = vars.find(O);
+    tail  = vars.find(T);
 
     BOOST_REQUIRE(name  != NULL);
     BOOST_REQUIRE(value != NULL);
@@ -457,9 +462,9 @@ BOOST_AUTO_TEST_CASE( test_match_list_tail )
     // Match [{c, 2.0} | T]
     vars.clear();
     BOOST_REQUIRE(term.match(*tail, &vars));
-    name  = vars.find("A");
-    value = vars.find("O");
-    tail  = vars.find("T");
+    name  = vars.find(A);
+    value = vars.find(O);
+    tail  = vars.find(T);
 
     BOOST_REQUIRE(name  != NULL);
     BOOST_REQUIRE(value != NULL);

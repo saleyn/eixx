@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE( test_encode_ref )
 {
     uint32_t ids[] = {1,2,3};
     eterm t(ref("test@host", ids, 0));
-    BOOST_REQUIRE_EQUAL("#Ref<test@host.3.2.1>", t.to_string());
+    BOOST_REQUIRE_EQUAL("#Ref<test@host.1.2.3>", t.to_string());
     string s(t.encode(0));
     //std::cout << s.to_binary_string() << std::endl;
     const uint8_t expect[] = {131,114,0,3,100,0,9,116,101,115,116,64,104,111,115,

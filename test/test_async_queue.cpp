@@ -90,12 +90,12 @@ BOOST_AUTO_TEST_CASE( test_async_queue )
     io.run();
 
     BOOST_REQUIRE_EQUAL(3,  n);
-    BOOST_REQUIRE_EQUAL(17, a);
-    BOOST_REQUIRE_EQUAL(17, b);
+    BOOST_REQUIRE_EQUAL(18, i);
+    BOOST_REQUIRE_EQUAL(18, b);
 }
 
 namespace {
-    const int iterations = getenv("ITERATIONS") ? atoi("ITERATIONS") : 1000000;
+    const int iterations = getenv("ITERATIONS") ? atoi(getenv("ITERATIONS")) : 1000000;
 
     std::atomic_int producer_count(0);
     std::atomic_int consumer_count(0);
@@ -108,10 +108,10 @@ namespace {
     std::atomic<bool> done (false);
 }
 
-void producer(async_queue<int>& q, std::atomic_int& n, int i)
+void producer(async_queue<int>& q, int i)
 {
     for (int i = 0; i != iterations; ++i) {
-        int value = ++n;
+        int value = ++producer_count;
         while (!q.enqueue(value));
     }
 
@@ -131,16 +131,17 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
 
     for (int i = 0; i < producer_thread_count; ++i)
         producer_threads.create_thread(
-            [&q, i] () { producer(*q, producer_count, i+1); }
+            [&q, i] () { producer(*q, i+1); }
         );
 
-    while (q->async_dequeue(
+    while(q->async_dequeue(
         [] (int& v, const boost::system::error_code& ec) {
-            consumer_count++;
-            return consumer_count < total_iterations;
+            if (!ec)
+                ++consumer_count;
+            return !(done && consumer_count >= producer_count);
         },
         std::chrono::milliseconds(1000),
-        true));
+        -1));
 
     io.run();
     io.reset();
@@ -152,8 +153,10 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
         std::cout << "Consumed " << consumer_count << " objects." << std::endl;
     }
 
+    bool abort = false;
+
     auto r = q->async_dequeue(
-        [] (int& v, const boost::system::error_code& ec) { return true; },
+        [&abort] (int& v, const boost::system::error_code& ec) { return !abort; },
         std::chrono::milliseconds(8000),
         -1);
 
@@ -161,8 +164,9 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
 
     boost::asio::system_timer t(io);
     t.expires_from_now(std::chrono::milliseconds(1));
-    t.async_wait([&q](const boost::system::error_code& e) {
+    t.async_wait([&q, &abort](const boost::system::error_code& e) {
         q->cancel();
+        abort = true;
         if (eixx::verboseness::level() >= eixx::connect::VERBOSE_DEBUG)
             std::cout << "Canceled timer" << std::endl;
     });
