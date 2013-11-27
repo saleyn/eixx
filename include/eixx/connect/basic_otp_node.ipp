@@ -153,6 +153,64 @@ create_ref()
 }
 
 template <typename Alloc, typename Mutex>
+inline basic_otp_mailbox<Alloc, Mutex>*
+basic_otp_node<Alloc, Mutex>::
+create_mailbox(const atom& a_name, boost::asio::io_service* a_svc)
+{
+    boost::asio::io_service* p_svc = a_svc ? a_svc : &m_io_service;
+    return m_mailboxes.create_mailbox(a_name, p_svc);
+}
+
+template <typename Alloc, typename Mutex>
+void basic_otp_node<Alloc, Mutex>::
+close_mailbox(basic_otp_mailbox<Alloc, Mutex>* a_mbox)
+{
+    if (a_mbox)
+        m_mailboxes.erase(a_mbox);
+}
+
+
+template <typename Alloc, typename Mutex>
+void basic_otp_node<Alloc, Mutex>::
+set_nodename(const atom& a_nodename, const std::string& a_cookie)
+{
+    close();
+    if (a_nodename != atom())
+        basic_otp_node_local::set_nodename(a_nodename.to_string(), a_cookie);
+}
+
+template <typename Alloc, typename Mutex>
+void basic_otp_node<Alloc, Mutex>::
+close()
+{
+    m_mailboxes.clear();
+    for(typename conn_hash_map::iterator
+        it = m_connections.begin(), end = m_connections.end(); it != end; ++it)
+        it->second->disconnect();
+    m_connections.clear();
+}
+
+template <typename Alloc, typename Mutex>
+template <typename CompletionHandler>
+inline void basic_otp_node<Alloc, Mutex>::
+connect(CompletionHandler h, const atom& a_remote_nodename, size_t a_reconnect_secs)
+    throw(err_connection)
+{
+    connect(h, a_remote_nodename, atom(), a_reconnect_secs);
+}
+
+template <typename Alloc, typename Mutex>
+inline typename basic_otp_node<Alloc, Mutex>::connection_t&
+basic_otp_node<Alloc, Mutex>::
+connection(atom a_nodename) const
+{
+    auto l_con = m_connections.find(a_nodename);
+    if (l_con == m_connections.end())
+        throw err_connection("Not connected to node", a_nodename);
+    return *l_con->second.get();
+}
+
+template <typename Alloc, typename Mutex>
 template <typename CompletionHandler>
 void basic_otp_node<Alloc, Mutex>::
 connect(CompletionHandler h, const atom& a_remote_node, const atom& a_cookie,
@@ -172,6 +230,14 @@ connect(CompletionHandler h, const atom& a_remote_node, const atom& a_cookie,
     }
 }
 
+template <typename Alloc, typename Mutex>
+void basic_otp_node<Alloc, Mutex>::
+on_disconnect_internal(const connection_t& a_con,
+    atom a_remote_nodename, const boost::system::error_code& err)
+{
+    if (on_disconnect)
+        on_disconnect(*this, a_con, a_remote_nodename, err);
+}
 
 template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::

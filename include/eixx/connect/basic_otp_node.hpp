@@ -100,13 +100,10 @@ class basic_otp_node: public basic_otp_node_local {
     friend class basic_otp_connection<Alloc, Mutex>;
 
     void on_disconnect_internal(const connection_t& a_con,
-        atom a_remote_nodename, const boost::system::error_code& err)
-    {
-        if (on_disconnect)
-            on_disconnect(*this, a_con, a_remote_nodename, err);
-    }
+        atom a_remote_nodename, const boost::system::error_code& err);
 
-    void report_status(report_level a_level, const connection_t* a_con, const std::string& s);
+    void report_status(report_level a_level,
+        const connection_t* a_con, const std::string& s);
     void rpc_call(const epid<Alloc>& a_from, const ref<Alloc>& a_ref,
         const atom& a_mod, const atom& a_fun, const list<Alloc>& a_args,
         const eterm<Alloc>& a_gleader);
@@ -118,10 +115,11 @@ protected:
     /// Unregister this node from epmd.
     void unpublish_port() throw (err_connection);
 
-    /// Send a message to a process ToProc which is either epid<Alloc> or 
+    /// Send a message to a process ToProc which is either epid<Alloc> or
     /// atom<Alloc> for registered names.
     template <typename ToProc>
-    void send(const atom& a_to_node, ToProc a_to, const transport_msg<Alloc>& a_msg)
+    void send(const atom& a_to_node,
+        ToProc a_to, const transport_msg<Alloc>& a_msg)
         throw (err_no_process, err_connection);
 public:
     typedef basic_otp_mailbox_registry<Alloc, Mutex> mailbox_registry_t;
@@ -133,7 +131,7 @@ public:
      *  hostname and port. ex: "ei:mynode@host.somewhere.com:3128"
      * @param a_cookie cookie to use
      * @param a_alloc is the allocator to use
-     * @param a_creation is the creation value to use (0 .. 2). This 
+     * @param a_creation is the creation value to use (0 .. 2). This
      *        argument is provided for being able to do determinitic testing.
      *        In production pass the default value, so that the creation value
      *        is determined automatically.
@@ -151,11 +149,7 @@ public:
     virtual ~basic_otp_node() { close(); }
 
     /// Change name of current node
-    void set_nodename(const atom& a_nodename, const std::string& a_cookie = "") {
-        close();
-        if (a_nodename != atom())
-            basic_otp_node_local::set_nodename(a_nodename.to_string(), a_cookie);
-    }
+    void set_nodename(const atom& a_nodename, const std::string& a_cookie = "");
 
     /// Get current verboseness level
     verbose_type verbose() const { return m_verboseness; }
@@ -167,16 +161,13 @@ public:
     /// Get the service object used by this node.
     boost::asio::io_service& io_service() { return m_io_service; }
 
+    /// Run the node's service dispatch
     void run()  { m_io_service.run();  }
+    /// Stop the node's service dispatch
     void stop() { m_io_service.stop(); }
 
-    void close() {
-        m_mailboxes.clear();
-        for(typename conn_hash_map::iterator
-            it = m_connections.begin(), end = m_connections.end(); it != end; ++it)
-            it->second->disconnect();
-        m_connections.clear();
-    }
+    /// Close all connections and empty the mailbox
+    void close();
 
     /**
      * Create a new mailbox with a new mailbox that can be used to send and
@@ -188,16 +179,9 @@ public:
      * @return new mailbox with a new pid.
      */
     basic_otp_mailbox<Alloc, Mutex>*
-    create_mailbox(const atom& a_reg_name = atom(), boost::asio::io_service* a_svc = NULL) {
-        boost::asio::io_service* p_svc = a_svc ? a_svc : &m_io_service;
-        return m_mailboxes.create_mailbox(a_reg_name, p_svc);
-    }
+    create_mailbox(const atom& a_name = atom(), boost::asio::io_service* a_svc = NULL);
 
-    void close_mailbox(basic_otp_mailbox<Alloc, Mutex>* a_mbox) {
-        if (a_mbox) {
-            m_mailboxes.erase(a_mbox);
-        }
-    }
+    void close_mailbox(basic_otp_mailbox<Alloc, Mutex>* a_mbox);
 
     /// Get a mailbox associated with a given atom name or epid.
     /// @param a_proc is either an atom name of a registered local process or epid.
@@ -255,19 +239,11 @@ public:
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_nodename,
-                 size_t a_reconnect_secs = 0) throw(err_connection)
-    {
-        connect(h, a_remote_nodename, atom(), a_reconnect_secs);
-    }
+                 size_t a_reconnect_secs = 0) throw(err_connection);
 
     /// Get connection identified by the \a a_node name.
     /// @throws err_connection if not connected to \a a_node._
-    connection_t& connection(atom a_nodename) const {
-        auto l_con = m_connections.find(a_nodename);
-        if (l_con == m_connections.end())
-            throw err_connection("Not connected to node", a_nodename);
-        return *l_con->second.get();
-    }
+    connection_t& connection(atom a_nodename) const;
 
     /**
      * Callback invoked on disconnect from a peer node
@@ -275,16 +251,16 @@ public:
     boost::function<
         //    OtpNode      OtpConnection  RemoteNodeName         ErrorCode
         void (self&, const connection_t&, atom, const boost::system::error_code&)
-    > on_disconnect; 
+    > on_disconnect;
 
     /**
      * Callback invoked if verbosity is different from VERBOSE_NONE. If not assigned,
-     * the content is printed to stderr. 
+     * the content is printed to stderr.
      */
     boost::function<
         //    OtpNode      OtpConnection     Status         Message
         void (self&, const connection_t*, report_level, const std::string&)
-    > on_status; 
+    > on_status;
 
     boost::function<
         eterm<Alloc> (const epid<Alloc>& a_from, const ref<Alloc>& a_ref,
