@@ -1,4 +1,4 @@
-# eixx - Erlang C++ Interface Library #
+## eixx - Erlang C++ Interface Library ##
 
 This library provides a set of classes for convenient marshaling
 of Erlang terms between processes as well as connecting to other
@@ -31,16 +31,16 @@ Ths library is dependend on {@link http://www.boost.org BOOST}
 project and erl_interface, which is a part of the 
 {@link www.erlang.org Erlang} distribution.
 
-## Downloading ##
+### Downloading ###
 
 Repository location: http://github.com/saleyn/eixx
 
     $ git clone git@github.com:saleyn/eixx.git
 
-## Building ##
+### Building ###
 
-Make sure that you have autoconf-archive package installed:
-[http://www.gnu.org/software/autoconf-archive]
+Make sure that you have [autoconf-archive]
+(http://www.gnu.org/software/autoconf-archive) package installed.
 
 Run:
     $ ./bootstrap
@@ -49,15 +49,15 @@ Run:
     $ make
     $ make install      # Default install path is ./install
 
-## Author ##
+### Author ###
 
 Serge Aleynikov <saleyn at gmail dot com>
 
-## LICENSE ##
+### LICENSE ###
 
 GNU Lesser General Public License
 
-## Example ##
+### Example ###
 
 Manipulating Erlang terms is quite simple:
 
@@ -164,8 +164,7 @@ Here's an example use of the eixx library:
 
 
 
-Testing distributed transport
-=============================
+### Testing distributed transport ###
 
 $ make
 
