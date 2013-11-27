@@ -43,6 +43,7 @@ Make sure that you have [autoconf-archive]
 (http://www.gnu.org/software/autoconf-archive) package installed.
 
 Run:
+
     $ ./bootstrap
     $ ./configure --with-boost="/path/to/boost" [--with-erlang="/path/to/erlang"] \
         [--prefix="/target/install/path"]
@@ -60,113 +61,116 @@ GNU Lesser General Public License
 ### Example ###
 
 Manipulating Erlang terms is quite simple:
+```cpp
+eterm i = 10;
+eterm s = "abc";
+eterm a = atom("ok");
+eterm t = {20.0, i, s, a};  // Constructs a tuple
+eterm e = list{};           // Constructs an empty list
+eterm l = list{i, 100.0, s, {a, 30}, list{}};   // Constructs a list
+```
+A convenient eterm::format() function implements an expression parser:
 
-    eterm i = 10;
-    eterm s = "abc";
-    eterm a = atom("ok");
-    eterm t = {20.0, i, s, a};  // Constructs a tuple
-    eterm e = list{};           // Constructs an empty list
-    eterm l = list{i, 100.0, s, {a, 30}, list{}};   // Constructs a list
-
-    A convenient eterm::format() function implements an expression parser:
-
-    eterm t1 = eterm::format("{ok, 10}");
-    eterm t2 = eterm::format("[1, 2, ok, [{one, 10}, {two, 20}]]");
-    eterm t3 = eterm::format("A::int()");            // t3 is a variable that can be matched
+```cpp
+eterm t1 = eterm::format("{ok, 10}");
+eterm t2 = eterm::format("[1, 2, ok, [{one, 10}, {two, 20}]]");
+eterm t3 = eterm::format("A::int()");            // t3 is a variable that can be matched
+```
 
 Pattern matching is done by constructing a pattern, and matching a term
 against it. If varbind is provided, it'll store the values of all matched variables:
 
-    static const eterm s_pattern = eterm::format("{ok, A::string()}");
+```cpp
+static const eterm s_pattern = eterm::format("{ok, A::string()}");
 
-    eterm value = {atom("ok"), "abc"};
+eterm value = {atom("ok"), "abc"};
 
-    varbind binding;
+varbind binding;
 
-    if (value.match(s_pattern, &binding))
-        std::cout << "Value of variable A: " << binding["A"].to_string() << std::endl;
-
+if (value.match(s_pattern, &binding))
+    std::cout << "Value of variable A: " << binding["A"].to_string() << std::endl;
+```
 Aside from providing functionality that allows to manipulate Erlang terms, this
 library implements Erlang distributed transport that allows a C++ program to connect
 to an Erlang node, exchange messages, make RPC calls, and receive I/O requests.
 Here's an example use of the eixx library:
 
-    void on_message(otp_mailbox& a_mbox, boost::system::error_code& ec) {
-        // On timeout ec == boost::asio::error::timeout
-        if (ec == boost::asio::error::timeout) {
-            std::cout << "Mailbox " << a_mbox.self() << " timeout: "
-                      << ec.message() << std::endl;
-        } else {
-            // The mailbox has a queue of transport messages.
-            // Dequeue next message from the mailbox.
-            std::unique_ptr<transport_msg> dist_msg;
+```cpp
+void on_message(otp_mailbox& a_mbox, boost::system::error_code& ec) {
+    // On timeout ec == boost::asio::error::timeout
+    if (ec == boost::asio::error::timeout) {
+        std::cout << "Mailbox " << a_mbox.self() << " timeout: "
+                  << ec.message() << std::endl;
+    } else {
+        // The mailbox has a queue of transport messages.
+        // Dequeue next message from the mailbox.
+        std::unique_ptr<transport_msg> dist_msg;
 
-            while (dist_msg.reset(a_mbox.receive())) {
-                std::cout << "Main mailbox got a distributed transport message:\n  "
-                          << *dist_msg << std::endl;
+        while (dist_msg.reset(a_mbox.receive())) {
+            std::cout << "Main mailbox got a distributed transport message:\n  "
+                      << *dist_msg << std::endl;
 
-                // Compile the following pattern into the corresponding abstract tree.
-                // The expression must be a valid Erlang term
-                static const eterm s_pattern = eterm::format("{From, {command, Cmd}}");
+            // Compile the following pattern into the corresponding abstract tree.
+            // The expression must be a valid Erlang term
+            static const eterm s_pattern = eterm::format("{From, {command, Cmd}}");
 
-                varbind binding;
+            varbind binding;
 
-                // Pattern match the message and bind From and Cmd variables
-                if (dist_msg->msg().match(s_pattern, &binding)) {
-                    const eterm* cmd = binding->find("Cmd");
-                    std::cout << "Got a command " << *cmd << std::endl;
-                    // Process command, e.g.:
-                    // process_command(binding["From"]->to_pid(), *cmd);
-                }
+            // Pattern match the message and bind From and Cmd variables
+            if (dist_msg->msg().match(s_pattern, &binding)) {
+                const eterm* cmd = binding->find("Cmd");
+                std::cout << "Got a command " << *cmd << std::endl;
+                // Process command, e.g.:
+                // process_command(binding["From"]->to_pid(), *cmd);
             }
         }
-        
-        // Schedule next async receive of a message (can also provide a timeout).
-        a_mbox.async_receive(&on_message);
+    }
+    
+    // Schedule next async receive of a message (can also provide a timeout).
+    a_mbox.async_receive(&on_message);
+}
+
+void on_connect(otp_connection* a_con, const std::string& a_error) {
+    if (!a_error.empty()) {
+        std::cout << a_error << std::endl;
+        return;
     }
 
-    void on_connect(otp_connection* a_con, const std::string& a_error) {
-        if (!a_error.empty()) {
-            std::cout << a_error << std::endl;
-            return;
-        }
+    // Illustrate creation of Erlang terms.
+    eterm t1 = eterm::format("{ok, ~i}", 10);
+    eterm t2 = tuple::make(10, 1.0, atom("test"), "abc");
+    eterm t3("This is a string");
+    eterm t4(tuple::make(t1, t2, t3));
 
-        // Illustrate creation of Erlang terms.
-        eterm t1 = eterm::format("{ok, ~i}", 10);
-        eterm t2 = tuple::make(10, 1.0, atom("test"), "abc");
-        eterm t3("This is a string");
-        eterm t4(tuple::make(t1, t2, t3));
+    otp_node*    node = a_con->node();
+    otp_mailbox* mbox = node->get_mailbox("main");
 
-        otp_node*    node = a_con->node();
-        otp_mailbox* mbox = node->get_mailbox("main");
+    // Send a message: {{ok, 10}, {10, 1.0, 'test', "abc"}, "This is a string"}
+    // to an Erlang process named 'test' running
+    // on node "abc@myhost"
 
-        // Send a message: {{ok, 10}, {10, 1.0, 'test', "abc"}, "This is a string"}
-        // to an Erlang process named 'test' running
-        // on node "abc@myhost"
+    node->send(mbox.self(), a_con->remote_node(), atom("test"), t4);
+}
 
-        node->send(mbox.self(), a_con->remote_node(), atom("test"), t4);
-    }
+int main() {
+    use namespace eixx;
 
-    int main() {
-        use namespace eixx;
+    otp_node node("abc");
 
-        otp_node node("abc");
+    otp_mailbox* mbox = node.create_mailbox("main");
 
-        otp_mailbox* mbox = node.create_mailbox("main");
+    node.connect(&on_connect, "abc@myhost");
 
-        node.connect(&on_connect, "abc@myhost");
+    // Asynchronously receive a message with a deadline of 10s:
+    mbox->async_receive(&on_message, 10000);
 
-        // Asynchronously receive a message with a deadline of 10s:
-        mbox->async_receive(&on_message, 10000);
-
-        node.run();
-    }
-
-
+    node.run();
+}
+```
 
 ### Testing distributed transport ###
 
-$ make
+    $ make
 
 Run tests:
 
