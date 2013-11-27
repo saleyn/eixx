@@ -33,16 +33,16 @@ project and erl_interface, which is a part of the
 
 ## Downloading ##
 
-    Repository location: http://github.com/saleyn/eixx
+Repository location: http://github.com/saleyn/eixx
 
     $ git clone git@github.com:saleyn/eixx.git
 
 ## Building ##
 
-    Make sure that you have autoconf-archive package installed:
-        http://www.gnu.org/software/autoconf-archive
+Make sure that you have autoconf-archive package installed:
+[http://www.gnu.org/software/autoconf-archive]
 
-    Run:
+Run:
     $ ./bootstrap
     $ ./configure --with-boost="/path/to/boost" [--with-erlang="/path/to/erlang"] \
         [--prefix="/target/install/path"]
@@ -51,11 +51,11 @@ project and erl_interface, which is a part of the
 
 ## Author ##
 
-    Serge Aleynikov <saleyn at gmail dot com>
+Serge Aleynikov <saleyn at gmail dot com>
 
 ## LICENSE ##
 
-    GNU Lesser General Public License
+GNU Lesser General Public License
 
 ## Example ##
 
