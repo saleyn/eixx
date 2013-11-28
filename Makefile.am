@@ -29,6 +29,6 @@ EXTRA_DIST = README LICENSE LICENSE.header license.sh \
              bootstrap
 
 installdir = $(prefix)
-install_DATA = README LICENSE
+install_DATA = README.md LICENSE
 
 .PHONY: docs doc
