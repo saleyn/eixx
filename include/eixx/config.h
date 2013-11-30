@@ -41,7 +41,9 @@
 #endif
 
 /* Algorithm IDEA in openssl crypto library */
-/* #undef CRYPTO_WITH_IDEA */
+#ifndef EIXX_CRYPTO_WITH_IDEA
+#define EIXX_CRYPTO_WITH_IDEA 1
+#endif
 
 /* Algorithm MD2 in openssl crypto library */
 #ifndef EIXX_CRYPTO_WITH_MD2

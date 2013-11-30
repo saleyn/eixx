@@ -23,7 +23,7 @@ AC_ARG_VAR([ERLC_FLAGS], [general flags to prepend to ERLC_FLAGS])
 
 ERLC_FLAGS="${ERLC_FLAGS} +debug_info"
 # CXXFLAGS="${CXXFLAGS% } -MMD -Wall -fno-strict-aliasing -fpermissive -Wl,-V"
-CXXFLAGS="${CXXFLAGS% } -MMD -Wall -fno-strict-aliasing"
+CXXFLAGS="${CXXFLAGS% } -MMD -Wall -fno-strict-aliasing -Wno-unused-local-typedefs"
 
 AC_ARG_ENABLE(debug,
      AC_HELP_STRING([--enable-debug],[enable debug [[default=no]]]),

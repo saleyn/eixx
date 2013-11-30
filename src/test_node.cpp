@@ -6,6 +6,7 @@
 #define BOOST_REQUIRE
 
 #include <eixx/connect/test_helper.hpp>
+#include <eixx/util/async_wait_timeout.hpp>
 
 using namespace EIXX_NAMESPACE;
 
@@ -28,7 +29,7 @@ void on_status(otp_node& a_node, const otp_connection* a_con,
 otp_mailbox *g_io_server, *g_main;
 static atom g_rem_node;
 
-void on_io_request(otp_mailbox& a_mbox, boost::system::error_code& ec) {
+void on_io_request(otp_mailbox& a_mbox, const boost::system::error_code& ec) {
     if (ec == boost::asio::error::operation_aborted) {
         eixx::transport_msg* p;
         while ((p = a_mbox.receive()) != NULL) {
@@ -49,7 +50,7 @@ void on_io_request(otp_mailbox& a_mbox, boost::system::error_code& ec) {
     a_mbox.async_receive(&on_io_request);
 }
 
-void on_main_msg(otp_mailbox& a_mbox, boost::system::error_code& ec) {
+void on_main_msg(otp_mailbox& a_mbox, const boost::system::error_code& ec) {
     if (ec == boost::asio::error::operation_aborted) {
         eixx::transport_msg* p;
         while ((p = a_mbox.receive()) != NULL) {
