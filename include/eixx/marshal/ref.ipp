@@ -83,7 +83,7 @@ void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
     put16be(s, COUNT);
     /* then the nodename */
     put8(s,ERL_ATOM_EXT);
-    const atom::string_t& str = node().to_string();
+    const std::string& str = node().to_string();
     unsigned short n = str.size();
     put16be(s, n);
     memmove(s, str.c_str(), n);

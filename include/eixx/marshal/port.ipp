@@ -64,7 +64,7 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     char* s0 = s;
     put8(s,ERL_PORT_EXT);
     put8(s,ERL_ATOM_EXT);
-    const atom::string_t& str = node().to_string();
+    const std::string& str = node().to_string();
     unsigned short n = str.size();
     put16be(s, n);
     memmove(s, str.c_str(), n);

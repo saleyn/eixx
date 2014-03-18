@@ -55,64 +55,8 @@ namespace util {
     /// and its content is never cleared.  The table contains a unique
     /// list of strings represented as atoms added throughout the lifetime
     /// of the application.
-    template <typename Mutex = eid::mutex>
-    class atom_table {
-    public:
-        //typedef std::basic_string<char, std::char_traits<char>, Alloc> string_t;
-        typedef std::string string_t;
-    private:
-        // See http://www.azillionmonkeys.com/qed/hash.html
-        // Copyright 2004-2008 (c) by Paul Hsieh 
-        struct hsieh_hash_fun {
-            static uint16_t get16bits(const char* d) { return *(const uint16_t *)d; }
-
-            int operator()(const char* data) const {
-                int len = strlen(data);
-                uint32_t hash = len, tmp;
-                int rem;
-
-                if (len <= 0 || data == NULL) return 0;
-
-                rem = len & 3;
-                len >>= 2;
-
-                /* Main loop */
-                for (;len > 0; len--) {
-                    hash  += get16bits (data);
-                    tmp    = (get16bits (data+2) << 11) ^ hash;
-                    hash   = (hash << 16) ^ tmp;
-                    data  += 2*sizeof (uint16_t);
-                    hash  += hash >> 11;
-                }
-
-                /* Handle end cases */
-                switch (rem) {
-                    case 3: hash += get16bits (data);
-                            hash ^= hash << 16;
-                            hash ^= data[sizeof (uint16_t)] << 18;
-                            hash += hash >> 11;
-                            break;
-                    case 2: hash += get16bits (data);
-                            hash ^= hash << 11;
-                            hash += hash >> 17;
-                            break;
-                    case 1: hash += *data;
-                            hash ^= hash << 10;
-                            hash += hash >> 1;
-                }
-
-                /* Force "avalanching" of final 127 bits */
-                hash ^= hash << 3;
-                hash += hash >> 5;
-                hash ^= hash << 4;
-                hash += hash >> 17;
-                hash ^= hash << 25;
-                hash += hash >> 6;
-
-                return hash;
-            }
-        };
-
+    template <typename String = std::string, typename Mutex = eid::mutex>
+    class basic_atom_table : private detail::hsieh_hash_fun {
         static const int s_default_max_atoms = 1024*1024;
 
         int find_value(size_t bucket, const char* a_atom) {
@@ -136,24 +80,24 @@ namespace util {
         /// Returns the current number of atoms stored in the atom table.
         size_t allocated() const { return m_atoms.size();     }
 
-        explicit atom_table(int a_max_atoms = default_size())
+        explicit basic_atom_table(int a_max_atoms = default_size())
             : m_index(a_max_atoms) {
             m_atoms.reserve(a_max_atoms);
             m_atoms.push_back(""); // The 0-th element is an empty atom ("").
             m_index[""] = 0;
         }
 
-        ~atom_table() {
+        ~basic_atom_table() {
             lock_guard<Mutex> guard(m_lock);
             m_atoms.clear();
             m_index.clear();
         }
 
         /// Lookup an atom in the atom table by index.
-        const string_t& get(int n) const { return (*this)[n]; }
+        const String& get(int n) const { return (*this)[n]; }
 
         /// Lookup an atom in the atom table by index.
-        const string_t& operator[] (int n) const {
+        const String& operator[] (int n) const {
             BOOST_ASSERT((size_t)n < m_atoms.size());
             return m_atoms[n];
         }
@@ -163,9 +107,9 @@ namespace util {
         /// atom in the atom table.
         /// @throws std::runtime_error if atom table is full.
         /// @throws err_bad_argument if atom size is longer than MAXATOMLEN
-        int lookup(const char* a_name, size_t n) { return lookup(std::string(a_name, n)); }
-        int lookup(const char* a_name)           { return lookup(std::string(a_name)); }
-        int lookup(const std::string& a_name)
+        int lookup(const char* a_name, size_t n) { return lookup(String(a_name, n)); }
+        int lookup(const char* a_name)           { return lookup(String(a_name)); }
+        int lookup(const String& a_name)
             throw(std::runtime_error, err_bad_argument)
         {
             if (a_name.size() == 0)
@@ -190,10 +134,12 @@ namespace util {
             return n;
         }
     private:
-        std::vector<string_t>   m_atoms;
-        char_int_hash_map       m_index;
-        Mutex                   m_lock;
+        std::vector<String> m_atoms;
+        char_int_hash_map   m_index;
+        Mutex               m_lock;
     };
+
+    typedef basic_atom_table<> atom_table;
 
 } // namespace util
 } // namespace EIXX_NAMESPACE

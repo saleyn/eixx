@@ -32,7 +32,7 @@ using namespace eixx;
 
 BOOST_AUTO_TEST_CASE( test_atomable )
 {
-	util::atom_table<> t(10);
+	util::atom_table t(10);
 	BOOST_REQUIRE_EQUAL(0, t.lookup(std::string()));
 	BOOST_REQUIRE_EQUAL(0, t.lookup(""));
 	int n = t.lookup("abc");

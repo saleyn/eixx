@@ -72,9 +72,7 @@ class atom
     int m_index;
 
 public:
-    typedef util::atom_table<>::string_t string_t;
-
-    static util::atom_table<>& atom_table();
+    static util::atom_table& atom_table();
 
     /// Returns empty atom
     static const atom null;
@@ -89,12 +87,12 @@ public:
     /// @throws std::runtime_error if atom table is full.
     /// @throws err_bad_argument if atom size is longer than MAXATOMLEN
     atom(const char* s) throw(std::runtime_error, err_bad_argument)
-        : m_index(atom_table().lookup(string_t(s))) {}
+        : m_index(atom_table().lookup(std::string(s))) {}
 
     /// @copydoc atom::atom
     template <int N>
     atom(const char (&s)[N]) throw(std::runtime_error, err_bad_argument)
-        : m_index(atom_table().lookup(string_t(s, N))) {}
+        : m_index(atom_table().lookup(std::string(s, N))) {}
 
     /// @copydoc atom::atom
     explicit atom(const std::string& s) throw(std::runtime_error)
@@ -104,12 +102,12 @@ public:
     /// @copydoc atom::atom
     template<typename Alloc>
     explicit atom(const string<Alloc>& s) throw(std::runtime_error)
-        : m_index(atom_table().lookup(string_t(s.c_str(), s.size())))
+        : m_index(atom_table().lookup(std::string(s.c_str(), s.size())))
     {}
 
     /// @copydoc atom::atom
     atom(const char* s, size_t n) throw(std::runtime_error)
-        : m_index(atom_table().lookup(string_t(s, n)))
+        : m_index(atom_table().lookup(std::string(s, n)))
     {}
 
     /// Copy atom from another atom.  This is a constant time 
@@ -123,19 +121,22 @@ public:
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
-        if (get8(s) != ERL_ATOM_EXT)
-            throw err_decode_exception("Error decoding atom", idx);
-        int len = get16be(s);
-        m_index = atom_table().lookup(string_t(s, len));
+        int len;
+        switch (get8(s)) {
+            case ERL_ATOM_EXT:       len = get16be(s); break;
+            case ERL_SMALL_ATOM_EXT: len = get8(s); break;
+            default: throw err_decode_exception("Error decoding atom", idx);
+        }
+        m_index = atom_table().lookup(std::string(s, len));
         idx += s + len - s0;
         BOOST_ASSERT((size_t)idx <= a_size);
     }
 
-    const char*     c_str()     const { return atom_table()[m_index].c_str();  }
-    const string_t& to_string() const { return atom_table()[m_index];          }
-    size_t          size()      const { return atom_table()[m_index].size();   }
-    size_t          length()    const { return size();                         }
-    bool            empty()     const { return m_index == 0;                   }
+    const char*         c_str()     const { return atom_table()[m_index].c_str();  }
+    const std::string&  to_string() const { return atom_table()[m_index];          }
+    size_t              size()      const { return atom_table()[m_index].size();   }
+    size_t              length()    const { return size();                         }
+    bool                empty()     const { return m_index == 0;                   }
 
     /// Get atom's index in the atom table.
     int             index()     const { return m_index; }

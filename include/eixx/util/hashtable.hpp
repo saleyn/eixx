@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/util/sync.hpp>
 
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 #include <unordered_map>
 #else
 #include <boost/unordered_map.hpp>
@@ -36,7 +36,7 @@ namespace EIXX_NAMESPACE {
 namespace detail {
 
 namespace src = 
-    #ifdef __GXX_EXPERIMENTAL_CXX0X__
+    #if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
     std;
     #else
     boost;

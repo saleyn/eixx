@@ -58,8 +58,6 @@ class var
         return is_any() || m_type == UNDEFINED || t == m_type;
     }
 
-    typedef util::atom_table<>::string_t string_t;
-
     eterm_type set(eterm_type t) { return m_name == am_ANY_ ? UNDEFINED : t; }
 
 public:
@@ -74,14 +72,14 @@ public:
     var(const var& v)                                       : var(v.name(), v.type()) {}
 
     const char*             c_str()         const { return m_name.c_str(); }
-    const string_t&         str()           const { return m_name.to_string(); }
+    const std::string&      str()           const { return m_name.to_string(); }
     atom                    name()          const { return m_name; }
     size_t                  length()        const { return m_name.length(); }
 
     eterm_type              type()          const { return (eterm_type)m_type; }
     bool                    is_any()        const { return name() == am_ANY_; }
 
-    string_t to_string() const {
+    std::string to_string() const {
         std::stringstream s;
         s << name().to_string() << type_to_type_string(type(), true);
         return s.str();

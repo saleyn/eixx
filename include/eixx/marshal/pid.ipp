@@ -69,7 +69,7 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
     char* s0 = s;
     put8(s,ERL_PID_EXT);
     put8(s,ERL_ATOM_EXT);
-    const atom::string_t& nd = node().to_string();
+    const std::string& nd = node().to_string();
     unsigned short n = nd.size();
     put16be(s, n);
     memmove(s, nd.c_str(), n);

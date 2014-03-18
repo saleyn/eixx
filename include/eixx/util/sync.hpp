@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/marshal/defaults.hpp>
 
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 #include <mutex>
 #else
 #include <boost/thread.hpp>
@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace EIXX_NAMESPACE {
 namespace detail {
 
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 typedef std::mutex                  mutex;
 typedef std::recursive_mutex        recursive_mutex;
 template <typename Mutex> struct lock_guard: public std::lock_guard<Mutex> {
