@@ -55,12 +55,18 @@ namespace util {
     /// and its content is never cleared.  The table contains a unique
     /// list of strings represented as atoms added throughout the lifetime
     /// of the application.
-    template <typename String = std::string, typename Mutex = eid::mutex>
+    template
+    <
+        typename String  = std::string,
+        typename Vector  = std::vector<String>,
+        typename HashMap = char_int_hash_map,
+        typename Mutex   = eid::mutex
+    >
     class basic_atom_table : private detail::hsieh_hash_fun {
         static const int s_default_max_atoms = 1024*1024;
 
         int find_value(size_t bucket, const char* a_atom) {
-            typename char_int_hash_map::const_local_iterator
+            typename HashMap::const_local_iterator
                 lit = m_index.begin(bucket), lend = m_index.end(bucket);
             while(lit != lend && strcmp(a_atom, lit->first) != 0) ++lit;
             return lit == lend ? -1 : lit->second;
@@ -125,7 +131,7 @@ namespace util {
             n = find_value(bucket, a_name.c_str());
             if (n >= 0)
                 return n;
-            
+
             n = m_atoms.size();
             if ((size_t)(n+1) == m_atoms.capacity())
                 throw std::runtime_error("Atom hash table is full!");
@@ -134,9 +140,9 @@ namespace util {
             return n;
         }
     private:
-        std::vector<String> m_atoms;
-        char_int_hash_map   m_index;
-        Mutex               m_lock;
+        Vector  m_atoms;
+        HashMap m_index;
+        Mutex   m_lock;
     };
 
     typedef basic_atom_table<> atom_table;

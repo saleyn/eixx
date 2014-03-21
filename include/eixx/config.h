@@ -234,7 +234,7 @@
 
 /* Define to the full name and version of this package. */
 #ifndef EIXX_PACKAGE_STRING
-#define EIXX_PACKAGE_STRING "eixx 0.1"
+#define EIXX_PACKAGE_STRING "eixx 1.1"
 #endif
 
 /* Define to the one symbol short name of this package. */
@@ -249,7 +249,7 @@
 
 /* Define to the version of this package. */
 #ifndef EIXX_PACKAGE_VERSION
-#define EIXX_PACKAGE_VERSION "0.1"
+#define EIXX_PACKAGE_VERSION "1.1"
 #endif
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -259,7 +259,7 @@
 
 /* Version number of package */
 #ifndef EIXX_VERSION
-#define EIXX_VERSION "0.1"
+#define EIXX_VERSION "1.1"
 #endif
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,

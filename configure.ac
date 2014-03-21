@@ -1,7 +1,7 @@
 #  -*- Autoconf -*-
 
 AC_PREREQ([2.63])
-AC_INIT([eixx], [0.1], [BUG-REPORT-ADDRESS])
+AC_INIT([eixx], [1.1], [BUG-REPORT-ADDRESS])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Wno-portability])
