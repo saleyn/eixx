@@ -164,6 +164,7 @@ AC_OUTPUT
 echo
 echo "========================================================================"
 echo "   CXXFLAGS: ${CXXFLAGS}" $BOOST_CPPFLAGS
+echo "    LDFLAGS: ${LDFLAGS} ${EI_LDFLAGS}"
 echo "      BOOST: $BOOST_ROOT"
 echo "     Erlang: $ERLANG_ROOT_DIR"
 echo "------------------------------------------------------------------------"

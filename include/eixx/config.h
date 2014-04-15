@@ -46,9 +46,7 @@
 #endif
 
 /* Algorithm MD2 in openssl crypto library */
-#ifndef EIXX_CRYPTO_WITH_MD2
-#define EIXX_CRYPTO_WITH_MD2 1
-#endif
+/* #undef CRYPTO_WITH_MD2 */
 
 /* Algorithm MD4 in openssl crypto library */
 #ifndef EIXX_CRYPTO_WITH_MD4
