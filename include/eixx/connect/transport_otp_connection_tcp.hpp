@@ -37,9 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <ei.h>
 #include <erl_interface.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <eixx/config.h>
 
 #ifdef EIXX_HAVE_EI_EPMD
 extern "C" {

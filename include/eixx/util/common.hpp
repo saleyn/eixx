@@ -21,9 +21,7 @@
 #include <boost/assert.hpp>
 #include <eixx/util/compiler_hints.hpp>
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include <eixx/config.h>
 
 #define ERL_MONITOR_P       19
 #define ERL_DEMONITOR_P     20

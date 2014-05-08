@@ -8,11 +8,12 @@ eixx_hdrs1 =  alloc_pool.hpp \
               alloc_pool_st.hpp \
               alloc_std_debug.hpp \
               alloc_std.hpp \
+              config.h \
               connect.hpp \
               eixx.hpp \
               eterm.hpp \
-			  eterm_exception.hpp \
-			  namespace.hpp
+              eterm_exception.hpp \
+              namespace.hpp
 eixx_hdrs2 =  connect/basic_otp_connection.hpp \
               connect/basic_otp_mailbox.hpp \
               connect/basic_otp_mailbox.ipp \
@@ -62,10 +63,10 @@ eixx_hdrs3 =  marshal/alloc_base.hpp \
               marshal/visit_subst.hpp \
               marshal/visit_to_string.hpp
 eixx_hdrs4 =  util/async_queue.hpp \
-			  util/async_wait_timeout.hpp \
-			  util/atom_table.hpp \
+              util/async_wait_timeout.hpp \
+              util/atom_table.hpp \
               util/common.hpp \
-			  util/compiler_hints.hpp \
+              util/compiler_hints.hpp \
               util/hashtable.hpp \
               util/string_util.hpp \
               util/sync.hpp \
