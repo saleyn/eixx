@@ -5,8 +5,7 @@ AC_INIT([eixx], [1.1], [BUG-REPORT-ADDRESS])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Wno-portability])
-AM_CONFIG_HEADER(config.h)
-AX_PREFIX_CONFIG_H(include/eixx/config.h)
+AC_CONFIG_HEADERS(config.h)
 
 AC_SUBST([eixxdir], [$libdir])
 
@@ -58,8 +57,6 @@ LT_INIT([disable-static])
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_SED
-
-#AC_CONFIG_HEADERS([config.h])
 
 # Checks for libraries.
 

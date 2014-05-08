@@ -8,7 +8,6 @@ eixx_hdrs1 =  alloc_pool.hpp \
               alloc_pool_st.hpp \
               alloc_std_debug.hpp \
               alloc_std.hpp \
-			  config.h \
               connect.hpp \
               eixx.hpp \
               eterm.hpp \
@@ -22,7 +21,6 @@ eixx_hdrs2 =  connect/basic_otp_connection.hpp \
               connect/basic_otp_node.hpp \
               connect/basic_otp_node.ipp \
               connect/basic_otp_node_local.hpp \
-			  connect/detail/basic_rpc_server.hpp \
               connect/test_helper.hpp \
               connect/transport_msg.hpp \
               connect/transport_otp_connection.hpp \
@@ -72,6 +70,7 @@ eixx_hdrs4 =  util/async_queue.hpp \
               util/string_util.hpp \
               util/sync.hpp \
 			  util/timeout.hpp
+eixx_hdrs5 = connect/detail/basic_rpc_server.hpp
 
 eixx_headers= $(eixx_hdrs1) \
 			  $(eixx_hdrs2) \
@@ -86,6 +85,8 @@ libeixx_la_hdr3dir		 = $(includedir)/@PACKAGE@/marshal
 libeixx_la_hdr3_HEADERS  = $(eixx_hdrs3:%=../include/@PACKAGE@/%)
 libeixx_la_hdr4dir		 = $(includedir)/@PACKAGE@/util
 libeixx_la_hdr4_HEADERS  = $(eixx_hdrs4:%=../include/@PACKAGE@/%)
+libeixx_la_hdr5dir		 = $(includedir)/@PACKAGE@/connect/detail
+libeixx_la_hdr5_HEADERS  = $(eixx_hdrs5:%=../include/@PACKAGE@/%)
 
 libeixx_la_SOURCES  = am.cpp atom.cpp defaults.cpp ref.cpp \
 					  basic_otp_node_local.cpp \
