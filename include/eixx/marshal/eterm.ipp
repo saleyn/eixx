@@ -279,6 +279,27 @@ bool eterm<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
     return visitor.apply_visitor(*this);
 }
 
+template <typename Alloc>
+eterm<Alloc> eterm<Alloc>::subst(const eterm<Alloc>& a, const varbind<Alloc>& binding) const
+    throw (err_invalid_term, err_unbound_variable) {
+    eterm<Alloc> out(a);
+    visit_eterm_subst<Alloc> visitor(out, binding);
+    static const eterm<Alloc> s_null;
+    return visitor.apply_visitor(*this) ? out : s_null;
+}
+
+#if __cplusplus >= 201103L
+
+template <typename Alloc>
+eterm<Alloc> eterm<Alloc>::subst(eterm<Alloc>&& a, const varbind<Alloc>& binding) const
+    throw (err_invalid_term, err_unbound_variable) {
+    visit_eterm_subst<Alloc> visitor(a, binding);
+    static const eterm<Alloc> s_null;
+    return visitor.apply_visitor(*this) ? std::move(a) : s_null;
+}
+
+#endif
+
 template <class Alloc>
 eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char** fmt, va_list* pap)
     throw (err_format_exception)

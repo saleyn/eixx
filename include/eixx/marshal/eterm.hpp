@@ -302,9 +302,11 @@ public:
     /**
      * Move constructor
      */
+#if __cplusplus >= 201103L
     eterm(eterm&& a) {
         replace(&a);
     }
+#endif
 
     /**
      * Destruct this term. For compound terms it decreases the
@@ -341,6 +343,7 @@ public:
      * Assign the value to this term.  If current term has been initialized,
      * its old value is destructed.
      */
+#if __cplusplus >= 201103L
     eterm& operator= (eterm&& a) {
         if (this != &a) {
             if (m_type >= STRING)
@@ -349,6 +352,7 @@ public:
         }
         return *this;
     }
+#endif
 
     template <typename T>
     void set(const T& a) {
@@ -465,6 +469,16 @@ public:
      */
     bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
         throw (err_invalid_term, err_unbound_variable);
+
+    /** Substitutes all variables in the term \a a. */
+    eterm<Alloc> subst(const eterm<Alloc>& a, const varbind<Alloc>& binding) const
+        throw (err_invalid_term, err_unbound_variable);
+
+#if __cplusplus >= 201103L
+    /** Substitutes all variables in the term \a a. */
+    eterm<Alloc> subst(eterm<Alloc>&& a, const varbind<Alloc>& binding) const
+        throw (err_invalid_term, err_unbound_variable);
+#endif
 
     /**
      * This method finds the first unbound variable in a term for

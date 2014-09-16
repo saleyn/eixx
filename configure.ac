@@ -51,6 +51,20 @@ AC_ARG_ENABLE(warnings,
      ],
 )
 
+AC_LANG_PUSH(C++)
+AC_ARG_ENABLE(cxx11,
+    AC_HELP_STRING([--disable-cxx11],[disable c++11 standard [default=no]]),
+    [ if test "x${enable_cxx11}" != "xno" -a -z "${disable_cxx11}"; then
+         AX_CXX_COMPILE_STDCXX_11([noext], [optional])
+      fi
+    ],
+    [
+        AX_CXX_COMPILE_STDCXX_11([noext], [optional])
+    ]
+)
+
+AC_LANG_POP([C++])
+
 # libtool
 LT_INIT([disable-static])
 
@@ -62,9 +76,11 @@ AC_PROG_SED
 
 AX_BOOST_BASE([1.49.0], [], [AC_MSG_ERROR("BOOST library version >= 1.49.0 not found!")])
 AX_BOOST_SYSTEM
-AX_BOOST_THREAD
 AX_BOOST_ASIO
 AX_BOOST_DATE_TIME
+# workaround unexpected extra dependency on boost_system library (at least in 1.49)
+LDFLAGS+=" $BOOST_LDFLAGS $BOOST_SYSTEM_LIB"
+AX_BOOST_THREAD
 AX_BOOST_UNIT_TEST_FRAMEWORK
 
 # eixx requires md5 support
