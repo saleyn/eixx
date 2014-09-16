@@ -622,7 +622,8 @@ BOOST_AUTO_TEST_CASE( test_varbind )
     atom am_a("A");
     atom am_b("B");
     atom am_c("C");
-    varbind binding3{ {atom(am_a), 10}, {am_b, 200.0}, {"C", "abc"} };
+
+    varbind binding3{ {am_a, 10}, {am_b, 200.0}, {"C", "abc"} };
     BOOST_CHECK_EQUAL(3u, binding3.count());
 
     BOOST_CHECK_EQUAL(10,    binding3[am_a]->to_long());
@@ -631,11 +632,13 @@ BOOST_AUTO_TEST_CASE( test_varbind )
 
     eterm term = eterm::format("{ok, A::int(), B::float(), C::string()}");
     eterm got0 = eterm::format("{ok, 10, 200.0, \"abc\"}");
-    eterm got1 = term.apply({{atom(am_a), 10}, {am_b, 200.0}, {"C", "abc"}});
-    eterm got2 = term.apply(binding3);
+    eterm got1 = term.apply({{am_a, 10}, {am_b, 200.0}, {"C", "abc"}});
+    eterm got2 = term.apply({{am_a, 10}, {am_b, 200.0}, {am_c, "abc"}});
+    eterm got3 = term.apply(binding3);
 
     BOOST_CHECK(got0 == got1);
     BOOST_CHECK(got0 == got2);
+    BOOST_CHECK(got0 == got3);
 #endif
 }
 
