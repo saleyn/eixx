@@ -617,6 +617,26 @@ BOOST_AUTO_TEST_CASE( test_varbind )
     binding1.merge(binding2);
 
     BOOST_REQUIRE_EQUAL(3ul, binding1.count());
+
+#if __cplusplus >= 201103L
+    atom am_a("A");
+    atom am_b("B");
+    atom am_c("C");
+    varbind binding3{ {atom(am_a), 10}, {am_b, 200.0}, {"C", "abc"} };
+    BOOST_CHECK_EQUAL(3u, binding3.count());
+
+    BOOST_CHECK_EQUAL(10,    binding3[am_a]->to_long());
+    BOOST_CHECK_EQUAL(200.0, binding3[am_b]->to_double());
+    BOOST_CHECK_EQUAL("abc", binding3[am_c]->to_str());
+
+    eterm term = eterm::format("{ok, A::int(), B::float(), C::string()}");
+    eterm got0 = eterm::format("{ok, 10, 200.0, \"abc\"}");
+    eterm got1 = term.apply({{atom(am_a), 10}, {am_b, 200.0}, {"C", "abc"}});
+    eterm got2 = term.apply(binding3);
+
+    BOOST_CHECK(got0 == got1);
+    BOOST_CHECK(got0 == got2);
+#endif
 }
 
 eterm f() {

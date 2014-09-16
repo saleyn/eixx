@@ -41,6 +41,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace EIXX_NAMESPACE {
 namespace marshal {
 
+/// Name-value pair associating an eterm with an atom name
+template <class Alloc>
+struct epair : std::pair<atom, eterm<Alloc> > {
+    typedef std::pair<atom, eterm<Alloc> > base;
+
+    epair(atom a_name, const eterm<Alloc>& a_value) : base(a_name, a_value) {}
+
+#if __cplusplus >= 201103L
+    epair(atom a_name, eterm<Alloc>&& a_value) : base(a_name, std::move(a_value)) {}
+    epair(const epair& a_rhs)                  : base(a_rhs) {}
+    epair(epair&& a_rhs)                       : base(std::forward<epair>(a_rhs)) {}
+
+    epair& operator=(const epair& a_rhs) {
+        return base::operator=(static_cast<const base&>(a_rhs));
+    }
+
+#endif
+
+    atom                name()  const { return base::first;  }
+    const eterm<Alloc>& value() const { return base::second; }
+    eterm<Alloc>&       value()       { return base::second; }
+};
+
 /**
  * This class maintains bindings of variables to values.
  */
@@ -61,6 +84,15 @@ public:
 
     varbind(const varbind<Alloc>& rhs) : m_term_map(rhs.m_term_map)
     {}
+
+#if __cplusplus >= 201103L
+    varbind(std::initializer_list<epair<Alloc>> a_list) {
+        m_term_map.insert(a_list.begin(), a_list.end());
+    }
+//     varbind(std::initializer_list<std::pair<atom, eterm<Alloc>> a_list) {
+//         m_term_map.insert(a_list.begin(), a_list.end());
+//     }
+#endif
 
     void copy(const varbind<Alloc>& rhs) { m_term_map = rhs.m_term_map; }
 

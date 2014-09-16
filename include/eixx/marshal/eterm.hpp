@@ -471,14 +471,8 @@ public:
         throw (err_invalid_term, err_unbound_variable);
 
     /** Substitutes all variables in the term \a a. */
-    eterm<Alloc> subst(const eterm<Alloc>& a, const varbind<Alloc>& binding) const
+    eterm<Alloc> apply(const varbind<Alloc>& binding) const
         throw (err_invalid_term, err_unbound_variable);
-
-#if __cplusplus >= 201103L
-    /** Substitutes all variables in the term \a a. */
-    eterm<Alloc> subst(eterm<Alloc>&& a, const varbind<Alloc>& binding) const
-        throw (err_invalid_term, err_unbound_variable);
-#endif
 
     /**
      * This method finds the first unbound variable in a term for
