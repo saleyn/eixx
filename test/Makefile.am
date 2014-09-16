@@ -3,7 +3,6 @@ bin_PROGRAMS = test_eterm test_perf test_connect
 AM_CXXFLAGS = -I. -I$(srcdir)/../include $(BOOST_CPPFLAGS) \
               -I$(ERLANG_LIB_DIR_erl_interface)/include \
               -I$(ERLANG_LIB_DIR_erl_interface)/src
-AM_LDFLAGS  = -W,l -rpath -W,l$(subst -L,,$(BOOST_LDFLAGS))
 
 test_eterm_SOURCES    = test_eterm.cpp test_eterm_encode.cpp \
                         test_eterm_format.cpp test_eterm_match.cpp \
