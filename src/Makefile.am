@@ -70,13 +70,13 @@ eixx_hdrs4 =  util/async_queue.hpp \
               util/hashtable.hpp \
               util/string_util.hpp \
               util/sync.hpp \
-              util/timeout.hpp
+			  util/timeout.hpp
 eixx_hdrs5 = connect/detail/basic_rpc_server.hpp
 
 eixx_headers= $(eixx_hdrs1) \
-              $(eixx_hdrs2) \
-              $(eixx_hdrs3) \
-              $(eixx_hdrs4)
+			  $(eixx_hdrs2) \
+			  $(eixx_hdrs3) \
+			  $(eixx_hdrs4)
 
 libeixx_la_hdr1dir		 = $(includedir)/@PACKAGE@
 libeixx_la_hdr1_HEADERS  = $(eixx_hdrs1:%=../include/@PACKAGE@/%)
@@ -90,19 +90,19 @@ libeixx_la_hdr5dir		 = $(includedir)/@PACKAGE@/connect/detail
 libeixx_la_hdr5_HEADERS  = $(eixx_hdrs5:%=../include/@PACKAGE@/%)
 
 libeixx_la_SOURCES  = am.cpp atom.cpp defaults.cpp ref.cpp \
-                      basic_otp_node_local.cpp \
-                      $(eixx_headers:%=../include/@PACKAGE@/%)
+					  basic_otp_node_local.cpp \
+					  $(eixx_headers:%=../include/@PACKAGE@/%)
 libeixx_la_LTADD    = -version-info 1:1:0 -shared
 libeixx_la_LIBS     = $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)
 libeixx_la_CXXFLAGS = $(if $(tr1),-std=c++0x) \
-                      -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) \
-                      -I../include $(BOOST_CPPFLAGS) \
-                      $(EI_CPPFLAGS)
+					  -g -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) \
+					  -I../include $(BOOST_CPPFLAGS) \
+					  $(EI_CPPFLAGS)
 
 #EXTRA_DIST = ../README overview.inl overview_usage.inl overview_config.inl
 
 test_node_SOURCES   = test_node.cpp
 test_node_CPPFLAGS  = -g -O0 -I$(srcdir)/../include $(BOOST_CPPFLAGS) $(EI_CPPFLAGS)
-test_node_LDFLAGS   = $(BOOST_LDFLAGS) $(EI_LDFLAGS)
-test_node_LIBS      = libeixx.la $(EI_LIB) \
-                      $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)
+test_node_LDFLAGS  	= $(BOOST_LDFLAGS) $(EI_LDFLAGS)
+test_node_LDADD		= libeixx.la $(EI_LIB) \
+					  $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) $(CRYPTO_LIBS)
