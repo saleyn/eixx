@@ -205,7 +205,7 @@ template <typename Alloc>
 string<Alloc> eterm<Alloc>::encode(size_t a_header_size, bool a_with_version) const 
 {
     size_t size = encode_size(a_header_size, a_with_version);
-    string<Alloc> out("", size);
+    string<Alloc> out(NULL, size);
     char* p = const_cast<char*>(out.c_str());
     encode(p, size, a_header_size, a_with_version);
     return out;

@@ -6,6 +6,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Wno-portability])
 AC_CONFIG_HEADERS(config.h)
+AX_PREFIX_CONFIG_H(include/eixx/config.h)
 
 AC_SUBST([eixxdir], [$libdir])
 

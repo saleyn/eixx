@@ -16,7 +16,8 @@ build-aux/ltversion.m4
 build-aux/lt~obsolete.m4
 build-aux/missing
 _configs.sed
-/config.h
+config.h
+include/eixx/config.h
 config.h.in*
 config.log
 config.status

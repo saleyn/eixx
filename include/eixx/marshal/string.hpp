@@ -87,8 +87,11 @@ public:
             return;
         }
         m_blob = new blob<char, Alloc>(n+1, a);
-        memcpy(m_blob->data(), s, m_blob->size());
-        m_blob->data()[m_blob->size()-1] = '\0';
+        if (s != NULL) {
+            memcpy(m_blob->data(), s, m_blob->size());
+            m_blob->data()[m_blob->size()-1] = '\0';
+        } else
+            m_blob->data()[0] = '\0';
     }
     string(const string<Alloc>& s) : m_blob(s.m_blob) {
         if (m_blob) m_blob->inc_rc();
