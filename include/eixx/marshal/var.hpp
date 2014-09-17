@@ -51,11 +51,13 @@ namespace marshal {
  **/
 class var
 {
-    atom    m_name;
-    int     m_type;
+    atom       m_name;
+    eterm_type m_type;
 
-    bool check_type(eterm_type t) const {
-        return is_any() || m_type == UNDEFINED || t == m_type;
+    template <class Alloc>
+    bool check_type(const eterm<Alloc>& t) const {
+        return is_any() || m_type == UNDEFINED || t.type() == m_type
+            || (m_type == STRING && t.is_list() && t.to_list().empty());
     }
 
     eterm_type set(eterm_type t) { return m_name == am_ANY_ ? UNDEFINED : t; }
@@ -76,7 +78,7 @@ public:
     atom                    name()          const { return m_name; }
     size_t                  length()        const { return m_name.length(); }
 
-    eterm_type              type()          const { return (eterm_type)m_type; }
+    eterm_type              type()          const { return m_type; }
     bool                    is_any()        const { return name() == am_ANY_; }
 
     std::string to_string() const {
@@ -105,7 +107,7 @@ public:
         throw (err_unbound_variable)
     {
         const eterm<Alloc>* term = binding ? binding->find(name()) : NULL;
-        if (!term || !check_type(term->type()))
+        if (!term || !check_type(*term))
             throw err_unbound_variable(c_str());
         out = *term;
         return true;
@@ -119,8 +121,8 @@ public:
         if (!binding) return false;
         const eterm<Alloc>* value = binding->find(name());
         if (value)
-            return check_type(value->type()) ? value->match(pattern, binding) : false;
-        if (!check_type(pattern.type()))
+            return check_type(*value) ? value->match(pattern, binding) : false;
+        if (!check_type(pattern))
             return false;
         // Bind the variable
         eterm<Alloc> et;
@@ -131,7 +133,7 @@ public:
     template <typename Alloc>
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding = NULL) const {
         const eterm<Alloc>* term = binding ? binding->find(name()) : NULL;
-        return out << (term && check_type(term->type())
+        return out << (term && check_type(*term)
                         ? term->to_string(std::string::npos, binding) : to_string());
     }
 };

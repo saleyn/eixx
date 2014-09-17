@@ -107,27 +107,27 @@ list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
     int arity;
     if (ei_decode_list_header(buf, &idx, &arity) < 0)
         err_decode_exception("Error decoding list header", idx);
-    m_blob = new blob_t(sizeof(header_t) + arity*sizeof(cons_t), a_alloc);
-    header_t* l_header = header();
-    l_header->initialized = true;
-    l_header->alloc_size  = arity;
-    l_header->size        = arity;
+    if (arity == 0)
+        m_blob = NULL;
+    else {
+        m_blob = new blob_t(sizeof(header_t) + arity*sizeof(cons_t), a_alloc);
+        header_t* l_header = header();
+        l_header->initialized = true;
+        l_header->alloc_size  = arity;
+        l_header->size        = arity;
 
-    cons_t* hd = l_header->head;
-    for (cons_t* end = hd+arity; hd != end; ++hd) {
-        eterm<Alloc> et(buf, idx, size, a_alloc);
-        new (&hd->node) eterm<Alloc>(et);
-        hd->next = hd+1;
-    }
-    if (arity == 0) {
-        l_header->tail = NULL;
-    } else {
+        cons_t* hd = l_header->head;
+        for (cons_t* end = hd+arity; hd != end; ++hd) {
+            eterm<Alloc> et(buf, idx, size, a_alloc);
+            new (&hd->node) eterm<Alloc>(et);
+            hd->next = hd+1;
+        }
         l_header->tail = hd-1;
         l_header->tail->next = NULL;
         if (*(buf+idx) != ERL_NIL_EXT)
             throw err_decode_exception("Not a NIL list!", idx);
-        idx++;
     }
+    idx++;
     BOOST_ASSERT((size_t)idx <= size);
 }
 
