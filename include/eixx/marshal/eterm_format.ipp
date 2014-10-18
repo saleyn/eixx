@@ -402,7 +402,7 @@ namespace marshal {
 
     template <class Alloc>
     static void eformat(atom& mod, atom& fun, eterm<Alloc>& args,
-                        const char** fmt, va_list* pap, const Alloc& a_alloc = Alloc())
+                        const char** fmt, va_list* pap, const Alloc& a_alloc)
     {
         Alloc alloc(a_alloc);
         vector<Alloc> v(alloc);
