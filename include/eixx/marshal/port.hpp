@@ -140,7 +140,7 @@ public:
      * Get the node name from the PORT.
      * @return the node name from the PORT.
      **/
-    atom node() const { return m_blob ? m_blob->data()->node : atom::null; }
+    atom node() const { return m_blob ? m_blob->data()->node : atom::null(); }
 
     /**
      * Get the id number from the PORT.

@@ -41,7 +41,7 @@ namespace EIXX_NAMESPACE {
 
     // Constant global atom values
 
-	extern const atom am_ANY_;
+	const atom am_ANY_              = atom("_");
 	extern const atom am_badrpc;
 	extern const atom am_call;
 	extern const atom am_cast;

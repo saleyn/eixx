@@ -43,7 +43,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace EIXX_NAMESPACE {
 namespace marshal {
 namespace detail {
-    extern const uint32_t s_ref_ids[3];
 } // namespace detail
 
 /**
@@ -93,6 +92,11 @@ class ref {
     uint64_t id1() const { return m_blob->data()->u.s.id1; }
 
 public:
+    inline static const uint32_t* s_ref_ids() {
+       static const uint32_t s_ref_ids[] = {0, 0, 0};
+       return s_ref_ids;
+    }
+
     static const ref<Alloc> null;
 
     ref() : m_blob(nullptr) {}
@@ -170,7 +174,7 @@ public:
      * Get the node name from the REF.
      * @return the node name from the REF.
      */
-    atom node() const { return m_blob ? m_blob->data()->node : atom::null; }
+    atom node() const { return m_blob ? m_blob->data()->node : atom::null(); }
 
     /**
      * Get an id number from the REF.
@@ -186,7 +190,7 @@ public:
      * Get the id array from the REF.
      * @return the id array number from the REF.
      */
-    const uint32_t* ids() const { return m_blob ? m_blob->data()->u.ids : detail::s_ref_ids; }
+    const uint32_t* ids() const { return m_blob ? m_blob->data()->u.ids : s_ref_ids(); }
 
     /**
      * Get the creation number from the REF.

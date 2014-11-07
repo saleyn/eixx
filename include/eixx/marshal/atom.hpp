@@ -72,10 +72,16 @@ class atom
     int m_index;
 
 public:
-    static util::atom_table& atom_table();
+    inline static util::atom_table& atom_table() {
+       static util::atom_table s_atom_table;
+       return s_atom_table;
+    }
 
     /// Returns empty atom
-    static const atom null;
+    inline static const atom null() {
+       static const atom null = atom();
+       return null;
+    }
 
     /// Create an empty atom
     atom() : m_index(0) {
@@ -201,6 +207,7 @@ inline atom make_node_name(const std::string& s)
     detail::check_node_length(s.size());
     return atom(s);
 }
+
 
 } // namespace marshal
 } // namespace EIXX_NAMESPACE
