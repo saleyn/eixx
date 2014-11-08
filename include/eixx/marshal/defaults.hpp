@@ -96,6 +96,44 @@ namespace EIXX_NAMESPACE {
         return type_string_to_type(s, strlen(s));
     }
 
+    inline const char* type_to_string(eterm_type a_type) {
+        switch (a_type) {
+            case LONG  : return "LONG";
+            case DOUBLE: return "DOUBLE";
+            case BOOL  : return "BOOL";
+            case ATOM  : return "ATOM";
+            case STRING: return "STRING";
+            case BINARY: return "BINARY";
+            case PID   : return "PID";
+            case PORT  : return "PORT";
+            case REF   : return "REF";
+            case VAR   : return "VAR";
+            case TUPLE : return "TUPLE";
+            case LIST  : return "LIST";
+            case TRACE : return "TRACE";
+            default    : return "UNDEFINED";
+        }
+    }
+
+    inline const char* type_to_type_string(eterm_type a_type, bool a_prefix) {
+        switch (a_type) {
+            case LONG  : return a_prefix ? "::int()"    : "int()";
+            case DOUBLE: return a_prefix ? "::float()"  : "float()";
+            case BOOL  : return a_prefix ? "::bool()"   : "bool()";
+            case ATOM  : return a_prefix ? "::atom()"   : "atom()";
+            case STRING: return a_prefix ? "::string()" : "string()";
+            case BINARY: return a_prefix ? "::binary()" : "binary()";
+            case PID   : return a_prefix ? "::pid()"    : "pid()";
+            case PORT  : return a_prefix ? "::port()"   : "port()";
+            case REF   : return a_prefix ? "::ref()"    : "ref()";
+            case VAR   : return a_prefix ? "::var()"    : "var()";
+            case TUPLE : return a_prefix ? "::tuple()"  : "tuple()";
+            case LIST  : return a_prefix ? "::list()"   : "list()";
+            case TRACE : return a_prefix ? "::trace()"  : "trace()";
+            default    : return "";
+        }
+    }
+
 } // namespace EIXX_NAMESPACE
 
 #endif // _EIXX_DEFAULTS_HPP

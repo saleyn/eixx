@@ -89,7 +89,7 @@ libeixx_la_hdr4_HEADERS  = $(eixx_hdrs4:%=../include/@PACKAGE@/%)
 libeixx_la_hdr5dir		 = $(includedir)/@PACKAGE@/connect/detail
 libeixx_la_hdr5_HEADERS  = $(eixx_hdrs5:%=../include/@PACKAGE@/%)
 
-libeixx_la_SOURCES  = am.cpp atom.cpp defaults.cpp ref.cpp \
+libeixx_la_SOURCES  = am.cpp \
 					  basic_otp_node_local.cpp \
 					  $(eixx_headers:%=../include/@PACKAGE@/%)
 libeixx_la_LTADD    = -version-info 1:1:0 -shared
