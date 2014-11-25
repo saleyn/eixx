@@ -19,8 +19,12 @@ This library adds on the following features:
   - Global atom table for fast manipulation of atoms.
 
 The library consists of two separate parts:
-  - Term marshaling (included by marshal.hpp or eixx.hpp)
+  - Term marshaling (included by eterm.hpp or eixx.hpp).
   - Distributed node connectivity (included by connect.hpp or eixx.hpp)
+
+If you are simply doing term marshalling only the eterm.hpp header along
+with one of the alloc headers is needed. This allows for header-only
+usage of the marshalling capabilities.
 
 The connectivity library implements a richer set of features than
 what's available in erl_interface - it fully supports process
