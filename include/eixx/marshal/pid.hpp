@@ -77,7 +77,7 @@ class epid {
         {}
     };
 
-    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(void*));
+    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(uint64_t));
 
     blob<pid_blob, Alloc>* m_blob;
 

@@ -147,15 +147,15 @@ class eterm {
         list<Alloc>     l;
         trace<Alloc>  trc;
 
-        void* value; // this is for ease of copying
+        uint64_t value; // this is for ease of copying
 
         // We ensure that the size of each compound type
-        // is sizeof(void*).  Therefore it's safe to store the actual
-        // value of a compound type in this union, so the pointer serves
-        // as the value placeholder.
+        // is sizeof(uint64_t).  Therefore it's safe to store the actual
+        // value of a compound type in this union, so the uint64 integer
+        // acts as the value placeholder.
         // This allows us to have the minimum overhead related to
         // copying terms as for simple types it merely involves copying
-        // 16 bytes (64-bit platform) and for compound types it means copying
+        // 16 bytes and for compound types it means copying
         // the same 16 bytes and in some cases
         // incrementing compound type's reference count.
         // This approach was tested against boost::variant<> and was found
@@ -182,7 +182,7 @@ class eterm {
         void reset() { i = 0; }
     } vt;
 
-    BOOST_STATIC_ASSERT(sizeof(vartype) == sizeof(void*));
+    BOOST_STATIC_ASSERT(sizeof(vartype) == sizeof(uint64_t));
 
     void check(eterm_type tp) const { if (unlikely(m_type != tp)) throw err_wrong_type(tp, m_type); }
 
