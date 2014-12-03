@@ -52,7 +52,7 @@ void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) 
     l_header->alloc_size    = n;
     l_header->size          = N;
 
-    for(auto p = items, *end = items+N; p != end; ++p, ++hd) {
+    for(auto p = items, end = items+N; p != end; ++p, ++hd) {
         BOOST_ASSERT(p->initialized());
         new (&hd->node) eterm<Alloc>(*p);
         hd->next = hd+1;
