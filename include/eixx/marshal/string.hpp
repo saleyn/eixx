@@ -140,6 +140,7 @@ public:
 
     const char* c_str()  const { return m_blob ? m_blob->data() : ""; }
     size_t      size()   const { return m_blob ? m_blob->size()-1 : 0; }
+    std::string to_str() const { return m_blob ? std::string(m_blob->data(), m_blob->size()-1) : ""; }
     size_t      length() const { return size(); }
     bool        empty()  const { return c_str()[0] == '\0'; }
 
