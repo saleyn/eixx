@@ -58,11 +58,16 @@ bool on_main_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
     if (l_msg.match(s_now_pattern, &l_binding)) {
         struct timeval tv =
             { l_binding[N1]->to_long() * 1000000 +
-                l_binding[N2]->to_long(),
-                l_binding[N3]->to_long() };
+              l_binding[N2]->to_long(),
+              l_binding[N3]->to_long() };
         struct tm tm;
         localtime_r(&tv.tv_sec, &tm);
-        printf("Server time: %02d:%02d:%02d.%06ld\n",
+        printf(
+#ifdef __APPLE__
+            "Server time: %02d:%02d:%02d.%06d\n",
+#else
+            "Server time: %02d:%02d:%02d.%06ld\n",
+#endif
             tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec);
     } else if (l_msg.match(s_stop)) {
         a_mbox.node().stop();

@@ -38,8 +38,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace EIXX_NAMESPACE {
 namespace marshal {
 
-    template <typename Alloc> class tuple;
-    template <typename Alloc> class list;
+    template <typename Alloc> struct tuple;
+    template <typename Alloc> struct list;
     class var;
 
     template <typename ResultType, typename Visitor>
