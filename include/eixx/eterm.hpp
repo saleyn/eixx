@@ -54,17 +54,17 @@ typedef marshal::eterm_pattern_matcher<allocator_t>  eterm_pattern_matcher;
 typedef marshal::eterm_pattern_action<allocator_t>   eterm_pattern_action;
 
 namespace detail {
-    BOOST_STATIC_ASSERT(sizeof(eterm)     == 2*sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(atom)      == sizeof(int));
-    BOOST_STATIC_ASSERT(sizeof(string)    == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(binary)    == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(epid)      == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(port)      == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(ref)       == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(tuple)     == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(list)      == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(trace)     == sizeof(void*));
-    BOOST_STATIC_ASSERT(sizeof(var)       == sizeof(void*));
+    BOOST_STATIC_ASSERT(sizeof(eterm)     == 2*sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(atom)      <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(string)    <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(binary)    <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(epid)      <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(port)      <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(ref)       <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(tuple)     <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(list)      <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(trace)     <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(var)       == sizeof(uint64_t));
 } // namespace detail
 
 } // namespace EIXX_NAMESPACE

@@ -77,7 +77,7 @@ class epid {
         {}
     };
 
-    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(void*));
+    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(uint64_t));
 
     blob<pid_blob, Alloc>* m_blob;
 
@@ -185,7 +185,7 @@ public:
      * Get the node name from the PID.
      * @return the node name from the PID.
      **/
-    atom node() const { return m_blob ? m_blob->data()->node : atom::null; }
+    atom node() const { return m_blob ? m_blob->data()->node : atom::null(); }
 
     /**
      * Get the id number from the PID.
