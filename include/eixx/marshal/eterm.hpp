@@ -412,6 +412,7 @@ public:
     const atom&          to_atom()   const { check(ATOM);   return vt.a; }
     const var&           to_var()    const { check(VAR);    return vt.v; }
     const string<Alloc>& to_str()    const { check(STRING); return vt.s; }
+    const std::string    as_str()    const { check(STRING); return vt.s.to_str(); }
     const binary<Alloc>& to_binary() const { check(BINARY); return vt.bin; }
     const epid<Alloc>&   to_pid()    const { check(PID);    return vt.pid; }
     const port<Alloc>&   to_port()   const { check(PORT);   return vt.prt; }
