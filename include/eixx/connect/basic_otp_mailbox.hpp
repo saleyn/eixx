@@ -102,10 +102,10 @@ public:
     typedef util::async_queue<transport_msg<Alloc>*, Alloc> queue_type;
 
     template<typename A, typename M> friend class basic_otp_node;
-    template<typename T, typename A> friend class util::async_queue;
+    template<typename T, typename A> friend struct util::async_queue;
     template<typename A, typename M> friend class basic_otp_mailbox_registry;
-    template<typename _R, typename... _ArgTypes> friend class std::function;
-    template<typename _R, typename _F, typename... _Args> friend class std::_Function_handler;
+    template<typename _R> friend class std::function;
+    template<typename _R, typename _F> friend class std::_Function_handler;
 
 private:
     boost::asio::io_service&            m_io_service;

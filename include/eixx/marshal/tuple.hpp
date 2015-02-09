@@ -45,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace EIXX_NAMESPACE {
 namespace marshal {
 
-template <typename Alloc> struct eterm;
+template <typename Alloc> class eterm;
 
 template <typename Alloc>
 class tuple {

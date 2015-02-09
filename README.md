@@ -54,6 +54,10 @@ Run:
     $ make
     $ make install      # Default install path is ./install
 
+For clang add before ./configure:
+    $ CC="clang -DBOOST_ASIO_HAS_STD_CHRONO" CXX="clang++ -DBOOST_ASIO_HAS_STD_CHRONO" ./configure <...>
+
+
 ### Author ###
 
 Serge Aleynikov <saleyn at gmail dot com>
