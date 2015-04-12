@@ -31,9 +31,8 @@ what's available in erl_interface - it fully supports process
 linking and monitoring.  The library is fully asynchronous and allows
 handling many connections and mailboxes in one OS thread.
 
-Ths library is dependend on {@link http://www.boost.org BOOST}
-project and erl_interface, which is a part of the 
-{@link www.erlang.org Erlang} distribution.
+Ths library is dependend on http://www.boost.org project and
+erl_interface, which is a part of the www.erlang.org distribution.
 
 ### Downloading ###
 
