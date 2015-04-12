@@ -5,8 +5,8 @@ of Erlang terms between processes as well as connecting to other
 distributed Erlang nodes from a C++ application.
 
 The marshaling classes are built on top of ei library included in
-{@link http://www.erlang.org/doc/apps/erl_interface erl_interface}.
-It is largely inspired by the {@link http://code.google.com/p/epi epi}
+http://www.erlang.org/doc/apps/erl_interface.
+It is largely inspired by the http://code.google.com/p/epi
 project, but is a complete rewrite with many new features and 
 optimization enhancements.
 
