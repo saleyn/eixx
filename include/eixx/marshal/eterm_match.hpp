@@ -79,7 +79,7 @@ public:
      * patterns in the match list shouldn't be checked, the
      * functor must return true.
      */
-    typedef boost::function<
+    typedef std::function<
         bool (const eterm<Alloc>& a_pattern,
               const varbind<Alloc>& a_binding,
               long  a_opaque) > pattern_functor_t;
@@ -224,6 +224,14 @@ public:
     eterm_pattern_action(
         const eterm<Alloc>& a_pattern, 
         pattern_functor_t& a_fun, long a_opaque = 0)
+        : m_pattern(a_pattern), m_fun(a_fun), m_opaque(a_opaque)
+    {
+        BOOST_ASSERT(m_fun != NULL);
+    }
+
+    template <typename Lambda>
+    eterm_pattern_action(
+        const eterm<Alloc>& a_pattern, const Lambda& a_fun, long a_opaque = 0)
         : m_pattern(a_pattern), m_fun(a_fun), m_opaque(a_opaque)
     {
         BOOST_ASSERT(m_fun != NULL);

@@ -352,7 +352,7 @@ static void run(int n)
         { eterm(12345),                           4 }
     };
 
-    static eterm_pattern_matcher sp(list, boost::ref(cb), alloc);
+    static eterm_pattern_matcher sp(list, std::ref(cb), alloc);
 
     BOOST_REQUIRE_EQUAL(n == 1 ? 4u : 3u, sp.size());
 
