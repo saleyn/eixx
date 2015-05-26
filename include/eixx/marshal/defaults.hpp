@@ -40,9 +40,9 @@ namespace EIXX_NAMESPACE {
     namespace marshal {
 
         // Forward declarations
-        template <typename Alloc> struct eterm;
-        template <typename Alloc> struct tuple;
-        template <typename Alloc> struct list;
+        template <typename Alloc> class eterm;
+        template <typename Alloc> class tuple;
+        template <typename Alloc> class list;
 
         namespace marshal {
             template <typename Alloc> struct visit_eterm_stringify;

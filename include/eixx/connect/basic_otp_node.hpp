@@ -37,6 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_BASIC_OTP_NODE_HPP_
 #define _EIXX_BASIC_OTP_NODE_HPP_
 
+#include <atomic>
 #include <time.h>
 #include <boost/function.hpp>
 #include <eixx/connect/basic_otp_node_local.hpp>

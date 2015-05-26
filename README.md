@@ -5,8 +5,8 @@ of Erlang terms between processes as well as connecting to other
 distributed Erlang nodes from a C++ application.
 
 The marshaling classes are built on top of ei library included in
-{@link http://www.erlang.org/doc/apps/erl_interface erl_interface}.
-It is largely inspired by the {@link http://code.google.com/p/epi epi}
+http://www.erlang.org/doc/apps/erl_interface.
+It is largely inspired by the http://code.google.com/p/epi
 project, but is a complete rewrite with many new features and 
 optimization enhancements.
 
@@ -31,9 +31,8 @@ what's available in erl_interface - it fully supports process
 linking and monitoring.  The library is fully asynchronous and allows
 handling many connections and mailboxes in one OS thread.
 
-Ths library is dependend on {@link http://www.boost.org BOOST}
-project and erl_interface, which is a part of the 
-{@link www.erlang.org Erlang} distribution.
+Ths library is dependend on http://www.boost.org project and
+erl_interface, which is a part of the www.erlang.org distribution.
 
 ### Downloading ###
 
@@ -53,6 +52,10 @@ Run:
         [--prefix="/target/install/path"]
     $ make
     $ make install      # Default install path is ./install
+
+For clang add before ./configure:
+    $ CC="clang -DBOOST_ASIO_HAS_STD_CHRONO" CXX="clang++ -DBOOST_ASIO_HAS_STD_CHRONO" ./configure <...>
+
 
 ### Author ###
 
