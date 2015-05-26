@@ -262,6 +262,20 @@ public:
         , m_opaque(a_rhs.m_opaque)
     {}
 
+    void operator=(eterm_pattern_action&& a_rhs)
+    {
+        m_pattern = std::move(a_rhs.m_pattern);
+        m_fun     = std::move(a_rhs.m_fun);
+        m_opaque  = a_rhs.m_opaque;
+    }
+
+    void operator=(const eterm_pattern_action& a_rhs)
+    {
+        m_pattern = a_rhs.m_pattern;
+        m_fun     = a_rhs.m_fun;
+        m_opaque  = a_rhs.m_opaque;
+    }
+
     bool operator() (const eterm<Alloc>& a_term,
                      varbind<Alloc>* a_binding) const 
         throw (eterm_exception)

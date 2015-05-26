@@ -200,7 +200,7 @@ public:
 
     bool operator==(const ref<Alloc>& t) const {
         return node() == t.node() &&
-               ::memcmp(&m_blob->data()->u, &t.m_blob->data()->u, sizeof(&m_blob->data()->u)) == 0;
+               ::memcmp(&m_blob->data()->u, &t.m_blob->data()->u, sizeof(m_blob->data()->u)) == 0;
     }
 
     /// Less operator, needed for maps
