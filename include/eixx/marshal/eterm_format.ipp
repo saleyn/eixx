@@ -105,7 +105,7 @@ namespace marshal {
         }
     }
 
-    static var pvariable(const char **fmt)
+    static inline var pvariable(const char **fmt)
     {
         const char* start = *fmt, *p = start;
         char c;
@@ -145,7 +145,7 @@ namespace marshal {
 
     } /* pvariable */
 
-    static atom patom(const char **fmt)
+    static inline atom patom(const char **fmt)
     {
         skip_ws_and_comments(fmt);
 
@@ -158,7 +158,7 @@ namespace marshal {
         return atom(start, p - start);
     } /* patom */
 
-    static atom pquotedatom(const char **fmt)
+    static inline atom pquotedatom(const char **fmt)
     {
         ++(*fmt); /* skip first quote */
         //skip_ws_and_comments(fmt);
