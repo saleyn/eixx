@@ -98,6 +98,8 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
+AC_CHECK_ALIGNOF([uint64_t])
+
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday socket sqrt])
 
