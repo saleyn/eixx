@@ -75,15 +75,8 @@ int __inline__ log2(unsigned long n, uint8_t base = 2) {
 }
 
 static __inline__ unsigned long bit_scan_forward(unsigned long v)
-{   
-    unsigned long r;
-    __asm__ __volatile__(
-        #if (__SIZEOF_LONG__ == 8)
-            "bsfq %1, %0": "=r"(r): "rm"(v) );
-        #else
-            "bsfl %1, %0": "=r"(r): "rm"(v) );
-        #endif
-    return r;
+{
+    return __builtin_ctzl(v);
 }
 
 /// Wrapper for basic atomic operations over an integer.

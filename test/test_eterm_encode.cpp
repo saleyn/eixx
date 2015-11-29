@@ -136,10 +136,18 @@ BOOST_AUTO_TEST_CASE( test_encode_long )
         BOOST_REQUIRE_EQUAL(d, t1.to_long());
     }
     {
+#if EIXX_SIZEOF_LONG >= 8
         long d = 12345678901;
+#else
+        long d = 0x12345678;
+#endif // EIXX_SIZEOF_LONG >= 8
         eterm t(d);
         string s(t.encode(0));
+#if EIXX_SIZEOF_LONG >= 8
         const uint8_t expect[] = {131,110,5,0,53,28,220,223,2};
+#else
+        const uint8_t expect[] = {131,110,4,0,0x78,0x56,0x34,0x12};
+#endif // EIXX_SIZEOF_LONG >= 8
         BOOST_REQUIRE(s.equal(expect));
         int idx = 1;  // skipping the magic byte
         eterm t1((const char*)expect, idx, sizeof(expect));
