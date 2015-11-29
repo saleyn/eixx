@@ -108,7 +108,7 @@ public:
 
     /// Transport message type
     transport_msg_type  type()      const { return m_type; }
-    int                 to_type()   const { return bit_scan_forward(m_type); }
+    int                 to_type()   const { return m_type == UNDEFINED ? 0 : bit_scan_forward(m_type); }
     const tuple<Alloc>& cntrl()     const { return m_cntrl;}
     const eterm<Alloc>& msg()       const { return m_msg;  }
     /// Returns true when the transport message contains message payload
