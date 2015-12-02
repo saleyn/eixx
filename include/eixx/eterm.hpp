@@ -54,7 +54,7 @@ typedef marshal::eterm_pattern_matcher<allocator_t>  eterm_pattern_matcher;
 typedef marshal::eterm_pattern_action<allocator_t>   eterm_pattern_action;
 
 namespace detail {
-    BOOST_STATIC_ASSERT(sizeof(eterm)     == 2*sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(eterm)     == (EIXX_ALIGNOF_UINT64_T > sizeof(int) ? EIXX_ALIGNOF_UINT64_T : sizeof(int)) + sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(atom)      <= sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(string)    <= sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(binary)    <= sizeof(uint64_t));
