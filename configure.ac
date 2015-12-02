@@ -23,7 +23,8 @@ AC_ARG_VAR([ERLC_FLAGS], [general flags to prepend to ERLC_FLAGS])
 
 ERLC_FLAGS="${ERLC_FLAGS} +debug_info"
 # CXXFLAGS="${CXXFLAGS% } -MMD -Wall -fno-strict-aliasing -fpermissive -Wl,-V"
-CXXFLAGS="${CXXFLAGS% } -MMD -Wall -Wno-unused-local-typedefs -fno-strict-aliasing -std=c++11 -DBOOST_SYSTEM_NO_DEPRECATED=1"
+CXXFLAGS="${CXXFLAGS% } -MMD -Wall -Wno-unused-local-typedefs -fno-strict-aliasing"
+CXXFLAGS+=" -Wno-deprecated-declarations -std=c++11 -DBOOST_SYSTEM_NO_DEPRECATED=1"
 
 AC_ARG_ENABLE(debug,
      AC_HELP_STRING([--enable-debug],[enable debug [[default=no]]]),
@@ -80,7 +81,7 @@ AX_BOOST_SYSTEM
 AX_BOOST_ASIO
 AX_BOOST_DATE_TIME
 # workaround unexpected extra dependency on boost_system library (at least in 1.49)
-LDFLAGS+=" $BOOST_LDFLAGS $BOOST_SYSTEM_LIB"
+LDFLAGS+=" $BOOST_LDFLAGS $BOOST_SYSTEM_LIB -Wl,-rpath=${BOOST_LDFLAGS#-L}"
 AX_BOOST_THREAD
 AX_BOOST_UNIT_TEST_FRAMEWORK
 
@@ -145,7 +146,8 @@ Erlang not found. Fill the ERL variable with erl(1) path or provide
 Erlang prefix with --with-erlang.])
 fi
 
-AC_SUBST([EI_LDFLAGS], ["-L${ERLANG_LIB_DIR_erl_interface}/lib"])
+AC_SUBST([EI_LDFLAGS], ["-L${ERLANG_LIB_DIR_erl_interface}/lib"
+                        -Wl,-rpath=${ERLANG_LIB_DIR_erl_interface}/lib])
 AC_SUBST([EI_LIB],     ["-lei"])
 
 AC_CHECK_HEADERS([${ERLANG_LIB_DIR_erl_interface}/src/epmd/ei_epmd.h],
