@@ -231,14 +231,16 @@ public:
 
     /// Deliver a message to this mailbox. The call is thread-safe.
 	void deliver(const transport_msg<Alloc>& a_msg) {
-        transport_msg<Alloc>* p = new transport_msg<Alloc>(a_msg);
-        m_queue->enqueue(p);
+        std::unique_ptr<transport_msg<Alloc>> p(new transport_msg<Alloc>(a_msg));
+        m_queue->enqueue(p.get());
+        p.release();
     }
 
     /// Deliver a message to this mailbox. The call is thread-safe.
     void deliver(transport_msg<Alloc>&& a_msg) {
-        transport_msg<Alloc>* p = new transport_msg<Alloc>(std::move(a_msg));
-        m_queue->enqueue(p);
+        std::unique_ptr<transport_msg<Alloc>> p(new transport_msg<Alloc>(std::move(a_msg)));
+        m_queue->enqueue(p.get());
+        p.release();
     }
 
     /// Send a message \a a_msg to a pid \a a_to.
