@@ -149,8 +149,7 @@ Erlang not found. Fill the ERL variable with erl(1) path or provide
 Erlang prefix with --with-erlang.])
 fi
 
-AC_SUBST([EI_LDFLAGS], ["-L${ERLANG_LIB_DIR_erl_interface}/lib"
-                        -Wl,-rpath=${ERLANG_LIB_DIR_erl_interface}/lib])
+AC_SUBST([EI_LDFLAGS], ["-L${ERLANG_LIB_DIR_erl_interface}/lib"])
 AC_SUBST([EI_LIB],     ["-lei"])
 
 AC_CHECK_HEADERS([${ERLANG_LIB_DIR_erl_interface}/src/epmd/ei_epmd.h],
