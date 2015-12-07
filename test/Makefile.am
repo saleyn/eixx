@@ -25,8 +25,8 @@ test_connect_LDADD    = -L../src/.libs -leixx \
                         $(BOOST_THREAD_LIB)
 
 test_perf_SOURCES     = test_perf.cpp
-test_perf_CPPFLAGS    = -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0)
+test_perf_CPPFLAGS    = -O$(if $(optimize),3 -DBOOST_DISABLE_ASSERTS,0) -Wno-unused-variable
 test_perf_LDFLAGS     = -L$(ERLANG_LIB_DIR_erl_interface)/lib $(BOOST_LDFLAGS)
-test_perf_LDADD       = -L../src/.libs -leixx $(BOOST_SYSTEM_LIB)
+test_perf_LDADD       = -L../src/.libs -leixx -lei $(BOOST_SYSTEM_LIB)
 
 
