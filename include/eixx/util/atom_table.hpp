@@ -136,7 +136,7 @@ namespace util {
             if ((size_t)(n+1) == m_atoms.capacity())
                 throw std::runtime_error("Atom hash table is full!");
             m_atoms.push_back(a_name);
-            m_index[a_name.c_str()] = n;
+            m_index[m_atoms.back().c_str()] = n;
             return n;
         }
     private:

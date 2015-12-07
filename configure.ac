@@ -81,7 +81,7 @@ AX_BOOST_SYSTEM
 AX_BOOST_ASIO
 AX_BOOST_DATE_TIME
 # workaround unexpected extra dependency on boost_system library (at least in 1.49)
-LDFLAGS+=" $BOOST_LDFLAGS $BOOST_SYSTEM_LIB"
+LDFLAGS+=" $BOOST_LDFLAGS $BOOST_SYSTEM_LIB -Wl,-rpath=${BOOST_LDFLAGS#-L}"
 AX_BOOST_THREAD
 AX_BOOST_UNIT_TEST_FRAMEWORK
 
@@ -98,6 +98,9 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
+
+AC_CHECK_ALIGNOF([uint64_t])
+AC_CHECK_SIZEOF([long])
 
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday socket sqrt])
