@@ -62,6 +62,12 @@ public:
 
     string() : m_blob(nullptr) {}
 
+    string(size_t a_sz, const Alloc& a = Alloc())
+        : m_blob(new blob<char, Alloc>(a_sz+1, a))
+    {
+        m_blob->data()[m_blob->size()-1] = '\0';
+    }
+
     string(const char* s, const Alloc& a = Alloc()) {
         BOOST_ASSERT(s);
         if (!s[0]) {
