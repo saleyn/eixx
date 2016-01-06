@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_ETERM_HPP_
 #define _EIXX_ETERM_HPP_
 
+#include <eixx/config.h>
 #include <eixx/namespace.hpp>  // definition of EIXX_NAMESPACE
 #include <eixx/marshal/defaults.hpp>
 #include <eixx/marshal/eterm.hpp>

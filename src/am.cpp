@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 namespace EIXX_NAMESPACE {
 
+    const atom am_badarg            = atom("badarg");
     const atom am_badrpc            = atom("badrpc");
     const atom am_call              = atom("call");
     const atom am_cast              = atom("cast");
