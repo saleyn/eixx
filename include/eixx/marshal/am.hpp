@@ -30,8 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ***** END LICENSE BLOCK *****
 */
-#ifndef _EIXX_AM_HPP_
-#define _EIXX_AM_HPP_
+#pragma once
 
 #include <eixx/marshal/atom.hpp>
 
@@ -41,7 +40,7 @@ namespace EIXX_NAMESPACE {
 
     // Constant global atom values
 
-	const atom am_ANY_              = atom("_");
+	const atom am_ANY_ = atom("_");
 	extern const atom am_badarg;
 	extern const atom am_badrpc;
 	extern const atom am_call;
@@ -66,5 +65,3 @@ namespace EIXX_NAMESPACE {
 	extern const atom am_user;
 
 } // namespace EIXX_NAMESPACE
-
-#endif // _EIXX_AM_HPP_
