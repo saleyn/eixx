@@ -54,6 +54,11 @@ class binary
 public:
     binary() : m_blob(nullptr) {}
 
+    /// Create a binary from string
+    explicit binary(const std::string& a_bin, const Alloc& a_alloc = Alloc())
+        : binary(a_bin.c_str(), a_bin.size(), a_alloc)
+    {}
+
     /**
      * Create a binary from the given data.
      * Data is shared between all cloned binaries by using reference counting.
