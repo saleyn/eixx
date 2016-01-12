@@ -7,6 +7,8 @@ AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign -Wall -Wno-portability])
 AC_CONFIG_HEADERS(config.h)
 AX_PREFIX_CONFIG_H(include/eixx/config.h)
+DX_HTML_FEATURE(ON)
+DX_INIT_DOXYGEN([eixx], [build-aux/Doxyfile])
 
 AC_SUBST([eixxdir], [$libdir])
 
