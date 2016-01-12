@@ -411,8 +411,14 @@ public:
     bool                 to_bool()   const { check(BOOL);   return vt.b; }
     const atom&          to_atom()   const { check(ATOM);   return vt.a; }
     const var&           to_var()    const { check(VAR);    return vt.v; }
-    const string<Alloc>& to_str()    const { check(STRING); return vt.s; }
-    const std::string    as_str()    const { check(STRING); return vt.s.to_str(); }
+    const string<Alloc>& to_str()    const {
+        if (m_type==LIST && vt.l.empty()) return string<Alloc>::null();
+        check(STRING); return vt.s;
+    }
+    const std::string    as_str()    const {
+        if (m_type==LIST && vt.l.empty()) return std::string();
+        check(STRING); return vt.s.to_str();
+    }
     const binary<Alloc>& to_binary() const { check(BINARY); return vt.bin; }
     const epid<Alloc>&   to_pid()    const { check(PID);    return vt.pid; }
     const port<Alloc>&   to_port()   const { check(PORT);   return vt.prt; }

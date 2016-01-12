@@ -60,6 +60,8 @@ protected:
 public:
     typedef const char* const_iterator;
 
+    static const string& null() { static string s; return s; }
+
     string() : m_blob(nullptr) {}
 
     string(size_t a_sz, const Alloc& a = Alloc())
