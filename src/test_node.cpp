@@ -141,11 +141,11 @@ int main(int argc, char* argv[]) {
     l_node.connect(&on_connect, g_rem_node, reconnect_secs);
 
     //otp_connection::connection_type* l_transport = a_con->transport();
-    g_io_server->async_receive(&on_io_request, std::chrono::milliseconds(-1), -1);
+    g_io_server->async_receive(on_io_request, std::chrono::milliseconds(-1), -1);
 
     //l_node->send_rpc(self, a_con->remote_node(), atom("shell_default"), atom("ls"),
     //    list::make(), &io_server);
-    g_main->async_receive(&on_main_msg, std::chrono::seconds(5), -1);
+    g_main->async_receive(on_main_msg, std::chrono::seconds(5), -1);
 
     l_node.run();
 

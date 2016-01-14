@@ -160,19 +160,16 @@ public:
             bind(it->first, it->second);
     }
 
-    /**
-     * Reset this binding
-     */
+    /// Reset this binding
     void clear() { m_term_map.clear(); }
 
-    /**
-     * Convert varbind to string
-     */
+    /// Convert varbind to string
     void dump(std::ostream& out) const { out << *this; }
 
-    /**
-     * Return the number of bound variables held in internal dictionary.
-     */
+    /// Dump to string
+    std::string to_string() const { std::stringstream s; dump(s); return s.str(); }
+
+    /// Return the number of bound variables held in internal dictionary.
     size_t count() const { return m_term_map.size(); }
 
 protected:

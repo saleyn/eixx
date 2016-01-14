@@ -56,16 +56,12 @@ using namespace boost::system::errc;
 template<typename T, typename Alloc = std::allocator<char>>
 struct async_queue : std::enable_shared_from_this<async_queue<T, Alloc>>
 {
-    typedef boost::lockfree::queue<
-          T
-        , boost::lockfree::allocator<Alloc>
-        , boost::lockfree::capacity<1023>
-        , boost::lockfree::fixed_sized<false>
-    > queue_type;
+    using queue_type = boost::lockfree::queue
+        <T, boost::lockfree::allocator<Alloc>, boost::lockfree::capacity<1023>,
+            boost::lockfree::fixed_sized<false>>;
 
-    typedef std::function<
-        bool (T&, const boost::system::error_code& ec)
-    > async_handler;
+    using async_handler =
+        std::function<bool (T&, const boost::system::error_code& ec)>;
 private:
     boost::asio::io_service&        m_io;
     queue_type                      m_queue;
@@ -102,8 +98,7 @@ private:
         // to process - give up the time slice and reschedule the handler
         if (i == m_batch_size && !m_queue.empty()) {
             m_io.post([this, h, repeat, repeat_count]() {
-                (*this->shared_from_this())(
-                    h, boost::asio::error::operation_aborted, repeat, repeat_count);
+                (*this->shared_from_this())(h, boost::asio::error::operation_aborted, repeat, repeat_count);
             });
             return;
         } else if (!i && !h(value, s_timeout)) {
@@ -219,7 +214,9 @@ public:
             m_timer.async_wait(
                 [this, &a_on_data, timeout, rep]
                 (const boost::system::error_code& e) {
-                    (*this->shared_from_this())(a_on_data, e, timeout, rep);
+                    auto p = this->shared_from_this();
+                    if (p)
+                        (*p)(a_on_data, e, timeout, rep);
                 }
             );
         }

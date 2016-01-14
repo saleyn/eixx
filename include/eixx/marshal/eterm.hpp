@@ -400,8 +400,11 @@ public:
      * Get the string representation of this eterm using a variable binding
      * @param binding Variable binding to use. It can be null.
      */
-    std::string to_string(size_t a_size_limit = std::string::npos,
-        const varbind<Alloc>* binding = NULL) const;
+    std::string to_string(size_t a_size_limit,
+                          const  varbind<Alloc>* binding = NULL) const;
+
+    // Separated into a separate function without default args for ease of gdb debugging
+    std::string to_string() const { return to_string(std::string::npos, NULL); }
 
     // Convert a term to its underlying type.  Will throw an exception
     // when the underlying type doesn't correspond to the requested operation.
@@ -454,9 +457,13 @@ public:
      *  match succeeds.
      * @return true if matching succeeded or false if failed.
      */
-    bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding = NULL,
+    bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding,
                const Alloc& a_alloc = Alloc()) const
         throw (err_unbound_variable);
+
+    // Separated into a separate function without default args for ease of gdb debugging
+    bool match(const eterm<Alloc>& pattern) const
+        throw (err_unbound_variable) { return match(pattern, NULL, Alloc()); }
 
     /**
      * Returns the equivalent without inner variables, using the
