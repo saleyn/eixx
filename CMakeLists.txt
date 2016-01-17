@@ -188,7 +188,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 install(
   DIRECTORY   ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/include
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.ipp" PATTERN "*.x??"
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.hxx"
 )
 install(
   FILES       ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/config.h
