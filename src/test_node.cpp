@@ -142,16 +142,14 @@ int main(int argc, char* argv[]) {
 
     node.connect(on_connect, g_rem_node, reconnect_secs);
 
-    auto on_msg1 = [](auto& a_mailbox, auto& a_msg,
-                      ::boost::system::error_code& a_err)
+    auto on_msg1 = [](auto& a_mailbox, auto& a_msg)
     {
-        on_io_request(a_mailbox, a_msg);
+        return on_io_request(a_mailbox, a_msg);
     };
 
-    auto on_msg2 = [](auto& a_mailbox, auto& a_msg,
-                      ::boost::system::error_code& a_err)
+    auto on_msg2 = [](auto& a_mailbox, auto& a_msg)
     {
-        on_main_msg(a_mailbox, a_msg);
+        return on_main_msg(a_mailbox, a_msg);
     };
 
     //otp_connection::connection_type* transport = a_con->transport();

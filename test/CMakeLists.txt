@@ -39,4 +39,8 @@ target_link_libraries(
   boost_system
 )
 
-install(TARGETS test-eterm test-connect test-perf RUNTIME DESTINATION test)
+install(
+  TARGETS
+    test-eterm test-connect test-perf
+  RUNTIME DESTINATION test
+)

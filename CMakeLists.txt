@@ -87,22 +87,11 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_BINARY_DIR}/src:${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #-------------------------------------------------------------------------------
-# Platform-specific checks
-#-------------------------------------------------------------------------------
-#include(${CMAKE_ROOT}/Modules/CheckTypeSize.cmake)
-#include(${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
-#include(${CMAKE_ROOT}/Modules/CheckStructHasMember.cmake)
-#include(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-
-#CHECK_INCLUDE_FILE(netinet/in.h HAVE_NETINET_IN_H)
-# Needed for pcap.hpp tests
-#CHECK_STRUCT_HAS_MEMBER("struct tcphdr" th_flags netinet/tcp.h UTXX_HAVE_TCPHDR_TH_FLAGS_H)
-
-#-------------------------------------------------------------------------------
 # Dependent packages and their directory locations
 #-------------------------------------------------------------------------------
 find_package(PkgConfig)
 find_program(ERL   erl)
+find_package(OpenSSL REQUIRED)
 
 set(PKG_ROOT_DIR "/opt/pkg" CACHE STRING "Package root directory")
 
@@ -162,6 +151,7 @@ set(AddCleanFiles)  # Additional clean files
 include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIRS}
+  ${OPENSSL_INCLUDE_DIR}
   ${Erl_DIR}/usr/include
   ${Erl_ERL_INTERFACE_DIR}/src
 )
@@ -173,6 +163,25 @@ link_directories(
   ${Boost_LIBRARY_DIRS}
   ${Erl_DIR}/usr/lib
 )
+
+set(EIXX_LIBS
+  ei
+  ${OPENSSL_LIBRARIES}  # For MD5 support
+  pthread
+)
+
+#-------------------------------------------------------------------------------
+# Platform-specific checks
+#-------------------------------------------------------------------------------
+#include(${CMAKE_ROOT}/Modules/CheckTypeSize.cmake)
+#include(${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
+#include(${CMAKE_ROOT}/Modules/CheckStructHasMember.cmake)
+include(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+
+set(CMAKE_REQUIRED_INCLUDES ${Erl_ERL_INTERFACE_DIR}/src)
+CHECK_INCLUDE_FILE(epmd/ei_epmd.h HAVE_EI_EPMD)
+# Needed for pcap.hpp tests
+#CHECK_STRUCT_HAS_MEMBER("struct tcphdr" th_flags netinet/tcp.h UTXX_HAVE_TCPHDR_TH_FLAGS_H)
 
 #-------------------------------------------------------------------------------
 # Configure files
@@ -228,7 +237,7 @@ set_directory_properties(
 #===============================================================================
 enable_testing()
 
-add_test(test-utxx test/test-eixx -l message)
+add_test(test-eixx test/test-eterm -l message)
 
 #===============================================================================
 # Documentation options

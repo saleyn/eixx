@@ -59,7 +59,7 @@ async_receive(const OnReceive& h, std::chrono::milliseconds a_timeout,
 {
     return m_queue->async_dequeue(
         [this, &h](transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec) {
-            if (this->m_time_freed.time_since_epoch().count() == 0 || !h)
+            if (this->m_time_freed.time_since_epoch().count() == 0)
                 return false;
             bool res;
             if (ec) {

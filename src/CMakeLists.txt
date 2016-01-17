@@ -19,12 +19,18 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
 add_executable(test-node test_node.cpp)
-target_link_libraries(test-node utxx)
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+target_link_libraries(test-node eixx pthread)
 
 install(
-  TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_static test-node
-  RUNTIME DESTINATION test
+  TARGETS
+    ${PROJECT_NAME}
+    ${PROJECT_NAME}_static
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+)
+install(
+  TARGETS
+    test-node
+  RUNTIME DESTINATION test
 )
