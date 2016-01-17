@@ -29,8 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ***** END LICENSE BLOCK *****
 */
-#ifndef _EIXX_ASYNC_QUEUE_HPP
-#define _EIXX_ASYNC_QUEUE_HPP
+#pragma once
 
 #include <chrono>
 #include <stdexcept>
@@ -122,7 +121,7 @@ private:
     }
 
     // Called by io_service on timeout of m_timer
-    void operator() (const async_handler& h, const boost::system::error_code& ec,
+    void operator() (async_handler h, const boost::system::error_code& ec,
                      std::chrono::milliseconds repeat, int repeat_count) {
         process_queue(h, ec, repeat, repeat_count);
     }
@@ -214,9 +213,7 @@ public:
             m_timer.async_wait(
                 [this, &a_on_data, timeout, rep]
                 (const boost::system::error_code& e) {
-                    auto p = this->shared_from_this();
-                    if (p)
-                        (*p)(a_on_data, e, timeout, rep);
+                    (*this->shared_from_this())(a_on_data, e, timeout, rep);
                 }
             );
         }
@@ -227,5 +224,3 @@ public:
 
 } // namespace util
 } // namespace EIXX_NAMESPACE
-
-#endif // _EIXX_ASYNC_QUEUE_HPP

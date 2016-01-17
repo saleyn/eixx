@@ -52,12 +52,13 @@ close(const eterm<Alloc>& a_reason, bool a_reg_remove) {
 }
 
 template <typename Alloc, typename Mutex>
+template <typename OnReceive>
 bool basic_otp_mailbox<Alloc, Mutex>::
-async_receive(receive_handler_type h, std::chrono::milliseconds a_timeout,
-              int a_repeat_count) throw (std::runtime_error)
+async_receive(const OnReceive& h, std::chrono::milliseconds a_timeout,
+              int   a_repeat_count) throw (std::runtime_error)
 {
     return m_queue->async_dequeue(
-        [this, h](transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec) {
+        [this, &h](transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec) {
             if (this->m_time_freed.time_since_epoch().count() == 0 || !h)
                 return false;
             bool res;
@@ -79,14 +80,15 @@ async_receive(receive_handler_type h, std::chrono::milliseconds a_timeout,
 }
 
 template <typename Alloc, typename Mutex>
+template <typename OnTimeout>
 bool basic_otp_mailbox<Alloc, Mutex>::
 async_match(const marshal::eterm_pattern_matcher<Alloc>& a_matcher,
-            const std::function<void (basic_otp_mailbox<Alloc, Mutex>&)>& a_on_timeout,
+            const OnTimeout& a_on_timeout,
             std::chrono::milliseconds a_timeout,
             int a_repeat_count) throw (std::runtime_error)
 {
     auto f =
-        [this, &a_matcher, a_on_timeout]
+        [this, &a_matcher, &a_on_timeout]
         (transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec) {
             if (this->m_time_freed.time_since_epoch().count() == 0)
                 return false;
@@ -116,7 +118,8 @@ break_links(const eterm<Alloc>& a_reason)
         try { m_node.send_exit(self(), *it, a_reason); } catch(...) {}
     for (typename std::map<ref<Alloc>, epid<Alloc> >::const_iterator
             it = m_monitors.begin(), end = m_monitors.end(); it != end; ++it)
-        try { m_node.send_monitor_exit(self(), it->second, it->first, a_reason); } catch(...) {}
+        try { m_node.send_monitor_exit(self(), it->second, it->first, a_reason); }
+        catch(...) {}
     if (!m_links.empty())    m_links.clear();
     if (!m_monitors.empty()) m_monitors.clear();
 }

@@ -194,12 +194,12 @@ public:
      *
      * The call is non-blocking. If returns Upon timeout
      * or delivery of a message to the mailbox the handler \a h will be
-     * invoked.  The handler must have a signature with two arguments:
-     * \verbatim
+     * invoked.  The handler must have a signature with three arguments:
+     * \code
      * void handler(basic_otp_mailbox<Alloc, Mutex>& a_mailbox,
-     *              transport_msg<Alloc>*& a_msg,
-     *              ::boost::system::error_code& a_errc);
-     * \endverbatim
+     *              transport_msg<Alloc>*&           a_msg,
+     *              ::boost::system::error_code&     a_err);
+     * \endcode
      * In case of timeout the error will be set to non-zero value
      *
      * @param h is the handler to call upon arrival of a message
@@ -207,11 +207,14 @@ public:
      * @param a_repeat_count is the number of messages to wait (-1 = infinite)
      * @return true if the message was synchronously received
      **/
-    bool async_receive(receive_handler_type h,
-                       std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
-                       int a_repeat_count = 0
-                      )
-        throw (std::runtime_error);
+    template <typename OnReceive>
+    bool async_receive
+    (
+        const OnReceive& h,
+        std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
+        int a_repeat_count = 0
+    )
+    throw (std::runtime_error);
 
     /**
      * Cancel pending asynchronous receive operation
@@ -222,12 +225,24 @@ public:
 
     /**
      * Wait for messages and perform pattern match when a message arives
+     *
+     * @param a_matcher is the pattern matcher to run
+     * @param a_on_timeout is the callback to be executed on timeout. It should
+     *   have the following signature
+     *   \code
+     *      void on_timeout(basic_otp_mailbox<Alloc,Mutex>&);
+     *   \endcode
+     * @param a_repeat_count number of messages to wait (-1 = infinite)
      */
-    bool async_match(const marshal::eterm_pattern_matcher<Alloc>& a_matcher,
-                     const std::function<void (basic_otp_mailbox<Alloc,Mutex>&)>& a_on_timeout,
-                     std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
-                     int a_repeat_count = 0)
-        throw (std::runtime_error);
+    template <typename OnTimeout>
+    bool async_match
+    (
+        const marshal::eterm_pattern_matcher<Alloc>& a_matcher,
+        const OnTimeout& a_on_timeout,
+        std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
+        int a_repeat_count = 0
+    )
+    throw (std::runtime_error);
 
     /// Deliver a message to this mailbox. The call is thread-safe.
 	void deliver(const transport_msg<Alloc>& a_msg) {

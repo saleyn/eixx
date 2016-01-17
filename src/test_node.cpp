@@ -25,7 +25,9 @@ void on_status(otp_node& a_node, const otp_connection* a_con,
     std::cerr << s_levels[a_level] << "| " << s << std::endl;
 }
 
-otp_mailbox *g_io_server, *g_main;
+std::shared_ptr<otp_mailbox> g_io_server;
+std::shared_ptr<otp_mailbox> g_main;
+
 static atom g_rem_node;
 
 static const atom S  = atom("S");
@@ -106,15 +108,15 @@ int main(int argc, char* argv[]) {
     if (argc < 2)
         usage(argv[0]);
 
-    const char* l_nodename = NULL, *l_remote = NULL, *use_cookie = "";
+    const char* nodename = NULL, *remote = NULL, *use_cookie = "";
     connect::verbose_type verbose = connect::verboseness::level();
     int reconnect_secs = 0;
 
     for (int i = 1; i < argc && argv[i][0] == '-'; i++) {
         if (strcmp(argv[i], "-n") == 0 && i < argc-1)
-            l_nodename = argv[++i];
+            nodename = argv[++i];
         else if (strcmp(argv[i], "-r") == 0 && i < argc-1)
-            l_remote = argv[++i];
+            remote = argv[++i];
         else if (strcmp(argv[i], "-c") == 0 && i < argc-1)
             use_cookie = argv[++i];
         else if (strcmp(argv[i], "-v") == 0 && i < argc-1)
@@ -125,29 +127,41 @@ int main(int argc, char* argv[]) {
             usage(argv[0]);
     }
 
-    if (!l_nodename || !l_remote)
+    if (!nodename || !remote)
         usage(argv[0]);
 
     boost::asio::io_service io_service;
-    otp_node l_node(io_service, l_nodename, use_cookie);
-    l_node.verbose(verbose);
-    l_node.on_status     = on_status;
-    l_node.on_disconnect = on_disconnect;
+    otp_node node(io_service, nodename, use_cookie);
+    node.verbose(verbose);
+    node.on_status     = on_status;
+    node.on_disconnect = on_disconnect;
 
-    g_io_server = l_node.create_mailbox("io_server");
-    g_main      = l_node.create_mailbox("main");
-    g_rem_node  = atom(l_remote);
+    g_io_server.reset(node.create_mailbox("io_server"));
+    g_main     .reset(node.create_mailbox("main"));
+    g_rem_node = atom(remote);
 
-    l_node.connect(&on_connect, g_rem_node, reconnect_secs);
+    node.connect(on_connect, g_rem_node, reconnect_secs);
 
-    //otp_connection::connection_type* l_transport = a_con->transport();
-    g_io_server->async_receive(on_io_request, std::chrono::milliseconds(-1), -1);
+    auto on_msg1 = [](auto& a_mailbox, auto& a_msg,
+                      ::boost::system::error_code& a_err)
+    {
+        on_io_request(a_mailbox, a_msg);
+    };
 
-    //l_node->send_rpc(self, a_con->remote_node(), atom("shell_default"), atom("ls"),
+    auto on_msg2 = [](auto& a_mailbox, auto& a_msg,
+                      ::boost::system::error_code& a_err)
+    {
+        on_main_msg(a_mailbox, a_msg);
+    };
+
+    //otp_connection::connection_type* transport = a_con->transport();
+    g_io_server->async_receive(on_msg1, std::chrono::milliseconds(-1), -1);
+
+    //node->send_rpc(self, a_con->remote_node(), atom("shell_default"), atom("ls"),
     //    list::make(), &io_server);
-    g_main->async_receive(on_main_msg, std::chrono::seconds(5), -1);
+    g_main->async_receive(on_msg2, std::chrono::seconds(5), -1);
 
-    l_node.run();
+    node.run();
 
     return 0;
 }

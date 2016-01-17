@@ -1,0 +1,3 @@
+include
+/opt/erlang/lib/erlang/lib/erl_interface-3.7.11/include
+/opt/boost/include
