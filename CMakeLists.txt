@@ -102,6 +102,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # Dependent packages and their directory locations
 #-------------------------------------------------------------------------------
 find_package(PkgConfig)
+find_program(ERL   erl)
 
 set(PKG_ROOT_DIR "/opt/pkg" CACHE STRING "Package root directory")
 
@@ -136,6 +137,18 @@ set(Boost_LIBRARIES
   ${Boost_IOSTREAMS_LIBRARY}
 )
 
+execute_process(
+  COMMAND ${ERL} -eval "io:format(\"~s\", [code:root_dir()]), halt()."
+                 -noshell -noinput
+  OUTPUT_VARIABLE Erl_DIR
+)
+execute_process(
+  COMMAND ${ERL} -eval "io:format(\"~s\", [code:lib_dir(erl_interface)]), halt()."
+                 -noshell -noinput
+  OUTPUT_VARIABLE Erl_ERL_INTERFACE_DIR
+)
+message(STATUS "Erl interface: ${Erl_ERL_INTERFACE_DIR}")
+
 set(AddCleanFiles)  # Additional clean files
 
 #-------------------------------------------------------------------------------
@@ -149,6 +162,8 @@ set(AddCleanFiles)  # Additional clean files
 include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIRS}
+  ${Erl_DIR}/usr/include
+  ${Erl_ERL_INTERFACE_DIR}/src
 )
 include_directories(
   ${CMAKE_SOURCE_DIR}/include
@@ -156,6 +171,7 @@ include_directories(
 )
 link_directories(
   ${Boost_LIBRARY_DIRS}
+  ${Erl_DIR}/usr/lib
 )
 
 #-------------------------------------------------------------------------------
