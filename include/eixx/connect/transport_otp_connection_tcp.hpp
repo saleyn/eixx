@@ -39,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/config.h>
 
-#ifdef EIXX_HAVE_EI_EPMD
+#ifdef HAVE_EI_EPMD
 extern "C" {
 
 #include <epmd/ei_epmd.h>           // see erl_interface/src
@@ -52,7 +52,7 @@ extern "C" {
 namespace eixx {
 namespace connect {
 
-#ifndef EIXX_HAVE_EI_EPMD
+#ifndef HAVE_EI_EPMD
 // These constants are not exposed by EI headers:
 static const char  ERL_VERSION_MAGIC            = 131;
 static const short EPMD_PORT                    = 4369;

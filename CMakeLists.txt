@@ -177,11 +177,12 @@ set(EIXX_LIBS
 #include(${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
 #include(${CMAKE_ROOT}/Modules/CheckStructHasMember.cmake)
 include(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+include(${CMAKE_SOURCE_DIR}/build-aux/CMakeAlignOf.cmake)
 
 set(CMAKE_REQUIRED_INCLUDES ${Erl_ERL_INTERFACE_DIR}/src)
 CHECK_INCLUDE_FILE(epmd/ei_epmd.h HAVE_EI_EPMD)
-# Needed for pcap.hpp tests
-#CHECK_STRUCT_HAS_MEMBER("struct tcphdr" th_flags netinet/tcp.h UTXX_HAVE_TCPHDR_TH_FLAGS_H)
+unset(CMAKE_REQUIRED_INCLUDES)
+ALIGNOF(uint64_t cpp UINT64_T)
 
 #-------------------------------------------------------------------------------
 # Configure files
