@@ -25,8 +25,8 @@ void on_status(otp_node& a_node, const otp_connection* a_con,
     std::cerr << s_levels[a_level] << "| " << s << std::endl;
 }
 
-std::shared_ptr<otp_mailbox> g_io_server;
-std::shared_ptr<otp_mailbox> g_main;
+boost::shared_ptr<otp_mailbox> g_io_server;
+boost::shared_ptr<otp_mailbox> g_main;
 
 static atom g_rem_node;
 
@@ -38,6 +38,9 @@ static const atom N3 = atom("N3");
 bool on_io_request(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
 
     static const eterm s_put_chars = eterm::format("{io_request,_,_,{put_chars,S}}");
+
+    if (!a_msg)
+        return true;
 
     varbind l_binding;
     if (s_put_chars.match(a_msg->msg(), &l_binding))
@@ -52,6 +55,9 @@ bool on_io_request(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
 bool on_main_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
     static const eterm s_now_pattern  = eterm::format("{rex, {N1, N2, N3}}");
     static const eterm s_stop         = atom("stop");
+
+    if (!a_msg)
+        return true;
 
     varbind l_binding;
 
@@ -142,22 +148,12 @@ int main(int argc, char* argv[]) {
 
     node.connect(on_connect, g_rem_node, reconnect_secs);
 
-    auto on_msg1 = [](auto& a_mailbox, auto& a_msg)
-    {
-        return on_io_request(a_mailbox, a_msg);
-    };
-
-    auto on_msg2 = [](auto& a_mailbox, auto& a_msg)
-    {
-        return on_main_msg(a_mailbox, a_msg);
-    };
-
     //otp_connection::connection_type* transport = a_con->transport();
-    g_io_server->async_receive(on_msg1, std::chrono::milliseconds(-1), -1);
+    g_io_server->async_receive(on_io_request, std::chrono::milliseconds(-1), -1);
 
-    //node->send_rpc(self, a_con->remote_node(), atom("shell_default"), atom("ls"),
-    //    list::make(), &io_server);
-    g_main->async_receive(on_msg2, std::chrono::seconds(5), -1);
+    //node.send_rpc(self, g_rem_node, atom("shell_default"), atom("ls"),
+    //              list::make(), &g_io_server);
+    g_main->async_receive(on_main_msg, std::chrono::seconds(5), -1);
 
     node.run();
 

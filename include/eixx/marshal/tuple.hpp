@@ -345,6 +345,6 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/marshal/tuple.ipp>
+#include <eixx/marshal/tuple.hxx>
 
 #endif // _IMPL_TUPLE_HPP_

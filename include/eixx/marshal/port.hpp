@@ -190,7 +190,7 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/marshal/port.ipp>
+#include <eixx/marshal/port.hxx>
 
 #endif // _IMPL_PORT_HPP_
 

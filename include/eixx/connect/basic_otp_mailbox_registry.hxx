@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-/// \file  basic_otp_mailbox_registry.ipp
+/// \file  basic_otp_mailbox_registry.hxx
 //----------------------------------------------------------------------------
 /// \brief Implemention details of mailbox registration functionality
 //----------------------------------------------------------------------------

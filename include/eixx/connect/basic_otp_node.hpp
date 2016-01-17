@@ -85,6 +85,7 @@ class basic_otp_node: public basic_otp_node_local {
 
     class rpc_server;
 
+    Mutex                                       m_lock;
     uint8_t                                     m_creation;
     std::atomic_int                             m_pid_count;
     std::atomic_int                             m_port_count;
@@ -92,7 +93,6 @@ class basic_otp_node: public basic_otp_node_local {
     std::atomic_int                             m_refid1;
 
     boost::asio::io_service&                    m_io_service;
-    Mutex                                       m_lock;
     basic_otp_mailbox_registry<Alloc, Mutex>    m_mailboxes;
     conn_hash_map                               m_connections;
     Alloc                                       m_allocator;
@@ -374,7 +374,7 @@ public:
 } // namespace connect
 } // namespace eixx
 
-#include <eixx/connect/basic_otp_node.ipp>
+#include <eixx/connect/basic_otp_node.hxx>
 #include <eixx/connect/detail/basic_rpc_server.hpp>
 
 #endif // _EIXX_BASIC_OTP_NODE_HPP_

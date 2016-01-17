@@ -243,7 +243,7 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/marshal/pid.ipp>
+#include <eixx/marshal/pid.hxx>
 
 #endif // _IMPL_PID_HPP_
 

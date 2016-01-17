@@ -93,7 +93,7 @@ template <typename Alloc, typename Mutex>
 class basic_otp_mailbox
 {
 public:
-    typedef std::shared_ptr<basic_otp_mailbox<Alloc, Mutex> > pointer;
+    using pointer = boost::shared_ptr<basic_otp_mailbox<Alloc, Mutex>>;
 
     typedef std::function<
         bool (basic_otp_mailbox<Alloc, Mutex>&, transport_msg<Alloc>*&)
@@ -114,7 +114,7 @@ private:
     atom                                m_name;
     std::set<epid<Alloc> >              m_links;
     std::map<ref<Alloc>, epid<Alloc> >  m_monitors;
-    std::shared_ptr<queue_type>         m_queue;
+    boost::shared_ptr<queue_type>       m_queue;
     system_clock::time_point            m_time_freed;   // Cache time of this mbox
 
     void do_deliver(transport_msg<Alloc>* a_msg);
@@ -139,9 +139,7 @@ public:
         , m_queue(new queue_type(m_io_service, a_queue_size, a_alloc))
     {}
 
-    ~basic_otp_mailbox() {
-        close();
-    }
+    ~basic_otp_mailbox() { close(); }
 
     /// @param a_reg_remove when true the mailbox's pid is removed from registry.
     ///          Only pass false when invoking from the registry on destruction.
@@ -369,6 +367,6 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/connect/basic_otp_mailbox.ipp>
+#include <eixx/connect/basic_otp_mailbox.hxx>
 
 #endif // _EIXX_BASIC_OTP_MAILBOX_HPP_

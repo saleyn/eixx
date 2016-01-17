@@ -52,7 +52,7 @@ using namespace boost::system::errc;
  * for use with BOOST ASIO.
  */
 template<typename T, typename Alloc = std::allocator<char>>
-struct async_queue : std::enable_shared_from_this<async_queue<T, Alloc>>
+struct async_queue : boost::enable_shared_from_this<async_queue<T, Alloc>>
 {
     using queue_type = boost::lockfree::queue
         <T, boost::lockfree::allocator<Alloc>, boost::lockfree::capacity<1023>,
@@ -91,11 +91,13 @@ private:
         static const auto s_timeout =
             boost::system::errc::make_error_code(boost::system::errc::timed_out);
 
+        auto pthis = this->shared_from_this();
+
         // If we reached the batch size and queue has more data
         // to process - give up the time slice and reschedule the handler
         if (i == m_batch_size && !m_queue.empty()) {
-            m_io.post([this, h, repeat, repeat_count]() {
-                (*this->shared_from_this())(h, boost::asio::error::operation_aborted, repeat, repeat_count);
+            m_io.post([pthis, h, repeat, repeat_count]() {
+                (*pthis)(h, boost::asio::error::operation_aborted, repeat, repeat_count);
             });
             return;
         } else if (!i && !h(value, s_timeout)) {
@@ -111,9 +113,9 @@ private:
             m_timer.cancel();
             m_timer.expires_from_now(repeat);
             m_timer.async_wait(
-                [this, h, repeat, n]
+                [pthis, h, repeat, n]
                 (const boost::system::error_code& ec) {
-                    (*this->shared_from_this())(h, ec, repeat, n);
+                    (*pthis)(h, ec, repeat, n);
                 });
         }
     }
@@ -211,10 +213,11 @@ public:
             boost::system::error_code ec;
             m_timer.cancel(ec);
             m_timer.expires_from_now(timeout);
+            auto pthis = this->shared_from_this();
             m_timer.async_wait(
-                [this, &a_on_data, timeout, rep]
+                [pthis, &a_on_data, timeout, rep]
                 (const boost::system::error_code& e) {
-                    (*this->shared_from_this())(a_on_data, e, timeout, rep);
+                    (*pthis)(a_on_data, e, timeout, rep);
                 }
             );
         }

@@ -617,6 +617,6 @@ namespace std {
     }
 }
 
-#include <eixx/marshal/eterm.ipp>
+#include <eixx/marshal/eterm.hxx>
 
 #endif

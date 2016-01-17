@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-/// \file connection_tcp.ipp
+/// \file connection_tcp.hxx
 //----------------------------------------------------------------------------
 /// \brief Implementation of TCP connectivity transport with an Erlang node.
 //----------------------------------------------------------------------------
@@ -68,22 +68,23 @@ void tcp_connection<Handler, Alloc>::connect(
     //boost::system::error_code err = boost::asio::error::host_not_found;
     std::stringstream es;
 
-    m_socket.close();
+    boost::system::error_code ec;
+    m_socket.close(ec);
 
     // First resolve remote host name and connect to EPMD to find out the
     // node's port number.
 
     const char* epmd_port_s = getenv("ERL_EPMD_PORT");
-    std::stringstream str;
-    str << EPMD_PORT;
 
-    const char* epmd_port = (epmd_port_s != NULL) ? epmd_port_s : str.str().c_str();
+    auto epmd_port = (epmd_port_s != NULL) ? epmd_port_s : std::to_string(EPMD_PORT);
+    auto host      = remote_hostname();
 
-    tcp::resolver::query q(remote_hostname(), epmd_port);
-    m_state = CS_WAIT_RESOLVE;
-    m_resolver.async_resolve(q,
-        std::bind(&tcp_connection<Handler, Alloc>::handle_resolve, shared_from_this(),
-                    std::placeholders::_1, std::placeholders::_2));
+    tcp::resolver::query q(host, epmd_port);
+    m_state    = CS_WAIT_RESOLVE;
+    auto pthis = this->shared_from_this();
+    m_resolver.async_resolve(q, [pthis](auto& err, auto& ep_iterator) {
+        pthis->handle_resolve(err, ep_iterator);
+    });
 }
 
 template <class Handler, class Alloc>
@@ -100,10 +101,12 @@ void tcp_connection<Handler, Alloc>::handle_resolve(
     // Attempt a connection to the first endpoint in the list. Each endpoint
     // will be tried until we successfully establish a connection.
     m_peer_endpoint = *ep_iterator;
-    m_state = CS_WAIT_EPMD_CONNECT;
-    m_socket.async_connect(m_peer_endpoint,
-        std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_connect, shared_from_this(),
-            std::placeholders::_1, ++ep_iterator));
+    m_state     = CS_WAIT_EPMD_CONNECT;
+    auto pthis  = this->shared_from_this();
+    auto epnext = ++ep_iterator;
+    m_socket.async_connect(m_peer_endpoint, [pthis, epnext](auto& err) {
+        pthis->handle_epmd_connect(err, epnext);
+    });
 }
 
 template <class Handler, class Alloc>
@@ -127,22 +130,32 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
             this->handler()->report_status(REPORT_INFO, s.str());
         }
 
-        m_state = CS_WAIT_EPMD_WRITE_DONE;
+        m_state    = CS_WAIT_EPMD_WRITE_DONE;
+        auto pthis = this->shared_from_this();
+        /*
         boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_epmd, len+2),
-            std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_write, shared_from_this(),
-                        std::placeholders::_1));
+            [pthis](auto& err) { pthis->handle_epmd_write(err); });
+        */
+        boost::asio::async_write(m_socket, boost::asio::buffer(m_buf_epmd, len+2),
+            std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_write, pthis,
+                      std::placeholders::_1));
     } else if (ep_iterator != boost::asio::ip::tcp::resolver::iterator()) {
         // The connection failed. Try the next endpoint in the list.
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         m_peer_endpoint = *ep_iterator;
+        auto pthis      = this->shared_from_this();
+        auto epnext     = ++ep_iterator;
         m_socket.async_connect(m_peer_endpoint,
-            std::bind(&tcp_connection<Handler, Alloc>::handle_epmd_connect, shared_from_this(),
-                std::placeholders::_1, ++ep_iterator));
+                               [pthis, epnext](auto& err) {
+                                   pthis->handle_epmd_connect(err, epnext);
+                               });
     } else {
         std::stringstream str; str << "Error connecting to epmd at host '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
     }
 }
 
@@ -154,10 +167,11 @@ void tcp_connection<Handler, Alloc>::handle_epmd_write(const boost::system::erro
         std::stringstream str; str << "Error writing to epmd at host '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
-        
+
     m_state = CS_WAIT_EPMD_REPLY;
     m_epmd_wr = m_buf_epmd;
     boost::asio::async_read(m_socket, boost::asio::buffer(m_buf_epmd, sizeof(m_buf_epmd)),
@@ -176,7 +190,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
         std::stringstream str; str << "Error reading response from epmd at host '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -187,7 +202,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
         std::stringstream str; str << "Error unknown response from epmd at host '" 
             << this->remote_nodename() << "': " << res;
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -204,7 +220,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
         std::stringstream str;
         str << "Node " << this->remote_nodename() << " not known to epmd!";
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -232,7 +249,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
         std::stringstream str; str << "Error reading response body from epmd at host '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -260,7 +278,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
 
     m_peer_endpoint.port(port);
     m_peer_endpoint.address( m_socket.remote_endpoint().address() );
-    m_socket.close();
+    boost::system::error_code ec;
+    m_socket.close(ec);
 
     if (m_dist_version <= 4) {
         std::stringstream str; str << "Incompatible version " << m_dist_version
@@ -286,7 +305,8 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
         str << "Cannot connect to node " << this->remote_nodename() 
             << " at port " << m_peer_endpoint.port() << ": " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -306,7 +326,8 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
         str << "Node name too long: " << this->local_nodename()
             << " [" << __FILE__ << ':' << __LINE__ << ']';
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -343,7 +364,8 @@ void tcp_connection<Handler, Alloc>::handle_write_name(const boost::system::erro
         std::stringstream str; str << "Error writing auth challenge to node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
     m_state = CS_WAIT_STATUS;
@@ -363,7 +385,8 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
         std::stringstream str; str << "Error reading auth status from node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -374,7 +397,8 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
         std::stringstream str; str << "Node " << this->remote_nodename() 
             << " rejected connection with reason: " << std::string(m_node_rd, len);
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -402,7 +426,8 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
         std::stringstream str; str << "Error reading auth status body from node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -414,7 +439,8 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
         std::stringstream str; str << "Error invalid auth status response '" 
             << this->remote_nodename() << "': " << std::string(m_node_rd, 3);
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -442,7 +468,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
         std::stringstream str; str << "Error reading auth challenge from node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -453,7 +480,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
         std::stringstream str; str << "Error in auth status challenge node length " 
             << this->remote_nodename() << " : " << m_expect_size;
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -479,7 +507,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         std::stringstream str; str << "Error reading auth challenge body from node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -494,7 +523,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         std::stringstream str; str << "Error reading auth challenge tag '" 
             << this->remote_nodename() << "': " << tag;
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -541,7 +571,8 @@ void tcp_connection<Handler, Alloc>::handle_write_challenge_reply(const boost::s
         std::stringstream str; str << "Error writing auth challenge reply to node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
     m_state = CS_WAIT_CHALLENGE_ACK;
@@ -562,7 +593,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header(
             << this->remote_nodename() << "': "
             << (err == boost::asio::error::eof ? "Possibly bad cookie?" : err.message());
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -573,7 +605,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header(
         std::stringstream str; str << "Error in auth status challenge ack length " 
             << this->remote_nodename() << " : " << m_expect_size;
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -602,7 +635,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
         std::stringstream str; str << "Error reading auth challenge ack body from node '" 
             << this->remote_nodename() << "': " << err.message();
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -624,7 +658,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
         std::stringstream str; str << "Error reading auth challenge ack body tag '" 
             << this->remote_nodename() << "': " << tag;
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 
@@ -635,7 +670,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
         std::stringstream str; str << "Authentication failure at node '" 
             << this->remote_nodename() << '!';
         this->handler()->on_connect_failure(this, str.str());
-        m_socket.close();
+        boost::system::error_code ec;
+        m_socket.close(ec);
         return;
     }
 

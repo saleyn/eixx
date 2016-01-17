@@ -67,7 +67,7 @@ static void eformat(atom& mod, atom& fun, eterm<Alloc>& args,
 } // namespace marshal
 } // namespace eixx
 
-#include <eixx/marshal/eterm_format.ipp>
+#include <eixx/marshal/eterm_format.hxx>
 
 #endif // _EI_ETERM_FORMAT_HPP_
 

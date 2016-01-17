@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-/// \file transport_otp_connection.ipp
+/// \file transport_otp_connection.hxx
 //----------------------------------------------------------------------------
 // Copyright (c) 2010 Serge Aleynikov <saleyn@gmail.com>
 // Created: 2010-09-11

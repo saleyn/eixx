@@ -118,6 +118,6 @@ public:
 } // namespace connect
 } // namespace eixx
 
-#include <eixx/connect/basic_otp_mailbox_registry.ipp>
+#include <eixx/connect/basic_otp_mailbox_registry.hxx>
 
 #endif // _EIXX_BASIC_OTP_MAILBOX_REGISTRTY_HPP_

@@ -242,7 +242,7 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/marshal/ref.ipp>
+#include <eixx/marshal/ref.hxx>
 
 #endif // _IMPL_REF_HPP_
 

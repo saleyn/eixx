@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
 {
     boost::asio::io_service io;
 
-    std::shared_ptr<async_queue<int>> q(new async_queue<int>(io, 128));
+    boost::shared_ptr<async_queue<int>> q(new async_queue<int>(io, 128));
 
     boost::thread_group producer_threads;
 

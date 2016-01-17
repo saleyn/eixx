@@ -353,6 +353,6 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/marshal/list.ipp>
+#include <eixx/marshal/list.hxx>
 
 #endif // _IMPL_LIST_HPP_

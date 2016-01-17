@@ -93,7 +93,8 @@ public:
     void stop(const boost::system::error_code& e) {
         if (this->handler()->verbose() >= VERBOSE_TRACE)
             std::cout << "Calling connection_tcp::stop(" << e.message() << ')' << std::endl;
-        m_socket.close(); 
+        boost::system::error_code ec;
+        m_socket.close(ec);
         m_state = CS_INIT;
         base_t::stop(e);
     }
@@ -143,9 +144,9 @@ private:
     void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
         throw(std::runtime_error);
 
-    std::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
-        std::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();
-        return *reinterpret_cast<std::shared_ptr<tcp_connection<Handler, Alloc> >*>(&p);
+    boost::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
+        boost::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();
+        return *reinterpret_cast<boost::shared_ptr<tcp_connection<Handler, Alloc> >*>(&p);
     }
 
     /// Set the socket to non-blocking mode and issue on_connect() callback.
@@ -210,7 +211,7 @@ private:
 //------------------------------------------------------------------------------
 // connection_tcp implementation
 //------------------------------------------------------------------------------
-#include <eixx/connect/transport_otp_connection_tcp.ipp>
+#include <eixx/connect/transport_otp_connection_tcp.hxx>
 
 #endif // _EIXX_TRANSPORT_OTP_CONNECTION_TCP_HPP_
 

@@ -160,6 +160,6 @@ namespace std {
 
 } // namespace std
 
-#include <eixx/marshal/binary.ipp>
+#include <eixx/marshal/binary.hxx>
 
 #endif // _IMPL_BINARY_HPP_

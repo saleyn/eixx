@@ -27,7 +27,7 @@ template <class Connection>
 class channel_manager : private boost::noncopyable
 {
 public:
-    typedef std::shared_ptr<Connection> channel_ptr;
+    using channel_ptr = boost::shared_ptr<Connection>;
 
     /// Add the specified channel to the manager and start it.
     void start(channel_ptr c, bool a_connected = false) {
@@ -68,8 +68,8 @@ template<class Handler>
 class server : private boost::noncopyable
 {
 public:
-    typedef Handler handler_type;
-    typedef std::shared_ptr<server<Handler> > pointer;
+    using handler_type  = Handler;
+    using pointer       = boost::shared_ptr<server<Handler>>;
 
     /// Construct the server to listen on the specified TCP address and port, and
     /// serve up files from the given directory.

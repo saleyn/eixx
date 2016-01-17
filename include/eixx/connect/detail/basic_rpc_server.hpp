@@ -131,24 +131,27 @@ public:
         {
             marshal::eterm_pattern_action<Alloc>(
                 this->get_allocator(),
-                std::bind(&basic_otp_node<Alloc,Mutex>::rpc_call, &m_node,
-                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+                [this](auto& pat, auto& binding, auto opaque) {
+                    this->m_node.rpc_call(pat, binding, opaque);
+                },
                 0,
                 "{'$gen_call', {~w, ~w}, {call, ~w, ~w, ~w, ~w}}",
                                  P,  R,          M,  F,  A,  G),
 
             marshal::eterm_pattern_action<Alloc>(
                 this->get_allocator(),
-                std::bind(&basic_otp_node<Alloc,Mutex>::rpc_call, &m_node,
-                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+                [this](auto& pat, auto& binding, auto opaque) {
+                    this->m_node.rpc_call(pat, binding, opaque);
+                },
                 1,
                 "{'$gen_cast', {cast, ~w, ~w, ~w, ~w}}",
                                        M,  F,  A,  G),
 
             marshal::eterm_pattern_action<Alloc>(
                 this->get_allocator(),
-                std::bind(&basic_otp_node<Alloc,Mutex>::rpc_call, &m_node,
-                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+                [this](auto& pat, auto& binding, auto opaque) {
+                    this->m_node.rpc_call(pat, binding, opaque);
+                },
                 2,
                 "{_, {~w, ~w}, _Cmd}}",
                        P,  R)
