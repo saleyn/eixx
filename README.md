@@ -98,7 +98,7 @@ Serge Aleynikov <saleyn at gmail dot com>
 
 ### LICENSE ###
 
-GNU Lesser General Public License
+Apache Public License v2.0
 
 ### Example ###
 
