@@ -72,10 +72,9 @@ private:
 
     // Dequeue up to m_batch_size of items and for each one call
     // m_wait_handler
-    void process_queue(const async_handler& h, const boost::system::error_code& ec,
+    template <typename Handler>
+    void process_queue(const Handler& h, const boost::system::error_code& ec,
                        std::chrono::milliseconds repeat, int repeat_count) {
-        if (h == nullptr) return;
-
         // Process up to m_batch_size items waiting on the queue.
         // For each dequeued item call m_wait_handler
 
@@ -120,7 +119,8 @@ private:
     }
 
     // Called by io_service on timeout of m_timer
-    void operator() (async_handler h, const boost::system::error_code& ec,
+    template <typename Handler>
+    void operator() (const Handler& h, const boost::system::error_code& ec,
                      std::chrono::milliseconds repeat, int repeat_count) {
         process_queue(h, ec, repeat, repeat_count);
     }
@@ -172,14 +172,16 @@ public:
     /// Call \a a_on_data handler asyncronously on next message in the queue.
     ///
     /// @returns true if the call was handled synchronously
-    bool async_dequeue(const async_handler& a_on_data, int repeat_count = 0) {
+    template <typename Handler>
+    bool async_dequeue(const Handler& a_on_data, int repeat_count = 0) {
         return async_dequeue(a_on_data, std::chrono::milliseconds(-1), repeat_count);
     }
 
     /// Call \a a_on_data handler asyncronously on next message in the queue.
     ///
     /// @returns true if the call was handled synchronously
-    bool async_dequeue(const async_handler& a_on_data,
+    template <typename Handler>
+    bool async_dequeue(const Handler& a_on_data,
         std::chrono::milliseconds a_wait_duration = std::chrono::milliseconds(-1),
         int repeat_count = 0)
     {

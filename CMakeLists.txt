@@ -86,16 +86,25 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_BINARY_DIR}/src:${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #-------------------------------------------------------------------------------
+# Custom cmake libs
+#-------------------------------------------------------------------------------
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/build-aux)
+
+#include(${CMAKE_ROOT}/Modules/CheckTypeSize.cmake)
+#include(${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
+#include(${CMAKE_ROOT}/Modules/CheckStructHasMember.cmake)
+include(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+include(${CMAKE_SOURCE_DIR}/build-aux/AlignOf.cmake)
+#include(${CMAKE_SOURCE_DIR}/build-aux/FindErlang.cmake)
+
+#-------------------------------------------------------------------------------
 # Dependent packages and their directory locations
 #-------------------------------------------------------------------------------
 find_package(PkgConfig)
-find_program(ERL   erl)
 find_package(OpenSSL REQUIRED)
+find_package(Erlang  REQUIRED)
 
 set(PKG_ROOT_DIR "/opt/pkg" CACHE STRING "Package root directory")
-
-# Python
-find_package(PythonInterp)
 
 # Boost (with local modifications):
 set(Boost_USE_STATIC_LIBS OFF)
@@ -115,44 +124,33 @@ if(Boost_FOUND)
 endif()
 
 set(Boost_LIBRARIES
-  ${Boost_SYSTEM_LIBRARY}
-  ${Boost_THREAD_LIBRARY}
-  ${Boost_REGEX_LIBRARY}
-  ${Boost_DATE_TIME_LIBRARY}
-  ${Boost_FILESYSTEM_LIBRARY}
-  ${Boost_SYSTEM_LIBRARY}
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${Boost_IOSTREAMS_LIBRARY}
+  boost_system
+  boost_thread
+# ${Boost_REGEX_LIBRARY}
+# ${Boost_DATE_TIME_LIBRARY}
+# ${Boost_FILESYSTEM_LIBRARY}
+#  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+#  ${Boost_IOSTREAMS_LIBRARY}
 )
 
-execute_process(
-  COMMAND ${ERL} -eval "io:format(\"~s\", [code:root_dir()]), halt()."
-                 -noshell -noinput
-  OUTPUT_VARIABLE Erl_DIR
-)
-execute_process(
-  COMMAND ${ERL} -eval "io:format(\"~s\", [code:lib_dir(erl_interface)]), halt()."
-                 -noshell -noinput
-  OUTPUT_VARIABLE Erl_ERL_INTERFACE_DIR
-)
-message(STATUS "Erl interface: ${Erl_ERL_INTERFACE_DIR}")
-
-set(AddCleanFiles)  # Additional clean files
+#-------------------------------------------------------------------------------
+# Platform-specific checks
+#-------------------------------------------------------------------------------
+set(CMAKE_REQUIRED_INCLUDES ${ERLANG_EI_PATH}/src)
+CHECK_INCLUDE_FILE(epmd/ei_epmd.h HAVE_EI_EPMD)
+unset(CMAKE_REQUIRED_INCLUDES)
+ALIGNOF(uint64_t cpp UINT64_T)
 
 #-------------------------------------------------------------------------------
 # MAKE options
 #-------------------------------------------------------------------------------
 
-#add_custom_target(vars
-#  COMMAND ${CMAKE_COMMAND} -H${CMAKE_SOURCE_DIR} -B${CMAKE_BINARY_DIR} -LA
-#)
-
 include_directories(
   SYSTEM
   ${Boost_INCLUDE_DIRS}
   ${OPENSSL_INCLUDE_DIR}
-  ${Erl_DIR}/usr/include
-  ${Erl_ERL_INTERFACE_DIR}/src
+  ${Erlang_EI_INCLUDE_DIR}
+  ${Erlang_EI_DIR}/src
 )
 include_directories(
   ${CMAKE_SOURCE_DIR}/include
@@ -160,28 +158,14 @@ include_directories(
 )
 link_directories(
   ${Boost_LIBRARY_DIRS}
-  ${Erl_DIR}/usr/lib
+  ${Erlang_EI_LIBRARY_DIR}
 )
 
 set(EIXX_LIBS
-  ei
+  ${Erlang_EI_LIBRARIES}
   ${OPENSSL_LIBRARIES}  # For MD5 support
   pthread
 )
-
-#-------------------------------------------------------------------------------
-# Platform-specific checks
-#-------------------------------------------------------------------------------
-#include(${CMAKE_ROOT}/Modules/CheckTypeSize.cmake)
-#include(${CMAKE_ROOT}/Modules/CheckFunctionExists.cmake)
-#include(${CMAKE_ROOT}/Modules/CheckStructHasMember.cmake)
-include(${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-include(${CMAKE_SOURCE_DIR}/build-aux/CMakeAlignOf.cmake)
-
-set(CMAKE_REQUIRED_INCLUDES ${Erl_ERL_INTERFACE_DIR}/src)
-CHECK_INCLUDE_FILE(epmd/ei_epmd.h HAVE_EI_EPMD)
-unset(CMAKE_REQUIRED_INCLUDES)
-ALIGNOF(uint64_t cpp UINT64_T)
 
 #-------------------------------------------------------------------------------
 # Configure files
@@ -195,8 +179,8 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pc.in"
 # Srcs and Targets:
 #-------------------------------------------------------------------------------
 
-add_subdirectory(src)
-add_subdirectory(test)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 
 #===============================================================================
 # Installation

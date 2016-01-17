@@ -1,12 +1,12 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@CMAKE_INSTALL_PREFIX@/lib
+includedir=@CMAKE_INSTALL_PREFIX@/include
 
-Name: @PACKAGE@
+Name: @PROJECT_NAME@
 Description: EIXX: C++ Interface to Erlang
 #Requires: boost_1_55_0
-Version: @PACKAGE_VERSION@
-Libs: -L${libdir} @EI_LDFLAGS@ -Wl,-rpath,${libdir} -leixx @EI_LIB@ @CRYPTO_LIBS@
-Cflags: -I${includedir} @EI_CPPFLAGS@
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -L@Erlang_EI_LIBRARY_PATH@ -Wl,-rpath,${libdir} -leixx -lei -lssl -lcrypto
+Cflags: -I${includedir} -I@Erlang_EI_INCLUDE_DIR@
 
