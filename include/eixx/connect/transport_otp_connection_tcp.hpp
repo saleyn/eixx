@@ -157,13 +157,17 @@ private:
 
     std::string remote_alivename() const {
         auto s = this->remote_nodename().to_string();
+#ifndef NDEBUG
         auto n = s.find('@');
+#endif
         BOOST_ASSERT(n != std::string::npos);
         return s.substr(0, s.find('@'));
     }
     std::string remote_hostname() const {
         auto s = this->remote_nodename().to_string();
+#ifndef NDEBUG
         auto n = s.find('@');
+#endif
         BOOST_ASSERT(n != std::string::npos);
         return s.substr(s.find('@')+1);
     }

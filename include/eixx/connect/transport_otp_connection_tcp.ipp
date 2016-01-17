@@ -237,7 +237,7 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
     }
 
     m_epmd_wr += bytes_transferred;
-    #ifndef BOOST_DISABLE_ASSERTS
+    #ifndef NDEBUG
     int got_bytes = m_epmd_wr - m_buf_epmd;
     #endif
     BOOST_ASSERT(got_bytes >= 10);
@@ -484,7 +484,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     }
 
     m_node_wr += bytes_transferred;
-    #ifndef BOOST_DISABLE_ASSERTS
+    #ifndef NDEBUG
     int got_bytes = m_node_wr - m_node_rd;
     #endif
     BOOST_ASSERT(got_bytes >= (int)m_expect_size);
@@ -607,7 +607,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
     }
 
     m_node_wr += bytes_transferred;
-    #ifndef BOOST_DISABLE_ASSERTS
+    #ifndef NDEBUG
     int got_bytes = m_node_wr - m_node_rd;
     #endif
     BOOST_ASSERT(got_bytes >= (int)m_expect_size);

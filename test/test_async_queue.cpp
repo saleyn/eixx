@@ -103,8 +103,6 @@ namespace {
     const int producer_thread_count = 4;
     std::atomic_int done_producer_count(0);
 
-    int total_iterations = producer_thread_count * iterations;
-
     std::atomic<bool> done (false);
 }
 

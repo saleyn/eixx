@@ -47,6 +47,7 @@ script:
   - make bootstrap generator=make build=Debug
   - make
   - make doc
+  - make install
   - make test
 branches:
   only: master

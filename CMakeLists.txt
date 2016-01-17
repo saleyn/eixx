@@ -6,7 +6,6 @@ project(eixx VERSION 1.4)
 # CMAKE options customization
 #===============================================================================
 option(VERBOSE                 "Turn verbosity on|off"                      OFF)
-#set(DEBUG "vars")
 
 if(VERBOSE)
   set(CMAKE_VERBOSE_MAKEFILE ON)
