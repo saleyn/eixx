@@ -11,6 +11,7 @@ addons:
     - libboost1.55-all-dev
     - libxslt1.1
     - python-lxml
+    - graphviz
     - doxygen
 
 before_install:
@@ -21,10 +22,8 @@ before_install:
   - sudo add-apt-repository -y "deb http://ppa.launchpad.net/wnoronha/thrift/ubuntu precise main"
   - sudo add-apt-repository -y "deb http://ppa.launchpad.net/kzemek/boost/ubuntu utopic main"
   - sudo add-apt-repository ppa:george-edison55/precise-backports --yes
-  - sudo apt-add-repository ppa:dperry/ppa-graphviz-test
   - sudo apt-get update -qq
   - sudo apt-get install cmake-data cmake
-  - sudo apt-get install graphviz
   - # sudo apt-get install libboost1.55-all-dev
   - # sudo updatedb
   - # dpkg -S /usr/include/boost/version.hpp
