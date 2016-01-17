@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/util/common.hpp>
 #include <iostream>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
     template <typename T, typename Alloc>
@@ -156,6 +156,6 @@ namespace marshal {
     };
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_ETERM_BASE_HPP_

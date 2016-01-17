@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/eterm_exception.hpp>
 #include <string.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 template <class Alloc>
@@ -145,16 +145,16 @@ public:
         if (printable)
             return out << "<<" << string<Alloc>(data(), size()) << ">>";
         else
-            return EIXX_NAMESPACE::to_binary_string(out, data(), size());
+            return eixx::to_binary_string(out, data(), size());
     }
 };
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
     template <typename Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::binary<Alloc>& a) {
+    ostream& operator<< (ostream& out, const eixx::marshal::binary<Alloc>& a) {
         return a.dump(out);
     }
 

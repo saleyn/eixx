@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/eixx.hpp>
 #include <eixx/marshal/eterm_format.hpp>
 
-using namespace EIXX_NAMESPACE;
+using namespace eixx;
 
 BOOST_AUTO_TEST_CASE( test_eterm_format_string )
 {

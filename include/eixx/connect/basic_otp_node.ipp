@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/interprocess/detail/atomic.hpp>
 #include <boost/concept_check.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 namespace {
@@ -467,4 +467,4 @@ send_monitor_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx

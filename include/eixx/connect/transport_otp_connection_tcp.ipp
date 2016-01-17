@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/utsname.h>
 #include <openssl/md5.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 //------------------------------------------------------------------------------
@@ -710,7 +710,7 @@ gen_digest(unsigned challenge, const char cookie[], uint8_t digest[16])
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_CONNECTION_TCP_IPP_
 

@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/am.hpp>
 #include <boost/concept_check.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
     const atom am_badarg            = atom("badarg");
     const atom am_badrpc            = atom("badrpc");
@@ -50,5 +50,5 @@ namespace EIXX_NAMESPACE {
     const atom am_unsupported       = atom("unsupported");
     const atom am_user              = atom("user");
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 

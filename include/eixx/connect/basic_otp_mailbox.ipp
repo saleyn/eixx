@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_BASIC_OTP_MAILBOX_IPP_
 #define _EIXX_BASIC_OTP_MAILBOX_IPP_
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 //------------------------------------------------------------------------------
@@ -205,6 +205,6 @@ dump(std::ostream& out) const {
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_BASIC_OTP_MAILBOX_IPP_

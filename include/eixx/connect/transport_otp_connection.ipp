@@ -39,10 +39,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/string.hpp>
 //#include <misc/eiext.h>                 // see erl_interface/src
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
-using EIXX_NAMESPACE::marshal::trace;
+using eixx::marshal::trace;
 
 template <class Handler, class Alloc>
 const size_t connection<Handler, Alloc>::s_header_size = 4;
@@ -485,7 +485,7 @@ send(const transport_msg<Alloc>& a_msg)
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_TRANSPORT_OTP_CONNECTION_IPP_
 

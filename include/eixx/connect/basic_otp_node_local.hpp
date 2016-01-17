@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/atom.hpp>
 #include <eixx/eterm_exception.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 using marshal::atom;
@@ -94,6 +94,6 @@ protected:
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_OTP_NODE_LOCAL_HPP_

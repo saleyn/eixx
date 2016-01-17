@@ -15,7 +15,7 @@
 #include <boost/lockfree/detail/branch_hints.hpp>
 
 // Branch prediction optimization (see http://lwn.net/Articles/255364/)
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 #ifndef NO_HINT_BRANCH_PREDICTION
     inline bool likely(bool expr)   { return boost::lockfree::detail::likely  (expr); }
@@ -26,7 +26,7 @@ namespace EIXX_NAMESPACE {
 #endif
 
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_COMPILER_HINTS_HPP_
 

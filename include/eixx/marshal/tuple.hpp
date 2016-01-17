@@ -42,7 +42,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/visit_encode_size.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 template <typename Alloc> class eterm;
@@ -334,12 +334,12 @@ public:
 };
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
 
     template <class Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::tuple<Alloc>& a) {
+    ostream& operator<< (ostream& out, const eixx::marshal::tuple<Alloc>& a) {
         return a.dump(out);
     }
 

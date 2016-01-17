@@ -11,7 +11,7 @@
 #ifndef _EIXX_VERBOSE_HPP_
 #define _EIXX_VERBOSE_HPP_
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 // otp_node.on_status reporting level
 enum report_level {
@@ -34,7 +34,7 @@ enum verbose_type {
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_VERBOSE_HPP_
 

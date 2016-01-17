@@ -40,10 +40,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/asio.hpp>
 #include <boost/concept_check.hpp>
 
-#include <eixx/namespace.hpp>  // definition of EIXX_NAMESPACE
 #include <eixx/util/timeout.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace util {
 
 using namespace boost::system::errc;
@@ -223,4 +222,4 @@ public:
 };
 
 } // namespace util
-} // namespace EIXX_NAMESPACE
+} // namespace eixx

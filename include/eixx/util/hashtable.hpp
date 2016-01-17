@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/unordered_map.hpp>
 #endif
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace detail {
 
 namespace src = 
@@ -110,7 +110,7 @@ struct hsieh_hash_fun {
 
 typedef detail::hash_map_base<const char*, size_t, detail::hsieh_hash_fun> char_int_hash_map;
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_HASHTABLE_HPP_
 

@@ -33,10 +33,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_DEFAULTS_HPP
 
 #include <string.h>
-#include <eixx/namespace.hpp>
 #include <eixx/util/compiler_hints.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
     namespace marshal {
 
         // Forward declarations
@@ -134,7 +133,7 @@ namespace EIXX_NAMESPACE {
         }
     }
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_DEFAULTS_HPP
 

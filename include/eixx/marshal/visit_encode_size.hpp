@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/visit.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 template <typename Alloc>
@@ -50,7 +50,7 @@ struct visit_eterm_encode_size_calc
     size_t operator()(const T& a) const { return a.encode_size(); }
 };
 
-} // namespace EIXX_NAMESPACE
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
+} // namespace eixx
 
 #endif // _IMPL_VISIT_ENCODE_SIZE_HPP_

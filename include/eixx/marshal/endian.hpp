@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/version.hpp>
 #include <boost/spirit/home/support/detail/endian.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 template <typename T>
 inline void put_be(char*& s, T n) {
@@ -71,6 +71,6 @@ inline uint16_t get16be(const char*& s) { uint16_t n; get_be(s, n); return n; }
 inline uint32_t get32be(const char*& s) { uint32_t n; get_be(s, n); return n; }
 inline uint64_t get64be(const char*& s) { uint64_t n; get_be(s, n); return n; }
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_ENDIAN_HPP_

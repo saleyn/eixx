@@ -48,10 +48,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/util/sync.hpp>
 #include <eixx/marshal/eterm.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
-using namespace EIXX_NAMESPACE;
+using namespace eixx;
 using marshal::epid;
 using marshal::port;
 using marshal::ref;
@@ -79,7 +79,7 @@ class basic_otp_node: public basic_otp_node_local {
     typedef transport_msg<Alloc>                transport_msg_t;
     typedef basic_otp_connection<Alloc,Mutex>   connection_t;
 
-    typedef EIXX_NAMESPACE::detail::hash_map_base<
+    typedef eixx::detail::hash_map_base<
         atom, typename connection_t::pointer, atom_con_hash_fun
     > conn_hash_map;
 
@@ -372,7 +372,7 @@ public:
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #include <eixx/connect/basic_otp_node.ipp>
 #include <eixx/connect/detail/basic_rpc_server.hpp>

@@ -39,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/eterm_exception.hpp>
 #include <eixx/marshal/atom.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 /**
@@ -233,11 +233,11 @@ public:
 };
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
     template <typename Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::epid<Alloc>& a) {
+    ostream& operator<< (ostream& out, const eixx::marshal::epid<Alloc>& a) {
         return a.dump(out);
     }
 

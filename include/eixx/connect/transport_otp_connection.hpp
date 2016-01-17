@@ -44,7 +44,7 @@
 #include <eixx/connect/verbose.hpp>
 #include <eixx/marshal/string.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 namespace posix = boost::asio::posix;
@@ -344,7 +344,7 @@ public:
 //------------------------------------------------------------------------------
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #include <eixx/connect/transport_otp_connection.ipp>
 

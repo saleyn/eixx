@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/marshal/eterm.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 namespace detail {
 
@@ -63,6 +63,6 @@ namespace detail {
 
 } // namespace detail
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_ARRAY_VARIADIC_INIT_HPP_

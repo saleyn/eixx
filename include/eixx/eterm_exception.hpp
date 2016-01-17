@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sstream>
 #include <string>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 /**
  * Base class for the other eixx erlang exception classes.
@@ -199,6 +199,6 @@ public:
     err_no_process(const std::string &msg, T arg): err_bad_argument(msg, arg) {}
 };
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_EXCEPTION_HPP_

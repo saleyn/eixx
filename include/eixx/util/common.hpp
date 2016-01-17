@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 /// \file common.hpp
 //----------------------------------------------------------------------------
-/// \namespace dmf Distributed Monitoring Framework.
+/// \namespace eixx EI C++ Interface Library
 ///
 /// This file contains a set of commonly used functions.
 //----------------------------------------------------------------------------
@@ -29,7 +29,7 @@
 #define ERL_DEMONITOR_P     20
 #define ERL_MONITOR_P_EXIT  21
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 #if BOOST_VERSION > 104800
 namespace bid = boost::interprocess::ipcdetail;
@@ -50,7 +50,7 @@ namespace bid = boost::interprocess::detail;
 /// \def ON_ERROR_CALLBACK(Client, S) 
 /// Invokes an error callback from within perc_client's implementation.
 ///
-/// @param Client is of type 'dmf::client'
+/// @param Connection is of type 'eixx::connection'
 /// @param S      is the stream of elements to include in the message.
 ///               The elements can be concatinated with left shift
 ///               notation.
@@ -113,7 +113,7 @@ int find_index(const char* (&a_list)[N], const char* a_string, int a_default=-1)
     return a_default;
 }
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_COMMON_HPP_
 

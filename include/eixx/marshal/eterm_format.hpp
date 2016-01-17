@@ -33,7 +33,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/marshal/defaults.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 /**
@@ -65,7 +65,7 @@ static void eformat(atom& mod, atom& fun, eterm<Alloc>& args,
                     const char** fmt, va_list* pa, const Alloc& a_alloc = Alloc());
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #include <eixx/marshal/eterm_format.ipp>
 

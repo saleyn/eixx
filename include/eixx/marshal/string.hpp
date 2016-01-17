@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/eterm_exception.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 template <class Alloc> class varbind;
@@ -253,27 +253,27 @@ string<Alloc>::string(const char* buf, int& idx, size_t size, const Alloc& a_all
 }
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
 
     template <typename Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::string<Alloc>& s) {
+    ostream& operator<< (ostream& out, const eixx::marshal::string<Alloc>& s) {
         return out << '"' << s.c_str() << '"';
     }
 
     template <typename Alloc>
-    bool operator== (const std::string& lhs, const EIXX_NAMESPACE::marshal::string<Alloc>& rhs) {
+    bool operator== (const std::string& lhs, const eixx::marshal::string<Alloc>& rhs) {
         return lhs == rhs.c_str();
     }
 
     template <typename Alloc>
-    bool operator== (const EIXX_NAMESPACE::marshal::string<Alloc>& lhs, const std::string& rhs) {
+    bool operator== (const eixx::marshal::string<Alloc>& lhs, const std::string& rhs) {
         return rhs == rhs.c_str();
     }
 
     template <typename Alloc>
-    bool operator== (const EIXX_NAMESPACE::marshal::string<Alloc>& lhs, const char* rhs) {
+    bool operator== (const eixx::marshal::string<Alloc>& lhs, const char* rhs) {
         return strcmp(rhs, lhs.c_str(), lhs.size()) == 0;
     }
 

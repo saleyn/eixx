@@ -44,11 +44,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/util/atom_table.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 namespace detail {
 
-    namespace eid = EIXX_NAMESPACE::detail;
+    namespace eid = eixx::detail;
     using eid::lock_guard;
 
     /// Create an atom containing node name.
@@ -210,11 +210,11 @@ inline atom make_node_name(const std::string& s)
 
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
 
-    inline ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::atom& s) {
+    inline ostream& operator<< (ostream& out, const eixx::marshal::atom& s) {
         return s.dump(out);
     }
 

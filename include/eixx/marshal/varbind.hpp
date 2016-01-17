@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <map>
 #include <eixx/marshal/eterm.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 /// Name-value pair associating an eterm with an atom name
@@ -177,13 +177,13 @@ protected:
 };
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
 
     template <class Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::varbind<Alloc>& binding) {
-        using namespace EIXX_NAMESPACE::marshal;
+    ostream& operator<< (ostream& out, const eixx::marshal::varbind<Alloc>& binding) {
+        using namespace eixx::marshal;
 
         for (typename varbind<Alloc>::eterm_map_t::const_iterator
                 it = binding.m_term_map.begin(); it != binding.m_term_map.end(); ++it)

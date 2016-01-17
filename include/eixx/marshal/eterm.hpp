@@ -55,7 +55,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/varbind.hpp>
 #include <eixx/marshal/eterm_match.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 namespace {
@@ -608,11 +608,11 @@ template <typename T, typename Alloc> T& get(eterm<Alloc>& t) {
 }
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
     template <typename Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::eterm<Alloc>& a_term) {
+    ostream& operator<< (ostream& out, const eixx::marshal::eterm<Alloc>& a_term) {
         return out << a_term.to_string();
     }
 }

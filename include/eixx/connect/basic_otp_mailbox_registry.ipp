@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_BASIC_OTP_MAILBOX_REGISTRTY_IPP_
 #include <chrono>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 //-----------------------------------------------------------------------------
@@ -227,6 +227,6 @@ void basic_otp_mailbox_registry<Alloc, Mutex>::pids(std::list<epid<Alloc> >& lis
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_BASIC_OTP_MAILBOX_REGISTRTY_IPP_

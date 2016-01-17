@@ -46,15 +46,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <list>
 #include <set>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 template<typename Alloc, typename Mutex> class basic_otp_node;
 
-using EIXX_NAMESPACE::marshal::list;
-using EIXX_NAMESPACE::marshal::epid;
-using EIXX_NAMESPACE::marshal::tuple;
-using EIXX_NAMESPACE::marshal::varbind;
+using eixx::marshal::list;
+using eixx::marshal::epid;
+using eixx::marshal::tuple;
+using eixx::marshal::varbind;
 using namespace std::chrono;
 
 /**
@@ -356,13 +356,13 @@ public:
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
 
     template <typename Alloc, typename Mutex>
     ostream& operator<< (ostream& out,
-        const EIXX_NAMESPACE::connect::basic_otp_mailbox<Alloc,Mutex>& a_mbox)
+        const eixx::connect::basic_otp_mailbox<Alloc,Mutex>& a_mbox)
     {
         return a_mbox.dump(out);
     }

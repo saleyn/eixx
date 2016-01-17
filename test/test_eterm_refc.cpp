@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "test_alloc.hpp"
 #include <eixx/marshal/eterm.hpp>
 
-using namespace EIXX_NAMESPACE;
-using EIXX_NAMESPACE::marshal::eterm;
+using namespace eixx;
+using eixx::marshal::eterm;
 
 template <class T>
 struct counted_alloc : public std::allocator<char> {

@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/var.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 template <typename Alloc>
@@ -59,7 +59,7 @@ public:
     bool operator()(const T& a) const { return false; }
 };
 
-} // namespace EIXX_NAMESPACE
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
+} // namespace eixx
 
 #endif // _IMPL_VISIT_SUBST_HPP_

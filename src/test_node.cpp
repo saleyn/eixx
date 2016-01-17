@@ -7,7 +7,7 @@
 
 #include <eixx/connect/test_helper.hpp>
 
-using namespace EIXX_NAMESPACE;
+using namespace eixx;
 
 void usage(char* exe) {
     printf("Usage: %s -n NODE -r REMOTE_NODE [-c COOKIE] [-v VERBOSE] [-t RECONNECT_SECS]\n"

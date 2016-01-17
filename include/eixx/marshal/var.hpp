@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/am.hpp>
 #include <eixx/marshal/varbind.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 /**
@@ -141,12 +141,12 @@ public:
 BOOST_STATIC_ASSERT(sizeof(var) == 8);
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
     template <typename Alloc>
-    ostream& operator<< (ostream& out, EIXX_NAMESPACE::marshal::var s) {
-        return s.dump(out, (const EIXX_NAMESPACE::marshal::varbind<Alloc>*)NULL);
+    ostream& operator<< (ostream& out, eixx::marshal::var s) {
+        return s.dump(out, (const eixx::marshal::varbind<Alloc>*)NULL);
     }
 } // namespace std
 

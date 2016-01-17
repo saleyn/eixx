@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <eixx/marshal/atom.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
     using marshal::atom;
 
@@ -64,4 +64,4 @@ namespace EIXX_NAMESPACE {
 	extern const atom am_unsupported;
 	extern const atom am_user;
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx

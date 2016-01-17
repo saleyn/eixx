@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/tuple.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
 /// Represents trace operations performed on the <tt>trace<Alloc>::tracer</tt>.
@@ -164,11 +164,11 @@ public:
 };
 
 } //namespace marshal
-} //namespace EIXX_NAMESPACE
+} //namespace eixx
 
 namespace std {
     template <typename Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::trace<Alloc>& a) {
+    ostream& operator<< (ostream& out, const eixx::marshal::trace<Alloc>& a) {
         return a.dump(out);
     }
 

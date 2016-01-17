@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string>
 #include <eixx/marshal/defaults.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 /// Print the content of a buffer to \a out stream in the form:
 /// \verbatim <<I1, I2, ..., In>> \endverbatim where <tt>Ik</tt> is
@@ -62,7 +62,7 @@ static inline std::string to_binary_string(const char* a, size_t sz) {
     return oss.str();
 }
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
 

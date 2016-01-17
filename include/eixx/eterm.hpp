@@ -33,11 +33,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define _EIXX_ETERM_HPP_
 
 #include <eixx/config.h>
-#include <eixx/namespace.hpp>  // definition of EIXX_NAMESPACE
 #include <eixx/marshal/defaults.hpp>
 #include <eixx/marshal/eterm.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 typedef marshal::eterm<allocator_t>                  eterm;
 typedef marshal::atom                                atom;
@@ -68,6 +67,6 @@ namespace detail {
     BOOST_STATIC_ASSERT(sizeof(var)       == sizeof(uint64_t));
 } // namespace detail
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif

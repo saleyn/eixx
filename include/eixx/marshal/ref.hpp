@@ -40,7 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/atom.hpp>
 #include <eixx/eterm_exception.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 namespace detail {
 } // namespace detail
@@ -227,7 +227,7 @@ public:
 };
 
 } //namespace marshal
-} //namespace EIXX_NAMESPACE
+} //namespace eixx
 
 namespace std {
     /**
@@ -235,7 +235,7 @@ namespace std {
      * as \verbatim #Ref<node.id> \endverbatim
      **/
     template <class Alloc>
-    ostream& operator<< (ostream& out, const EIXX_NAMESPACE::marshal::ref<Alloc>& a) {
+    ostream& operator<< (ostream& out, const eixx::marshal::ref<Alloc>& a) {
         return out << "#Ref<" << a.node() << '.' 
             << a.id(0) << '.' << a.id(1) << '.' << a.id(2) << '>';
     }

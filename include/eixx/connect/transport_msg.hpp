@@ -37,15 +37,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/util/common.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
-using EIXX_NAMESPACE::marshal::tuple;
-using EIXX_NAMESPACE::marshal::list;
-using EIXX_NAMESPACE::marshal::eterm;
-using EIXX_NAMESPACE::marshal::epid;
-using EIXX_NAMESPACE::marshal::ref;
-using EIXX_NAMESPACE::marshal::trace;
+using eixx::marshal::tuple;
+using eixx::marshal::list;
+using eixx::marshal::eterm;
+using eixx::marshal::epid;
+using eixx::marshal::ref;
+using eixx::marshal::trace;
 
 /// Erlang distributed transport messages contain message type,
 /// control message with message routing and other details, and 
@@ -113,7 +113,7 @@ public:
     const eterm<Alloc>& msg()       const { return m_msg;  }
     /// Returns true when the transport message contains message payload
     /// associated with SEND or REG_SEND message type.
-    bool                has_msg()   const { return m_msg.type() != EIXX_NAMESPACE::UNDEFINED; }
+    bool                has_msg()   const { return m_msg.type() != eixx::UNDEFINED; }
 
     /// Indicates that there was an error processing this message
     bool  has_error()               const { return (m_type & EXCEPTION) == EXCEPTION; }
@@ -461,11 +461,11 @@ const char* transport_msg<Alloc>::type_string() const {
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 namespace std {
     template <typename Alloc>
-    ostream& operator<< (ostream& out, EIXX_NAMESPACE::connect::transport_msg<Alloc>& a_msg) {
+    ostream& operator<< (ostream& out, eixx::connect::transport_msg<Alloc>& a_msg) {
         return a_msg.dump(out);
     }
 } // namespace std

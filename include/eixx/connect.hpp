@@ -37,13 +37,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/connect/basic_otp_connection.hpp>
 #include <eixx/connect/basic_otp_node.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 typedef connect::transport_msg<allocator_t>                                 transport_msg;
 typedef connect::basic_otp_connection<allocator_t, detail::recursive_mutex> otp_connection;
 typedef connect::basic_otp_mailbox<allocator_t,    detail::recursive_mutex> otp_mailbox;
 typedef connect::basic_otp_node<allocator_t,       detail::recursive_mutex> otp_node;
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif

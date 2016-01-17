@@ -33,13 +33,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef _EIXX_ALLOC_POOL_HPP_
 #define _EIXX_ALLOC_POOL_HPP_
 
-#include <eixx/namespace.hpp>  // definition of EIXX_NAMESPACE
 #include <boost/pool/pool_alloc.hpp>
 #include <boost/pool/detail/mutex.hpp>
 
 #define EIXX_USE_ALLOCATOR
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 typedef boost::fast_pool_allocator<
       char
@@ -47,7 +46,7 @@ typedef boost::fast_pool_allocator<
     , boost::details::pool::null_mutex
 > allocator_t;
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_ALLOC_POOL_HPP_
 

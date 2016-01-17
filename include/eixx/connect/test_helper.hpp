@@ -12,7 +12,7 @@
 
 #include <eixx/connect/verbose.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 class verboseness {
@@ -44,7 +44,7 @@ public:
 
 typedef connect::verboseness verboseness;
 
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_TEST_HELPER_HPP_
 

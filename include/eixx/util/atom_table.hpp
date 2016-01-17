@@ -43,10 +43,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/util/hashtable.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace util {
 
-    namespace eid = EIXX_NAMESPACE::detail;
+    namespace eid = eixx::detail;
     using eid::lock_guard;
 
     /// Non-garbage collected hash table for atoms. It stores strings
@@ -148,6 +148,6 @@ namespace util {
     typedef basic_atom_table<> atom_table;
 
 } // namespace util
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif

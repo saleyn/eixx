@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/eterm_match.hpp>
 #include <eixx/eterm_exception.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 using marshal::atom;
@@ -175,6 +175,6 @@ const var basic_otp_node<Alloc, Mutex>::rpc_server::T = var("T");
 
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_BASIC_RPC_SERVER_HPP_

@@ -39,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/util/hashtable.hpp>
 #include <queue>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 using detail::lock_guard;
@@ -116,7 +116,7 @@ public:
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #include <eixx/connect/basic_otp_mailbox_registry.ipp>
 

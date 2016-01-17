@@ -54,7 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/concept_check.hpp>
 //#include <boost/scope_exit.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace marshal {
 
     namespace {
@@ -463,5 +463,5 @@ namespace marshal {
     }
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 

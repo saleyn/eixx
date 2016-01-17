@@ -8,15 +8,14 @@
 // Created: 2010-04-11
 //
 
-#ifndef _SERVER_HPP_
-#define _SERVER_HPP_
+#pragma once
 
 #include <boost/asio.hpp>
 #include <string>
 #include <boost/noncopyable.hpp>
 #include "channel.hpp"
 
-namespace perc {
+namespace eixx {
 
 //------------------------------------------------------------------------------
 // channel_manager class
@@ -337,6 +336,4 @@ private:
     }
 };
 
-} // namespace perc
-
-#endif // _SERVER_HPP_
+} // namespace eixx

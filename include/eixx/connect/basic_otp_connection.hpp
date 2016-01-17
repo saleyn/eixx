@@ -39,7 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/eterm.hpp>
 #include <eixx/connect/transport_otp_connection.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 template <typename Alloc, typename Mutex> class basic_otp_node;
@@ -238,7 +238,7 @@ public:
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_BASIC_OTP_CONNECTION_HPP_
 

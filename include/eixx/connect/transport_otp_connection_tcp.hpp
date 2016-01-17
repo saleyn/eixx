@@ -49,7 +49,7 @@ extern "C" {
 }
 #endif
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 #ifndef EIXX_HAVE_EI_EPMD
@@ -201,7 +201,7 @@ private:
 };
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 //------------------------------------------------------------------------------
 // connection_tcp implementation

@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <boost/thread.hpp>
 #endif
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace detail {
 
 #if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
@@ -53,7 +53,7 @@ template <typename Mutex> struct lock_guard: public boost::lock_guard<Mutex> {
 #endif
 
 } // namespace detail
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
 
 #endif // _EIXX_SYNC_HPP_
 

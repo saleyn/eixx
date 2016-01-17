@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-using namespace EIXX_NAMESPACE;
+using namespace eixx;
 
 int iterations=200000;
 

@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/visit_match.hpp>
 #include <eixx/marshal/eterm_format.hpp>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 
 inline eterm_type type_string_to_type(const char* s, size_t n) {
      eterm_type r = UNDEFINED;
@@ -417,4 +417,4 @@ void eterm<Alloc>::format(atom& m, atom& f, eterm<Alloc>& args, const char* fmt,
 }
 
 } // namespace marshal
-} // namespace EIXX_NAMESPACE
+} // namespace eixx

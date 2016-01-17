@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/connect/basic_otp_node_local.hpp>
 #include <ei.h>
 
-namespace EIXX_NAMESPACE {
+namespace eixx {
 namespace connect {
 
 namespace {
@@ -121,4 +121,4 @@ void basic_otp_node_local::set_nodename(
 }
 
 } // namespace connect
-} // namespace EIXX_NAMESPACE
+} // namespace eixx
