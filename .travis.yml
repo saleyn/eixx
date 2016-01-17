@@ -46,7 +46,7 @@ before_script:
 script:
   - make bootstrap generator=make build=Debug
   - make
-  - make doc
+  - make doc > build/doc.log
   - make install
   - make test
 branches:
