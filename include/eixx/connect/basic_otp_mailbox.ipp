@@ -92,7 +92,6 @@ async_match(const marshal::eterm_pattern_matcher<Alloc>& a_matcher,
         (transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec) {
             if (this->m_time_freed.time_since_epoch().count() == 0)
                 return false;
-            bool res;
             if (ec) {
                 a_on_timeout(*this);
                 return false;

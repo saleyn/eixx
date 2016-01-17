@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE( test_list3 )
     {
         list t = list::make(1, alloc);
         BOOST_REQUIRE_EQUAL(1ul, t.length());
-        BOOST_REQUIRE_EQUAL(1,   t.nth(0).to_long());
+        BOOST_REQUIRE_EQUAL(1l,  t.nth(0).to_long());
     }
     {
         const list& t = list::make(1, 2, alloc);

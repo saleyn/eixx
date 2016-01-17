@@ -177,18 +177,18 @@ public:
     void    close() { header()->initialized = true; }
 
     /// Return list length. This method has O(1) complexity.
-    size_t  length()        const { return m_blob ? header()->size : 0; }
+    size_t  length()        const { return  m_blob ?  header()->size :  0; }
     bool    empty()         const { return !m_blob || header()->size == 0; }
-    bool    initialized()   const { return m_blob && header()->initialized; }
+    bool    initialized()   const { return  m_blob && header()->initialized; }
 
     /// Return pointer to the N'th element in the list. This method has
     /// O(N) complexity.
     const eterm<Alloc>& nth(size_t n) const throw(err_bad_argument) {
         if (n > length())
             throw err_bad_argument("Index out of bounds", n);
-        const_iterator it = begin(), endit = end();
         size_t i = 0;
-        for(; it != endit, i < n; ++it, ++i);
+        auto it = begin();
+        for(auto endit = end(); it != endit && i < n; ++it, ++i);
         return *it;
     }
 
