@@ -1,5 +1,8 @@
 language: cpp
 compiler: g++
+language: erlang
+otp_release:
+  - 18.1
 addons:
   apt:
     sources:
