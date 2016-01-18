@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------
-/// \file  list.hxx
+/// \file  list.ipp
 //----------------------------------------------------------------------------
 /// \brief Implementation of the list member functions.
 //----------------------------------------------------------------------------
@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 ***** END LICENSE BLOCK *****
 */
+#pragma once
 
 #include <eixx/marshal/endian.hpp>
 #include <eixx/marshal/visit_to_string.hpp>
@@ -37,7 +38,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/visit_subst.hpp>
 #include <ei.h>
 
-namespace eixx {
+namespace eixx    {
 namespace marshal {
 
 template <class Alloc>
@@ -82,6 +83,12 @@ list<Alloc>::list(const cons_t* a_head, int a_len, const Alloc& alloc)
     } else
         throw err_bad_argument("List of negative length!");
 
+    // If this is an empty list - no allocation is needed
+    if (alloc_size == 0) {
+        m_blob = empty_list();
+        return;
+    }
+
     m_blob = new blob_t(sizeof(header_t) + alloc_size*sizeof(cons_t), alloc);
     header_t* l_header      = header();
     l_header->initialized   = true;
@@ -102,12 +109,18 @@ list<Alloc>::list(const cons_t* a_head, int a_len, const Alloc& alloc)
 
 template <class Alloc>
 list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
-    throw(err_decode_exception) : base_t(a_alloc) 
+    throw(err_decode_exception) : base_t(a_alloc)
 {
     int arity;
     if (ei_decode_list_header(buf, &idx, &arity) < 0)
         err_decode_exception("Error decoding list header", idx);
-// TODO: optimize for an empty list!!!
+
+    // If this is an empty list - no allocation is needed
+    if (arity == 0) {
+        m_blob = empty_list();
+        return;
+    }
+
     m_blob = new blob_t(sizeof(header_t) + arity*sizeof(cons_t), a_alloc);
     header_t* l_header = header();
     l_header->initialized = true;

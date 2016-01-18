@@ -1,3 +1,12 @@
 1. Check serialization of long: -6478876429381754229
 2. Check encoding binary encoding of: ["ecg",-6478876429381754229,Pid,"example_core",29633]
-3. Optimize an empty list not to allocate space. See commit 7e52873a
+3. Change internal representatino of eterm, so that the refcount is moved from blob_t to
+   eterm itself, so the layout of eterm would be the following:
+     a. change eterm_type's storage:
+            enum eterm_type : char;
+     b. change eterm:
+             struct eterm {
+                 eterm_type       m_type;
+                 atomic<int16_t>  m_rc;
+                 union vartype {} m_data;
+             }

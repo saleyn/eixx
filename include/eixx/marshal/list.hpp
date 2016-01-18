@@ -56,6 +56,13 @@ private:
     typedef alloc_base<cons_t, Alloc> base_t;
 
     struct header_t {
+        header_t()          {}
+        header_t(std::nullptr_t)
+            : initialized(true)
+            , alloc_size (0)
+            , size       (0)
+            , tail       (nullptr)
+        {}
         bool            initialized;
         unsigned int    alloc_size;
         unsigned int    size;
@@ -66,6 +73,18 @@ private:
     typedef blob<char, Alloc> blob_t;
 
     blob_t* m_blob;
+
+    /// Returns a pointer to a singleton empty list
+    static blob_t* empty_list() {
+        auto creator = []() {
+            auto p = new blob_t(sizeof(header_t));
+            auto h = reinterpret_cast<header_t*>(p->data());
+            new (h) header_t(nullptr);
+            return p;
+        };
+        static std::unique_ptr<blob_t> s_empty(creator());
+        return s_empty.get();
+    }
 
     header_t* header() {
         BOOST_ASSERT(m_blob); return reinterpret_cast<header_t*>(m_blob->data());
@@ -78,7 +97,7 @@ private:
     cons_t*       tail()          { return header()->tail; }
 
     void release() {
-        if (!m_blob)
+        if (!m_blob || m_blob == empty_list())
            return;
         if (m_blob->release(false)) {
             header_t* l_header = header();
@@ -115,15 +134,26 @@ public:
         , m_blob(NULL)
     {}
 
+    /// Construct an NIL list (initialized list with no elements)
+    explicit list(std::nullptr_t) : m_blob(empty_list()) {}
+
+    /// Construct a list with a given estimated size.
+    ///
+    /// When a_estimated_size is 0, an empty initialized list is created. Otherwise,
+    /// the list is not initialized.
     explicit list(int a_estimated_size, const Alloc& alloc = Alloc())
         : base_t(alloc)
-        , m_blob(new blob_t(sizeof(header_t) + a_estimated_size*sizeof(cons_t), alloc))
     {
-        header_t* l_header      = header();
-        l_header->initialized   = a_estimated_size == 0;
-        l_header->alloc_size    = a_estimated_size;
-        l_header->size          = 0;
-        l_header->tail          = NULL;
+        if (a_estimated_size == 0)
+            m_blob = empty_list();
+        else {
+            m_blob = new blob_t(sizeof(header_t) + a_estimated_size*sizeof(cons_t), alloc);
+            header_t* hdr      = header();
+            hdr->initialized   = a_estimated_size == 0;
+            hdr->alloc_size    = a_estimated_size;
+            hdr->size          = 0;
+            hdr->tail          = NULL;
+        }
     }
 
     list(const list<Alloc>& a) : base_t(a.get_allocator()), m_blob(a.m_blob) {
@@ -174,7 +204,10 @@ public:
      * Closes the list.
      * A list must be closed before it can be copied or included into other terms.
      */
-    void    close() { header()->initialized = true; }
+    void    close() {
+        if (!m_blob || m_blob == empty_list()) return;
+        header()->initialized = true;
+    }
 
     /// Return list length. This method has O(1) complexity.
     size_t  length()        const { return  m_blob ?  header()->size :  0; }

@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <eixx/marshal/defaults.hpp>
 #include <eixx/util/common.hpp>
 #include <iostream>
+#include <memory>
 
 namespace eixx {
 namespace marshal {
@@ -88,9 +89,13 @@ namespace marshal {
         T*           m_data;
 
         ~blob() {
-            this->deallocate(m_data, m_size);
+            if (m_data)
+                this->deallocate(m_data, m_size);
         }
 
+        /// This is needed in order to allow blobs to be hosted inside
+        /// std::unique_ptr:
+        template <typename U> friend struct std::default_delete;
     public:
         blob(const Alloc& a = Alloc())
             : base_t(a), m_rc(1), m_size(0), m_data(NULL)
