@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #define BOOST_TEST_MODULE test_eterm
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include "test_alloc.hpp"
 #include <eixx/eixx.hpp>
 #include <set>

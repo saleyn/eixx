@@ -36,8 +36,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <atomic>
 #include <thread>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/thread.hpp>
-#include <boost/test/unit_test.hpp>
 #include <eixx/util/async_queue.hpp>
 #include <eixx/connect/test_helper.hpp>
 

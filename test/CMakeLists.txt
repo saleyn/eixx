@@ -17,9 +17,9 @@ target_compile_definitions(test-eterm PRIVATE -DBOOST_TEST_DYN_LINK)
 target_include_directories(test-eterm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(
   test-eterm
+  boost_unit_test_framework
   eixx
   ${Erlang_EI_LIBRARIES}
-  boost_unit_test_framework
   ${Boost_LIBRARIES}
   boost_system
 )
@@ -27,9 +27,9 @@ target_link_libraries(
 add_executable(test-connect test_async_queue.cpp)
 target_link_libraries(
   test-connect
+  boost_unit_test_framework
   eixx
   ${Erlang_EI_LIBRARIES}
-  boost_unit_test_framework
   ${Boost_LIBRARIES}
 )
 

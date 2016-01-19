@@ -1,4 +1,5 @@
-#include "test_alloc.hpp"
+#include <eixx/alloc_std.hpp>
+//#include "test_alloc.hpp"   // Uses boost::pool_alloc, which does much worse
 #include <eixx/eixx.hpp>
 #include <stdio.h>
 #include <sys/time.h>
@@ -151,6 +152,20 @@ int main(int argc, char* argv[]) {
             size += x.encode_size();
         }
         t.sample("Create speed", true, size);
+        iterations *= 10;
+    }
+
+    {
+        iterations /= 10;
+        size_t size = 0;
+        for (int j=0, e = iterations; j < e; j++) {
+            auto x = tuple{am_md, xchg, instr,
+                        list{tuple{am_q,
+                                   list{tuple{1.2345, 100000}},
+                                   list{tuple{1.2355, 200000}}}}};
+            size += x.encode_size();
+        }
+        t.sample("Create2 speed", true, size);
         iterations *= 10;
     }
 
