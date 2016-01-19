@@ -75,7 +75,7 @@ ENV:BOOST_ROOT=/opt/pkg/boost/current
 ENV:BOOST_LIBRARYDIR=/opt/pkg/boost/current/gcc/lib
 PKG_ROOT_DIR=/opt/pkg
 ```
-Run:
+* Run:
 ```
 $ make bootstrap [toolchain=gcc|clang]  [build=Debug|Release] \
                  [generator=make|ninja] [prefix=/usr/local] [verbose=true]
@@ -85,12 +85,14 @@ $ make install      # Default install path is /usr/local
 After running `make bootstrap` two local links are created `build` and `inst`
 pointing to build and installation directories.
 
-If you need to do a full cleanup of the current build and rerun bootstrap with
+* To do a full cleanup of the current build and rerun bootstrap with
 previously chosen options, do:
 ```
 $ make distclean
-$ make rebootstrap
+$ make rebootstrap [toolchain=gcc|clang]  [build=Debug|Release]
 ```
+Note that the `rebootstrap` command remembers previous bootstrap options, but
+if you give it arguments they will override the old ones.
 
 ### Author ###
 
@@ -236,7 +238,7 @@ Test distributed transport:
             msg={io_request,#Pid<abc@fc12.273.0>,#Pid<a@fc12.1.0>,
                     {put_chars,<<"This is a test string">>}}}
 
-The message above is a result of the on_connect() handler in test_node.cpp
+The message above is a result of the `on_connect()` handler in `test_node.cpp`
 issuing an rpc call to the abc@fc12 node of `io:put_chars("This is a test 
 string")'. This the call selects a locally registered process called 
 'io_server' as the group leader for this rpc call, the I/O output is sent 
