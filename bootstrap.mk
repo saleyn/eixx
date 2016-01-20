@@ -125,15 +125,15 @@ bootstrap: | $(DIR)
 	$(call makecmd) 2>&1 | tee $(DIR)/.cmake.bootstrap.log
 	@[ ! -d build ] && ln -s $(DIR) build || true
 	@ln -s $(prefix) inst
-	@echo "make bootstrap $(MAKEOVERRIDES)"     >  $(DIR)/.bootstrap
+	@echo "make bootstrap $(MAKEOVERRIDES)"            >  $(DIR)/.bootstrap
 	@cp $(DIR)/.bootstrap .build/
-	@echo "PROJECT   := $(PROJECT)"             >  $(DIR)/cache.mk
-	@echo "VERSION   := $(VERSION)"             >> $(DIR)/cache.mk
-	@echo "OPT_FILE  := $(abspath $(OPT_FILE))" >> $(DIR)/cache.mk
-	@echo "generator := $(generator)"           >> $(DIR)/cache.mk
-	@echo "build     := $(BUILD)"               >> $(DIR)/cache.mk
-	@echo "DIR       := $(DIR)"                 >> $(DIR)/cache.mk
-	@echo "prefix    := $(prefix)"              >> $(DIR)/cache.mk
+	@echo "export PROJECT   := $(PROJECT)"             >  $(DIR)/cache.mk
+	@echo "export VERSION   := $(VERSION)"             >> $(DIR)/cache.mk
+	@echo "export OPT_FILE  := $(abspath $(OPT_FILE))" >> $(DIR)/cache.mk
+	@echo "export generator := $(generator)"           >> $(DIR)/cache.mk
+	@echo "export build     := $(BUILD)"               >> $(DIR)/cache.mk
+	@echo "export DIR       := $(DIR)"                 >> $(DIR)/cache.mk
+	@echo "export prefix    := $(prefix)"              >> $(DIR)/cache.mk
 
 $(DIR):
 	@mkdir -p $@
