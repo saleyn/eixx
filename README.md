@@ -134,6 +134,28 @@ varbind binding;
 if (value.match(s_pattern, &binding))
     std::cout << "Value of variable A: " << binding["A"].to_string() << std::endl;
 ```
+Erlang terms manipulation is pretty efficient. Creation/copying times of polymorphic
+eterm's are shown below (project compiled in the `release` mode):
+```
+$ build/test/test-perf
+                       1000000 iterations
+                       Integer | latency:     6ns, speed: 150015001/s 
+                        Double | latency:     3ns, speed: 300030003/s 
+                          Bool | latency:     3ns, speed: 299940011/s 
+                        String | latency:    50ns, speed:  20000000/s 
+                         Atom1 | latency:    30ns, speed:  33333333/s 
+                         Atom2 | latency:    30ns, speed:  33333333/s 
+                       Binary1 | latency:    50ns, speed:  20000000/s 
+                       Binary2 | latency:     6ns, speed: 150015001/s 
+                        Tuple1 | latency:    73ns, speed:  13636425/s 
+                        Tuple2 | latency:    20ns, speed:  50000000/s 
+                         List1 | latency:    76ns, speed:  13043421/s 
+                         List2 | latency:    23ns, speed:  42857755/s 
+                   Apply speed | latency:  1173ns, speed:    852272/s 
+            Apply/Create speed | latency:   953ns, speed:   1048951/s 
+ Nested lists/tuples (1) speed | latency:   533ns, speed:   1874976/s 
+ Nested lists/tuples (2) speed | latency:   466ns, speed:   2142841/s
+```
 Aside from providing functionality that allows to manipulate Erlang terms, this
 library implements Erlang distributed transport that allows a C++ program to connect
 to an Erlang node, exchange messages, make RPC calls, and receive I/O requests.

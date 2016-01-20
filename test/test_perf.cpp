@@ -5,10 +5,19 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+/// Prevent variable optimization by the compiler
+#ifdef _MSC_VER
+#pragma optimize("", off)
+template <class T> void dont_optimize_var(T&& v) { v = v; }
+#pragma optimize("", on)
+#else
+template <class T> void dont_optimize_var(T&& v) { asm volatile("":"+r" (v)); }
+#endif
+
 using namespace eixx;
 
-int iterations=200000;
-
+int iterations=1000000;
+size_t g_size = 0;
 class timer {
     struct rusage start, end;
     void begin() { getrusage(RUSAGE_THREAD, &start); }
@@ -23,10 +32,12 @@ public:
                                end.ru_stime.tv_sec  - start.ru_stime.tv_sec) +
                       (double)(end.ru_utime.tv_usec - start.ru_utime.tv_usec +
                                end.ru_stime.tv_usec - start.ru_stime.tv_usec)/1000000.0;
+        g_size += out;
 
         // out is used merely to trick the optimizer
-        printf("%30s | latency: %7.3fus, speed: %9ld/s%s", title,
-               1000000.0*diff/iterations, diff > 0 ? long((double)iterations / diff) : 0,
+        printf("%30s | latency: %5ldns, speed: %9ld/s%s", title,
+               long(1000000000.0*diff/iterations),
+               diff > 0 ? long((double)iterations / diff) : 0,
                out == 0 ? "\n" : " \n");
         if (restart)
             begin();
@@ -48,19 +59,19 @@ int main(int argc, char* argv[]) {
 
     size_t size = 0;
     for (int j=0; j < iterations; j++)
-        { size += eterm(1).encode_size(); }
+        { size += eterm(j).encode_size(); }
     t.sample("Integer", true, size);
     for (int j=0; j < iterations; j++)
-        { eterm(1.0).encode_size(); }
+        { size += eterm((double)j).encode_size(); }
     t.sample("Double", true, size);
     for (int j=0; j < iterations; j++)
-        { eterm(true).encode_size(); }
+        { size += eterm(j&1).encode_size(); }
     t.sample("Bool", true, size);
     for (int j=0; j < iterations; j++)
-        { eterm("test").encode_size(); }
+        { size += eterm("test").encode_size(); }
     t.sample("String", true, size);
     for (int j=0; j < iterations; j++)
-        { atom("test").encode_size(); }
+        { size += atom("test").encode_size(); }
     t.sample("Atom1", true, size);
     {
         atom a("test");
@@ -120,7 +131,6 @@ int main(int argc, char* argv[]) {
     atom   instr("EUR/USD");
     t.restart();
     {
-        size_t size = 0;
         for (int j=0; j < iterations; j++) {
             auto x = s_md1.apply({{am_Xchg, xchg},  {am_Instr, instr},
                                   {am_BPx, 1.2345}, {am_BQty, 100000},
@@ -130,7 +140,6 @@ int main(int argc, char* argv[]) {
         t.sample("Apply speed", true, size);
     }
     {
-        size_t size = 0;
         for (int j=0; j < iterations; j++) {
             auto x = s_md2.apply({{am_Xchg, xchg},  {am_Instr, instr},
                                   {am_L1, list::make(tuple::make(1.2345, 100000))},
@@ -143,7 +152,6 @@ int main(int argc, char* argv[]) {
     atom am_q ("q");
     {
         iterations /= 10;
-        size_t size = 0;
         for (int j=0, e = iterations; j < e; j++) {
             auto x = tuple::make(am_md, xchg, instr,
                         list::make(tuple::make(am_q,
@@ -151,13 +159,12 @@ int main(int argc, char* argv[]) {
                                     list::make(tuple::make(1.2355, 200000)))));
             size += x.encode_size();
         }
-        t.sample("Create speed", true, size);
+        t.sample("Nested lists/tuples (1) speed", true, size);
         iterations *= 10;
     }
 
     {
         iterations /= 10;
-        size_t size = 0;
         for (int j=0, e = iterations; j < e; j++) {
             auto x = tuple{am_md, xchg, instr,
                         list{tuple{am_q,
@@ -165,9 +172,12 @@ int main(int argc, char* argv[]) {
                                    list{tuple{1.2355, 200000}}}}};
             size += x.encode_size();
         }
-        t.sample("Create2 speed", true, size);
+        t.sample("Nested lists/tuples (2) speed", true, size);
         iterations *= 10;
     }
+
+    if (g_size == 0)
+        std::cerr << "No iterations performed!" << std::endl;
 
     return 0;
 }
