@@ -15,7 +15,7 @@ if(WITH_ENUM_SERIALIZATION)
 endif()
 
 string(TOLOWER ${TOOLCHAIN} toolchain)
-string(TOUPPER "${PROJECT_NAME}-${TOOLCHAIN}" BUILD_TYPE)
+string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE)
 
 # Custom extensions
 include(${CMAKE_CURRENT_SOURCE_DIR}/build-aux/CMakeEx.txt)
@@ -29,18 +29,13 @@ if("${toolchain}" STREQUAL "gcc")
   set(CMAKE_CXX_COMPILER "g++")
   add_definitions(-Wno-strict-aliasing -fopenmp -Wall)
 
-  if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+  if("${CMAKE_BUILD_TYPE}" STREQUAL "release")
     add_definitions(-flto -funroll-loops -fomit-frame-pointer)
 
     # The following will omit all symbol information from the build:
     #add_definitions(-Wl,-s)
     #set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s")
   endif()
-
-  #if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-  #    add_definitions(-flto -funroll-loops -fomit-frame-pointer -Wl,-s)
-  #    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s")
-  #endif()
 elseif("${toolchain}" STREQUAL "intel")
   set(CMAKE_C_COMPILER   "icc")
   set(CMAKE_CXX_COMPILER "icpc")
@@ -54,6 +49,11 @@ else()
   message(FATAL_ERROR "Invalid toolchain: ${TOOLCHAIN}")
 endif()
 
+# Append "_d" to the library when doing debug build
+if (CMAKE_BUILD_TYPE STREQUAL "debug")
+  set(LIB_SUFFIX "_d")
+endif()
+
 # Note: explicit c++14 definitions done in CMakeInit.txt.
 # Alternative is to set for each target:
 # target_compile_features(${PROJECT_NAME} PRIVATE cxx_lambda_init_captures)
@@ -65,7 +65,9 @@ add_definitions(
 	-DBOOST_SYSTEM_NO_DEPRECATED
 )
 
-message(STATUS "${ClrBold}Configuring for the ${TOOLCHAIN} toolchain${ClrReset}")
+message(STATUS "Configuring for the "
+               "${BoldMagenta}${TOOLCHAIN}${ClrReset} toolchain "
+               "${BoldMagenta}${CMAKE_BUILD_TYPE}${ClrReset} build")
 
 #-------------------------------------------------------------------------------
 # Policies

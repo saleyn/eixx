@@ -11,9 +11,13 @@ add_library(${PROJECT_NAME}_static STATIC ${EIXX_SRCS})
 set_target_properties(${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} ${EIXX_LIBS})
 
-if (${BUILD_TYPE} STREQUAL "Debug")
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX "-d.so")
-  set_target_properties(${PROJECT_NAME}_static PROPERTIES SUFFIX "-d.so")
+if (${CMAKE_BUILD_TYPE} STREQUAL "debug")
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+    DEBUG_POSTFIX   "${LIB_SUFFIX}"
+    RELEASE_POSTFIX "")
+  set_target_properties(${PROJECT_NAME}_static PROPERTIES
+    DEBUG_POSTFIX   "${LIB_SUFFIX}"
+    RELEASE_POSTFIX "")
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
