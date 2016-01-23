@@ -141,20 +141,22 @@ $ build/test/test-perf
                        1000000 iterations
                        Integer | latency:     6ns, speed: 150015001/s 
                         Double | latency:     3ns, speed: 300030003/s 
-                          Bool | latency:     3ns, speed: 299940011/s 
-                        String | latency:    50ns, speed:  20000000/s 
-                         Atom1 | latency:    30ns, speed:  33333333/s 
-                         Atom2 | latency:    30ns, speed:  33333333/s 
-                       Binary1 | latency:    50ns, speed:  20000000/s 
+                          Bool | latency:     3ns, speed: 300030003/s 
+                        String | latency:    56ns, speed:  17646955/s 
+                         Atom1 | latency:    33ns, speed:  30000300/s 
+                         Atom2 | latency:    36ns, speed:  27272479/s 
+                       Binary1 | latency:    46ns, speed:  21428877/s 
                        Binary2 | latency:     6ns, speed: 150015001/s 
-                        Tuple1 | latency:    73ns, speed:  13636425/s 
+                        Tuple1 | latency:    73ns, speed:  13636239/s 
                         Tuple2 | latency:    20ns, speed:  50000000/s 
-                         List1 | latency:    76ns, speed:  13043421/s 
+                         List1 | latency:    73ns, speed:  13636239/s 
                          List2 | latency:    23ns, speed:  42857755/s 
-                   Apply speed | latency:  1173ns, speed:    852272/s 
-            Apply/Create speed | latency:   953ns, speed:   1048951/s 
- Nested lists/tuples (1) speed | latency:   533ns, speed:   1874976/s 
- Nested lists/tuples (2) speed | latency:   466ns, speed:   2142841/s
+                   Apply speed | latency:  1190ns, speed:    840336/s 
+            Apply/Create speed | latency:   966ns, speed:   1034482/s 
+ Nested lists/tuples (1) speed | latency:   566ns, speed:   1764695/s 
+ Nested lists/tuples (2) speed | latency:   466ns, speed:   2142887/s 
+      Simple pattern match (1) | latency:    33ns, speed:  30003000/s 
+      Nested pattern match (2) | latency:   333ns, speed:   2999940/s
 ```
 Aside from providing functionality that allows to manipulate Erlang terms, this
 library implements Erlang distributed transport that allows a C++ program to connect

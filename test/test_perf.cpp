@@ -176,6 +176,39 @@ int main(int argc, char* argv[]) {
         iterations *= 10;
     }
 
+    {
+        static const eterm s_pattern = eterm::format("V");
+        static atom  am_var("V");
+        if (!s_pattern.match(12345))
+            std::cerr << "Expected match failed at line " << __LINE__ << std::endl;;
+
+        iterations /= 10;
+        for (int j=0, e = iterations; j < e; j++) {
+            varbind binding;
+            if (s_pattern.match(12345, &binding))
+                size++;
+        }
+        t.sample("Simple pattern match (1)", true, size);
+        iterations *= 10;
+    }
+
+    {
+        static const eterm s_pattern = eterm::format("{error, [{abc, V}]}");
+        static const eterm s_term    = eterm::format("{error, [{abc, \"ok\"}]}");
+        static atom  am_var("V");
+        if (!s_term.match(s_pattern))
+            std::cerr << "Expected match failed at line " << __LINE__ << std::endl;;
+
+        iterations /= 10;
+        for (int j=0, e = iterations; j < e; j++) {
+            varbind binding;
+            if (s_term.match(s_pattern, &binding))
+                size++;
+        }
+        t.sample("Nested pattern match (2)", true, size);
+        iterations *= 10;
+    }
+
     if (g_size == 0)
         std::cerr << "No iterations performed!" << std::endl;
 
