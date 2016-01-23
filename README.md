@@ -158,6 +158,10 @@ $ build/test/test-perf
       Simple pattern match (1) | latency:    33ns, speed:  30003000/s 
       Nested pattern match (2) | latency:   333ns, speed:   2999940/s
 ```
+The last four tests illustrate various ways of creating nested terms with tuples,
+lists and other types. The other tests illustrate creation times of primitive
+eterm types.
+
 Aside from providing functionality that allows to manipulate Erlang terms, this
 library implements Erlang distributed transport that allows a C++ program to connect
 to an Erlang node, exchange messages, make RPC calls, and receive I/O requests.
