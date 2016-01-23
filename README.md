@@ -156,6 +156,10 @@ $ build/test/test-perf
  Nested lists/tuples (1) speed | latency:   533ns, speed:   1874976/s 
  Nested lists/tuples (2) speed | latency:   466ns, speed:   2142841/s
 ```
+The last four tests illustrate various ways of creating nested terms with tuples,
+lists and other types. The other tests illustrate creation times of primitive
+eterm types.
+
 Aside from providing functionality that allows to manipulate Erlang terms, this
 library implements Erlang distributed transport that allows a C++ program to connect
 to an Erlang node, exchange messages, make RPC calls, and receive I/O requests.
