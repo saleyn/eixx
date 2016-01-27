@@ -4,6 +4,7 @@
 .cproject
 .kdev4/
 .project
+.cmake-args*
 build
 inst
 test/.kdev4/

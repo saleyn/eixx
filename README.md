@@ -139,23 +139,23 @@ eterm's are shown below (project compiled in the `release` mode):
 ```
 $ build/test/test-perf
                        1000000 iterations
-                       Integer | latency:     6ns, speed: 150015001/s 
-                        Double | latency:     3ns, speed: 300030003/s 
-                          Bool | latency:     3ns, speed: 300030003/s 
-                        String | latency:    56ns, speed:  17646955/s 
-                         Atom1 | latency:    33ns, speed:  30000300/s 
-                         Atom2 | latency:    36ns, speed:  27272479/s 
-                       Binary1 | latency:    46ns, speed:  21428877/s 
-                       Binary2 | latency:     6ns, speed: 150015001/s 
-                        Tuple1 | latency:    73ns, speed:  13636239/s 
-                        Tuple2 | latency:    20ns, speed:  50000000/s 
-                         List1 | latency:    73ns, speed:  13636239/s 
-                         List2 | latency:    23ns, speed:  42857755/s 
-                   Apply speed | latency:  1190ns, speed:    840336/s 
-            Apply/Create speed | latency:   966ns, speed:   1034482/s 
- Nested lists/tuples (1) speed | latency:   566ns, speed:   1764695/s 
- Nested lists/tuples (2) speed | latency:   466ns, speed:   2142887/s 
-      Simple pattern match (1) | latency:    33ns, speed:  30003000/s 
+                       Integer | latency:     6ns, speed: 150015001/s
+                        Double | latency:     3ns, speed: 300030003/s
+                          Bool | latency:     3ns, speed: 300030003/s
+                        String | latency:    56ns, speed:  17646955/s
+                         Atom1 | latency:    33ns, speed:  30000300/s
+                         Atom2 | latency:    36ns, speed:  27272479/s
+                       Binary1 | latency:    46ns, speed:  21428877/s
+                       Binary2 | latency:     6ns, speed: 150015001/s
+                        Tuple1 | latency:    73ns, speed:  13636239/s
+                        Tuple2 | latency:    20ns, speed:  50000000/s
+                         List1 | latency:    73ns, speed:  13636239/s
+                         List2 | latency:    23ns, speed:  42857755/s
+                   Apply speed | latency:  1190ns, speed:    840336/s
+            Apply/Create speed | latency:   966ns, speed:   1034482/s
+ Nested lists/tuples (1) speed | latency:   566ns, speed:   1764695/s
+ Nested lists/tuples (2) speed | latency:   466ns, speed:   2142887/s
+      Simple pattern match (1) | latency:    33ns, speed:  30003000/s
       Nested pattern match (2) | latency:   333ns, speed:   2999940/s
 ```
 The last four tests illustrate various ways of creating nested terms with tuples,
@@ -197,7 +197,7 @@ void on_message(otp_mailbox& a_mbox, boost::system::error_code& ec) {
             }
         }
     }
-    
+
     // Schedule next async receive of a message (can also provide a timeout).
     a_mbox.async_receive(&on_message);
 }
@@ -284,4 +284,3 @@ registered on the C++ node:
             type=REG_SEND,
             cntrl={6,#Pid<abc@fc12.46.0>,'',main},
             msg="This is a test!"}
-
