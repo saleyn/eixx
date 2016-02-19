@@ -42,10 +42,29 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 namespace eixx {
 namespace marshal {
 
+    namespace {
+    }
+
 template <typename Alloc>
 struct cons {
     eterm<Alloc> node;
     cons<Alloc>* next;
+
+    // Try to decode the value as a pair containing atom
+    // option name and any value
+    bool to_pair(atom& a_opt, eterm<Alloc>& a_val) {
+        static const eterm<Alloc> s_pair = eterm<Alloc>::format("{A::atom(), V}");
+        static const atom         s_am_opt = atom("A");
+        static const atom         s_am_val = atom("V");
+
+        varbind<Alloc> binding;
+        if (s_pair.match(node, &binding)) {
+            a_opt =  binding[s_am_opt]->to_atom();
+            a_val = *binding[s_am_val];
+            return true;
+        }
+        return false;
+    }
 };
 
 template <typename Alloc>
