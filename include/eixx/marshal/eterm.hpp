@@ -220,7 +220,6 @@ class eterm {
 
     static void format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& args,
         const char** fmt, va_list* pa) throw (err_format_exception);
-
 public:
     eterm_type  type()        const { return m_type; }
     const char* type_string() const;
@@ -432,6 +431,20 @@ public:
     list<Alloc>&         to_list()         { check(LIST);   return vt.l; }
     const trace<Alloc>&  to_trace()  const { check(TRACE);  return vt.trc; }
     trace<Alloc>&        to_trace()        { check(TRACE);  return vt.trc; }
+
+    // Try to decode the value as a pair containing atom
+    // option name and any value
+    bool to_pair(atom& a_opt, eterm<Alloc>& a_val) {
+        static const eterm<Alloc> s_pair = eterm<Alloc>::format("{A::atom(), V}");
+        static const atom         s_am_opt = atom("A");
+        static const atom         s_am_val = atom("V");
+
+        varbind<Alloc> binding;
+        if (!match(s_pair, &binding)) return false;
+        a_opt =  binding[s_am_opt]->to_atom();
+        a_val = *binding[s_am_val];
+        return true;
+    }
 
     // Checks if database of the term is of given type
 

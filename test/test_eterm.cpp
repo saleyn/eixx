@@ -242,6 +242,24 @@ BOOST_AUTO_TEST_CASE( test_list4 )
         l.push_back(eterm(atom("abc")));
     l.close();
     BOOST_REQUIRE_EQUAL(2u, l.length());
+
+    {
+        list l1{tuple{am_ok, 10}, tuple{am_error, "abc"}};
+
+        atom  opt;
+        eterm val;
+
+        for (auto& item : l1) {
+            BOOST_REQUIRE(item.to_pair(opt, val));
+            if (opt == am_ok)
+                BOOST_REQUIRE_EQUAL(10, val.to_long());
+            else if (opt == am_error)
+                BOOST_REQUIRE_EQUAL("abc", val.to_str());
+            else
+                BOOST_REQUIRE(false);
+        }
+
+    }
 }
 
 BOOST_AUTO_TEST_CASE( test_double )
