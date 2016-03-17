@@ -34,8 +34,8 @@ namespace eixx {
 // Though the compiler should optimize this inlined code in the same way as
 // when using LIKELY/UNLIKELY macros directly the preference is to use the later
 #ifndef NO_HINT_BRANCH_PREDICTION
-    inline bool likely(bool expr)   { return __builtin_expect((expr),1); }
-    inline bool unlikely(bool expr) { return __builtin_expect((expr),0); }
+    inline bool likely(bool expr)   { return __builtin_expect(!!(expr),1); }
+    inline bool unlikely(bool expr) { return __builtin_expect(!!(expr),0); }
 #else
     inline bool likely(bool expr)   { return expr; }
     inline bool unlikely(bool expr) { return expr; }
