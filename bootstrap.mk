@@ -71,7 +71,7 @@ ROOT_DIR    := $(dir $(abspath include))
 DEF_BLD_DIR := $(ROOT_DIR:%/=%)/build
 DIR         := $(if $(BLD_DIR),$(BLD_DIR),$(DEF_BLD_DIR))
 PREFIX      := $(call substitute,DIR:INSTALL,$(OPT_FILE))
-prefix      := $(if $(PREFIX),$(PREFIX),/usr/local)
+prefix      ?= $(if $(PREFIX),$(PREFIX),/usr/local)
 generator   ?= make
 
 #-------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ info:
 	@echo "prefix:    $(prefix)"
 	@echo "generator: $(generator)"
 
-variables   := $(filter-out toolchain=% generator=% build=% verbose=%,$(MAKEOVERRIDES))
+variables   := $(filter-out toolchain=% generator=% build=% verbose=% prefix=%,$(MAKEOVERRIDES))
 makevars    := $(variables:%=-D%)
 
 envvars     += $(shell sed -n '/^ENV:/{s/^ENV://;p}' $(OPT_FILE) 2>/dev/null)
