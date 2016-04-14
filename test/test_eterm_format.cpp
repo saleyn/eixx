@@ -38,6 +38,31 @@ BOOST_AUTO_TEST_CASE( test_eterm_format_string )
     BOOST_REQUIRE_EQUAL("abc", et.to_str());
 }
 
+BOOST_AUTO_TEST_CASE( test_eterm_format_binary )
+{
+    allocator_t alloc;
+
+    eterm et = eterm::format(alloc, "<<\"abc\">>");
+
+    BOOST_REQUIRE_EQUAL(BINARY, et.type());
+    BOOST_REQUIRE_EQUAL("abc", std::string(et.to_binary().data(), et.to_binary().size()));
+
+    et = eterm::format(alloc, "<<65,66, 67>>");
+    BOOST_REQUIRE_EQUAL(BINARY, et.type());
+    BOOST_REQUIRE_EQUAL("ABC", std::string(et.to_binary().data(), et.to_binary().size()));
+
+    et = eterm::format(alloc, "<<>>");
+    BOOST_REQUIRE_EQUAL(BINARY, et.type());
+    BOOST_REQUIRE_EQUAL("", std::string(et.to_binary().data(), et.to_binary().size()));
+
+    et = eterm::format(alloc, "<<\"\">>");
+    BOOST_REQUIRE_EQUAL(BINARY, et.type());
+    BOOST_REQUIRE_EQUAL("", std::string(et.to_binary().data(), et.to_binary().size()));
+
+    BOOST_CHECK_THROW(eterm::format("<<-1>>"), err_format_exception);
+    BOOST_CHECK_THROW(eterm::format("<<1,2 3>>"), err_format_exception);
+}
+
 BOOST_AUTO_TEST_CASE( test_eterm_format_atom )
 {
     allocator_t alloc;

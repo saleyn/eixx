@@ -43,7 +43,7 @@ namespace eixx {
 /// Print the content of a buffer to \a out stream in the form:
 /// \verbatim <<I1, I2, ..., In>> \endverbatim where <tt>Ik</tt> is
 /// unsigned integer less than 256.
-static inline std::ostream& to_binary_string(std::ostream& out, const char* buf, size_t sz) {
+inline std::ostream& to_binary_string(std::ostream& out, const char* buf, size_t sz) {
     out << "<<";
     const char* begin = buf, *end = buf + sz;
     for(const char* p = begin; p != end; ++p) {
@@ -56,10 +56,42 @@ static inline std::ostream& to_binary_string(std::ostream& out, const char* buf,
 /// Convert the content of a buffer to a binary string in the form:
 /// \verbatim <<I1, I2, ..., In>> \endverbatim where <tt>Ik</tt> is
 /// unsigned integer less than 256.
-static inline std::string to_binary_string(const char* a, size_t sz) {
+inline std::string to_binary_string(const char* a, size_t sz) {
     std::stringstream oss;
     to_binary_string(oss, a, sz);
     return oss.str();
+}
+
+/// Convert string to integer
+///
+/// @tparam TillEOL instructs that the integer must be validated till a_end.
+///                 If false, "123ABC" is considered a valid 123 number. Otherwise
+///                 the function will return NULL.
+/// @return input string ptr beyond the the value read if successful, NULL otherwise
+//
+template <typename T, bool TillEOL = true>
+inline const char* fast_atoi(const char* a_str, const char* a_end, T& res) {
+    if (a_str >= a_end) return nullptr;
+
+    bool l_neg;
+
+    if (*a_str == '-') { l_neg = true; ++a_str; }
+    else               { l_neg = false; }
+
+    T x = 0;
+
+    do {
+        const int c = *a_str - '0';
+        if (c < 0 || c > 9) {
+            if (TillEOL)
+               return nullptr;
+            break;
+        }
+        x = (x << 3) + (x << 1) + c;
+    } while (++a_str != a_end);
+
+    res = l_neg ? -x : x;
+    return a_str;
 }
 
 } // namespace eixx

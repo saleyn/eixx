@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <iostream>
 #include <eixx/marshal/defaults.hpp>
+#include <eixx/util/string_util.hpp>
 #include <eixx/eterm_exception.hpp>
 #include <boost/concept_check.hpp>
 //#include <boost/scope_exit.hpp>
@@ -368,6 +369,47 @@ namespace marshal {
                     throw err_format_exception("Error parsing list", *fmt);
                 ret = v.to_list(alloc);
                 break;
+
+            case '<': {
+                if (**fmt != '<')
+                    throw err_format_exception("Error parsing binary", *fmt);
+                bool str   = *(*fmt + 1) == '"';
+                if (str) {
+                    *fmt += 2;
+                    const char* end = strstr(*fmt, "\">>");
+                    if (!end)
+                        throw err_format_exception("Cannot find end of binary", *fmt);
+                    ret = eterm<Alloc>(binary<Alloc>(*fmt, end - *fmt, alloc));
+                    *fmt = end + 3;
+                } else {
+                    const char* end = strstr(++(*fmt), ">>");
+                    if (!end)
+                        throw err_format_exception("Cannot find end of binary", *fmt);
+                    std::vector<char> v;
+                    auto p = *fmt;
+
+                    while (p < end) {
+                        while (*p == ' ' || *p == '\t') ++p;
+                        int byte;
+                        auto q = fast_atoi<int, false>(p, end, byte);
+                        if (!q)
+                            throw err_format_exception("Error parsing binary", p);
+                        p = q;
+                        if (byte < 0 || byte > 255)
+                            throw err_format_exception("Invalid byte value in binary", p);
+                        v.push_back((char)byte);
+                        while (*p == ' ' || *p == '\t') ++p;
+                        if (*p == ',')
+                            ++p;
+                        else if (p < end)
+                            throw err_format_exception("Invalid byte delimiter in binary", p);
+                    }
+                    auto begin = &v[0];
+                    ret = eterm<Alloc>(binary<Alloc>(begin, v.size(), alloc));
+                    *fmt = end + 2;
+                }
+                break;
+            }
 
             case '$': /* char-value? */
                 ret = eterm<Alloc>((int)(*(*fmt)++));
