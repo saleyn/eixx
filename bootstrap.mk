@@ -88,6 +88,9 @@ info:
 	@echo "prefix:    $(prefix)"
 	@echo "generator: $(generator)"
 
+ver:
+	@echo $(VERSION)
+
 variables   := $(filter-out toolchain=% generator=% build=% verbose=% prefix=%,$(MAKEOVERRIDES))
 makevars    := $(variables:%=-D%)
 

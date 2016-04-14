@@ -29,7 +29,7 @@ rebootstrap: .build/.bootstrap
 test:
 	CTEST_OUTPUT_ON_FAILURE=TRUE $(generator) -C$(DIR) $(VERBOSE) -j$(shell nproc) $@
 
-info:
+info ver:
 	@$(MAKE) -sf bootstrap.mk --no-print-directory $@
 
 vars:
