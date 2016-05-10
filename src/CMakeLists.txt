@@ -42,8 +42,8 @@ install(
   DIRECTORY ${CMAKE_BINARY_DIR}/src/
   DESTINATION lib
   FILES_MATCHING
-    PATTERN "${CMAKE_BINARY_DIR}/src/libeixx*.so*"
-    PATTERN "${CMAKE_BINARY_DIR}/src/libeixx*.a*"
+    PATTERN "libeixx*.so*"
+    PATTERN "libeixx*.a*"
     PATTERN "CMakeFiles/" EXCLUDE
 )
 
