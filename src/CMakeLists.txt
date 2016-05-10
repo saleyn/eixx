@@ -40,9 +40,15 @@ install(
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "release")
   install(
-    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}${LIB_SUFFIX}.so.${PROJECT_VERSION}
-    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}${LIB_SUFFIX}.so
-    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}${LIB_SUFFIX}.a
+    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}_d.so.${PROJECT_VERSION}
+    DESTINATION lib
+  )
+  install(
+    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}_d.so
+    DESTINATION lib
+  )
+  install(
+    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}_a.so
     DESTINATION lib
   )
 endif()
