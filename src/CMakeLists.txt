@@ -38,14 +38,14 @@ install(
   ARCHIVE DESTINATION lib
 )
 
-install(
-  DIRECTORY ${CMAKE_BINARY_DIR}/src/
-  DESTINATION lib
-  FILES_MATCHING
-    PATTERN "libeixx*.so*"
-    PATTERN "libeixx*.a*"
-    PATTERN "CMakeFiles/" EXCLUDE
-)
+if (${CMAKE_BUILD_TYPE} STREQUAL "release")
+  install(
+    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}${LIB_SUFFIX}.so.${PROJECT_VERSION}
+    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}${LIB_SUFFIX}.so
+    FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}${LIB_SUFFIX}.a
+    DESTINATION lib
+  )
+endif()
 
 install(
   TARGETS
