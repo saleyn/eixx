@@ -52,4 +52,4 @@ build/cache.mk:
             -j$(shell nproc) $@;\
 	fi
 
-.PHONY: bootstrap rebootstrap distclean info test
+.PHONY: bootstrap rebootstrap distclean info test doc

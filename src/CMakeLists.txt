@@ -26,6 +26,10 @@ add_executable(test-node test_node.cpp)
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 target_link_libraries(test-node eixx pthread)
 
+# In the install below we split library installation in a separate library clause
+# so that it's possible to build/install both Release and Debug versions of the
+# library and then include that into a package
+
 install(
   TARGETS
     ${PROJECT_NAME}
@@ -33,6 +37,13 @@ install(
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+
+install(
+  DIRECTORY ${CMAKE_BINARY_DIR}/src/
+  DESTINATION lib
+  FILES_MATCHING PATTERN "libeixx*.so*" PATTERN "libeixx*.a*"
+)
+
 install(
   TARGETS
     test-node
