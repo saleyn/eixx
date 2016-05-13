@@ -82,6 +82,16 @@ $ make bootstrap [toolchain=gcc|clang]  [build=Debug|Release] \
 $ make [verbose=true]
 $ make install      # Default install path is /usr/local
 ```
+There is a slight difference between installing release and debug builds. The release
+build installer also tries to install a "debug version" of eixx (`libeixx_d.so`) that
+must be build using build type `"debug"`.  So for a release build do:
+```
+$ make bootstrap build=debug
+$ make src/libeixx_d.so
+$ make rebootstrap build=release
+$ make
+$ make install
+```
 After running `make bootstrap` two local links are created `build` and `inst`
 pointing to build and installation directories.
 
