@@ -1,5 +1,7 @@
 # vim:ts=2:sw=2:et
 
+include(GNUInstallDirs)
+
 list(APPEND EIXX_SRCS
   am.cpp
   basic_otp_node_local.cpp
@@ -34,22 +36,22 @@ install(
   TARGETS
     ${PROJECT_NAME}
     ${PROJECT_NAME}_static
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "release")
   install(
     FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}_d.so.${PROJECT_VERSION}
-    DESTINATION lib
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   install(
     FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}_d.so
-    DESTINATION lib
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   install(
     FILES ${CMAKE_BINARY_DIR}/src/lib${PROJECT_NAME}_d.a
-    DESTINATION lib
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 endif()
 
