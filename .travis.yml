@@ -12,6 +12,8 @@ addons:
     - gcc-4.9
     - g++-4.9
     - libboost1.55-all-dev
+    - cmake
+    - cmake-data
     - libxslt1.1
     - python-lxml
     - graphviz
@@ -26,7 +28,6 @@ before_install:
   - sudo add-apt-repository -y "deb http://ppa.launchpad.net/kzemek/boost/ubuntu utopic main"
   - sudo add-apt-repository ppa:george-edison55/precise-backports --yes
   - sudo apt-get update -qq
-  - sudo apt-get install cmake-data cmake
   - # sudo apt-get install libboost1.55-all-dev
   - # sudo updatedb
   - # dpkg -S /usr/include/boost/version.hpp
