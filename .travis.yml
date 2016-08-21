@@ -64,6 +64,7 @@ script:
       if ! brew ls --version cmake &>/dev/null; then brew install cmake; fi
     fi
 
+  - cd ${TRAVIS_BUILD_DIR}      # Go back to the root of the project and bootstrap
   - make bootstrap generator=make build=Debug
   - make
   - make doc > build/doc.log
