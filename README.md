@@ -6,21 +6,18 @@ distributed Erlang nodes from a C++ application.
 
 The marshaling classes are built on top of ei library included in
 http://www.erlang.org/doc/apps/erl_interface.
-It is largely inspired by the http://code.google.com/p/epi
-project, but is a complete rewrite with many new features and 
-optimization enhancements.
-
-This library adds on the following features:
-  - Use of reference-counted smart pointers for complex terms and
-    by-value copied simple terms (e.i. integers, doubles, bool, atoms).
-  - Ability to provide custom memory allocators.
-  - Encoding/decoding of nested terms using a single function call
-    (eterm::encode() and eterm::eterm() constructor).
-  - Global atom table for fast manipulation of atoms.
 
 The library consists of two separate parts:
   - Term marshaling (included by eterm.hpp or eixx.hpp).
   - Distributed node connectivity (included by connect.hpp or eixx.hpp)
+
+The term marshaling part of the library has following features:
+  - Encoding/decoding of nested terms using a single function call
+    (eterm::encode() and eterm::eterm() constructor).
+  - Global atom table for fast manipulation of atoms.
+  - Ability to provide custom memory allocators.
+  - Use of reference-counted smart pointers for complex terms and
+    by-value copied simple terms (e.i. integers, doubles, bool, atoms).
 
 If you are simply doing term marshalling only the eterm.hpp header along
 with one of the alloc headers is needed. This allows for header-only
