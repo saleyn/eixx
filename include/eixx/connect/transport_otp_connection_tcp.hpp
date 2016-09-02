@@ -50,7 +50,7 @@ namespace connect {
 
 #ifndef HAVE_EI_EPMD
 // These constants are not exposed by EI headers:
-static const char  ERL_VERSION_MAGIC            = 131;
+static const int   ERL_VERSION_MAGIC            = 131;
 static const short EPMD_PORT                    = 4369;
 static const int   EPMDBUF                      = 512;
 static const char  EI_EPMD_PORT2_REQ            = 122;
