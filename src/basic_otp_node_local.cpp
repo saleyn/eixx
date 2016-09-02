@@ -86,10 +86,15 @@ void basic_otp_node_local::set_nodename(
     }
 
     std::string short_hostname;
+    boost::system::error_code ec;
+    boost::asio::ip::address::from_string( m_hostname, ec );
     pos = m_hostname.find('.');
-
     std::stringstream str;
-    if (pos != std::string::npos) {
+
+    if(! ec) {
+        str << m_alivename << '@' << m_hostname;
+        m_longname = m_alivename+'@'+m_hostname;
+    } else if (pos != std::string::npos) {
         str << m_alivename << '@' << m_hostname.substr(0, pos);
         m_longname = m_alivename+'@'+m_hostname;
     } else {
