@@ -10,3 +10,25 @@
                  atomic<int16_t>  m_rc;
                  union vartype {} m_data;
              }
+4. Protocol change in R19.2. See this report on mailing list (2010-10-12):
+	Got into interesting 'does not work' situation while connecting newly
+	deployed c-node (compiled with otp 19.0 libraries) with older 18.3
+	erlang node: nodes were unable to communicate with messages
+
+	2016-10-12 18:43:28.404 [warning] emulator '<erlang node name>' got a
+	  corrupted external term from '<c-node name>' on distribution channel ...
+
+	logged on erlang side.
+
+	After some research, root cause was isolated: C-node was initialized using
+	ei_connect_xinit with random() % 16 for its creation id. In 18.x, Pid of
+	C-node was encoded as ERL_PID_EXT and used only two lower bits of creation id.
+	However, in 19.x there is a new Pid wire presentation, ERL_NEW_PID_EXT, which
+	encodes all 32 bits of creation id. Worse yet, this presentation is
+	automatically selected for encoding any Pid with creation id > 3, and,
+	as this presentation is not known by older 18.x nodes, this leads to
+	connection drop.
+
+	Solution: if you expect your C-nodes to communicate with pre-19.x erlang
+	nodes, you may use only values 0..3 for creation id. In my case I just
+	replaced random() % 16 with random() % 4.
