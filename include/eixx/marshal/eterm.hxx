@@ -118,7 +118,7 @@ const char* eterm<Alloc>::type_string() const {
         case MAP:       return "map";
         case TRACE:     return "trace";
     }
-    static_assert(MAX_ETERM_TYPE == 14);
+    static_assert(MAX_ETERM_TYPE == 14, "Invalid number of terms");
 }
 
 template <typename Alloc>
@@ -145,7 +145,7 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
             throw err_invalid_term(s.str());
         }
     }
-    static_assert(MAX_ETERM_TYPE == 14);
+    static_assert(MAX_ETERM_TYPE == 14, "Invalid number of terms");
 }
 
 template <typename Alloc>
@@ -195,7 +195,7 @@ inline bool eterm<Alloc>::operator< (const eterm<Alloc>& rhs) const {
             throw err_invalid_term(s.str());
         }
     }
-    static_assert(MAX_ETERM_TYPE == 14);
+    static_assert(MAX_ETERM_TYPE == 14, "Invalid number of terms");
 }
 
 template <typename Alloc>
