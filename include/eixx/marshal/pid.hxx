@@ -34,7 +34,6 @@ namespace marshal {
 
 template <class Alloc>
 void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& alloc)
-    throw(err_decode_exception, err_bad_argument)
 {
     const char* s  = buf + idx;
     const char* s0 = s;

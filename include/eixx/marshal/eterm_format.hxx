@@ -342,7 +342,6 @@ namespace marshal {
 
     template <class Alloc>
     static eterm<Alloc> eformat(const char** fmt, va_list* pap, const Alloc& a_alloc)
-        throw (err_format_exception)
     {
         vector<Alloc> v(a_alloc);
         Alloc alloc(a_alloc);

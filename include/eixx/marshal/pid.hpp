@@ -90,7 +90,6 @@ class epid {
 
     // Must only be called from constructor!
     void init(const atom& node, int id, uint8_t creation, const Alloc& alloc)
-        throw(err_bad_argument)
     {
         m_blob = new blob<pid_blob, Alloc>(1, alloc);
         new (m_blob->data()) pid_blob(node, id, creation);
@@ -100,8 +99,9 @@ class epid {
         #endif
     }
 
-    void decode(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
-        throw (err_decode_exception, err_bad_argument);
+    /// @throw err_decode_exception
+    /// @throw err_bad_argument
+    void decode(const char* buf, int& idx, size_t size, const Alloc& a_alloc);
 
 public:
 
@@ -122,25 +122,21 @@ public:
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      **/
     epid(const char* node, int id, int serial, int creation, const Alloc& a_alloc = Alloc()) 
-        throw(err_bad_argument)
         : epid(atom(node), id, serial, creation, a_alloc)
     {}
 
     epid(const atom& node, int id, int serial, int creation, const Alloc& a_alloc = Alloc())
-        throw(err_bad_argument)
         : epid(node, (id & 0x7fff) | ((serial & 0x1fff) << 15), creation, a_alloc)
     {}
 
     epid(const atom& node, int id, int creation, const Alloc& a_alloc = Alloc())
-        throw(err_bad_argument)
     {
         detail::check_node_length(node.size());
         init(node, id, creation, a_alloc);
     }
 
     /// Decode the pid from a binary buffer.
-    epid(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
-        throw (err_decode_exception, err_bad_argument) {
+    epid(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc()) {
         decode(buf, idx, size, a_alloc);
     }
 

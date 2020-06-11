@@ -88,6 +88,9 @@ inline eterm_type type_string_to_type(const char* s, size_t n) {
          case 'l':
              if (strncmp(p,"ist",m) == 0)        r = LIST;
              break;
+         case 'm':
+             if (strncmp(p,"ap",m) == 0)         r = MAP;
+             break;
          default:
              break;
      }
@@ -112,9 +115,10 @@ const char* eterm<Alloc>::type_string() const {
         case VAR:       return "var";
         case TUPLE:     return "tuple";
         case LIST:      return "list";
+        case MAP:       return "map";
         case TRACE:     return "trace";
     }
-    BOOST_STATIC_ASSERT(MAX_ETERM_TYPE == 13);
+    static_assert(MAX_ETERM_TYPE == 14);
 }
 
 template <typename Alloc>
@@ -134,13 +138,64 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
         case REF:    return vt.r    == rhs.vt.r;
         case TUPLE:  return vt.t    == rhs.vt.t;
         case LIST:   return vt.l    == rhs.vt.l;
+        case MAP:    return vt.m    == rhs.vt.m;
         case TRACE:  return vt.trc  == rhs.vt.trc;
         default: {
             std::stringstream s; s << "Undefined term_type (" << m_type << ')';
             throw err_invalid_term(s.str());
         }
     }
-    BOOST_STATIC_ASSERT(MAX_ETERM_TYPE == 13);
+    static_assert(MAX_ETERM_TYPE == 14);
+}
+
+template <typename Alloc>
+inline bool eterm<Alloc>::operator< (const eterm<Alloc>& rhs) const {
+    /// Term comparison precedence
+    auto type_precedence = [](int type) {
+        static const int s_precedences[MAX_ETERM_TYPE+1] = {
+            9,          // UNDEFINED
+            0, 0,       // LONG, DOUBLE
+            1,          // BOOL
+            2,          // ATOM
+            13,         // VAR
+            10,         // STRING
+            11,         // BINARY
+            6,          // PID
+            5,          // PORT
+            3,          // REF
+            7,          // TUPLE
+            10,         // LIST
+            8,          // MAP
+            12          // TRACE
+        };
+        return s_precedences[type];
+    };
+    int a = type_precedence(int(m_type));
+    int b = type_precedence(int(rhs.m_type));
+    if (a < b) return true;
+    if (a > b) return false;        
+    // precedences are equal - (note that numeric types have same precedence):
+    switch (m_type) {
+        case LONG:   return double(vt.i) < (rhs.m_type == LONG ? double(rhs.vt.i) : rhs.vt.d);
+        case DOUBLE: return vt.d         < (rhs.m_type == LONG ? double(rhs.vt.i) : rhs.vt.d);
+        case BOOL:   return vt.b         < rhs.vt.b;
+        case ATOM:   return vt.a         < rhs.vt.a;
+        case VAR:    return vt.v         < rhs.vt.v;
+        case STRING: return vt.s         < rhs.vt.s;
+        case BINARY: return vt.bin       < rhs.vt.bin;
+        case PID:    return vt.pid       < rhs.vt.pid;
+        case PORT:   return vt.prt       < rhs.vt.prt;
+        case REF:    return vt.r         < rhs.vt.r;
+        case TUPLE:  return vt.t         < rhs.vt.t;
+        case LIST:   return vt.l         < rhs.vt.l;
+        case MAP:    return vt.m         < rhs.vt.m;
+        case TRACE:  return vt.trc       < rhs.vt.trc;
+        default: {
+            std::stringstream s; s << "Undefined term_type (" << m_type << ')';
+            throw err_invalid_term(s.str());
+        }
+    }
+    static_assert(MAX_ETERM_TYPE == 14);
 }
 
 template <typename Alloc>
@@ -157,7 +212,6 @@ std::string eterm<Alloc>::to_string(size_t a_size_limit, const varbind<Alloc>* b
 
 template <class Alloc>
 eterm<Alloc>::eterm(const char* a_buf, size_t a_size, const Alloc& a_alloc)
-    throw(err_decode_exception)
 {
     int idx = 0;
     int vsn;
@@ -168,7 +222,6 @@ eterm<Alloc>::eterm(const char* a_buf, size_t a_size, const Alloc& a_alloc)
 
 template <class Alloc>
 void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc)
-    throw(err_decode_exception)
 {
     if ((size_t)idx == a_size)
         throw err_decode_exception("Empty term", idx);
@@ -240,6 +293,10 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
         new (this) eterm<Alloc>(port<Alloc>(a_buf, idx, a_size, a_alloc));
         break;
 
+    case ERL_MAP_EXT:
+        new (this) eterm<Alloc>(map<Alloc>(a_buf, idx, a_size, a_alloc));
+        break;
+
     default:
         std::ostringstream oss;
         oss << "Unknown message content type " << type;
@@ -268,7 +325,7 @@ string<Alloc> eterm<Alloc>::encode(size_t a_header_size, bool a_with_version) co
 
 template <typename Alloc>
 void eterm<Alloc>::encode(char* a_buf, size_t size, 
-    size_t a_header_size, bool a_with_version) const throw (err_encode_exception)
+    size_t a_header_size, bool a_with_version) const
 {
     #if BOOST_VERSION >= 104900
     namespace bd = boost::spirit::detail;
@@ -309,7 +366,6 @@ bool eterm<Alloc>::match(
     const eterm<Alloc>& pattern,
     varbind<Alloc>* binding,
     const Alloc& a_alloc) const
-    throw (err_unbound_variable)
 {
     // Protect the given binding. Change it only if the match succeeds.
     varbind<Alloc> dirty(a_alloc);
@@ -329,7 +385,6 @@ bool eterm<Alloc>::match(
 
 template <typename Alloc>
 bool eterm<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
-    throw (err_invalid_term, err_unbound_variable)
 {
     visit_eterm_subst<Alloc> visitor(out, binding);
     return visitor.apply_visitor(*this);
@@ -337,7 +392,6 @@ bool eterm<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
 
 template <typename Alloc>
 eterm<Alloc> eterm<Alloc>::apply(const varbind<Alloc>& binding) const
-    throw (err_invalid_term, err_unbound_variable)
 {
     eterm<Alloc> out;
     visit_eterm_subst<Alloc> visitor(out, &binding);
@@ -347,7 +401,6 @@ eterm<Alloc> eterm<Alloc>::apply(const varbind<Alloc>& binding) const
 
 template <class Alloc>
 eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char** fmt, va_list* pap)
-    throw (err_format_exception)
 {
     try {
         return eformat<Alloc>(fmt, pap, a_alloc);
@@ -361,7 +414,7 @@ eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char** fmt, va_lis
 
 template <class Alloc>
 void eterm<Alloc>::format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& args,
-    const char** fmt, va_list* pap) throw (err_format_exception)
+    const char** fmt, va_list* pap)
 {
     try {
         eformat<Alloc>(m, f, args, fmt, pap, a_alloc);
@@ -375,7 +428,6 @@ void eterm<Alloc>::format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& 
 
 template <class Alloc>
 eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char* fmt, ...)
-    throw (err_format_exception)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -385,7 +437,6 @@ eterm<Alloc> eterm<Alloc>::format(const Alloc& a_alloc, const char* fmt, ...)
 
 template <class Alloc>
 eterm<Alloc> eterm<Alloc>::format(const char* fmt, ...)
-    throw (err_format_exception)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -395,7 +446,7 @@ eterm<Alloc> eterm<Alloc>::format(const char* fmt, ...)
 
 template <class Alloc>
 void eterm<Alloc>::format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& args,
-    const char* fmt, ...) throw (err_format_exception)
+    const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -404,7 +455,6 @@ void eterm<Alloc>::format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& 
 }
 template <class Alloc>
 void eterm<Alloc>::format(atom& m, atom& f, eterm<Alloc>& args, const char* fmt, ...)
-    throw (err_format_exception)
 {
     va_list ap;
     va_start(ap, fmt);

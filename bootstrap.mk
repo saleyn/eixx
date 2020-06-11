@@ -124,7 +124,7 @@ bootstrap: | $(DIR)
 	@mkdir -p .build
 	@rm -f inst
 	@[ -L build ] && rm -f build || true
-	@echo $(call makecmd) > $(DIR)/.cmake
+	@echo $(call makecmd) > $(DIR)/.cmake.log
 	$(call makecmd) 2>&1 | tee $(DIR)/.cmake.bootstrap.log
 	@[ ! -d build ] && ln -s $(DIR) build || true
 	@ln -s $(prefix) inst

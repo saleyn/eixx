@@ -68,8 +68,9 @@ namespace eixx {
         , REF               = 10
         , TUPLE             = 11
         , LIST              = 12
-        , TRACE             = 13
-        , MAX_ETERM_TYPE    = 13
+        , MAP               = 13
+        , TRACE             = 14
+        , MAX_ETERM_TYPE    = 14
     };
 
     /// Returns string representation of type \a a_type.
@@ -105,6 +106,7 @@ namespace eixx {
             case VAR   : return "VAR";
             case TUPLE : return "TUPLE";
             case LIST  : return "LIST";
+            case MAP   : return "MAP";
             case TRACE : return "TRACE";
             default    : return "UNDEFINED";
         }
@@ -124,6 +126,7 @@ namespace eixx {
             case VAR   : return a_prefix ? "::var()"    : "var()";
             case TUPLE : return a_prefix ? "::tuple()"  : "tuple()";
             case LIST  : return a_prefix ? "::list()"   : "list()";
+            case MAP   : return a_prefix ? "::map()"    : "map()";
             case TRACE : return a_prefix ? "::trace()"  : "trace()";
             default    : return "";
         }

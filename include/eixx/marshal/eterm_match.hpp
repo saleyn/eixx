@@ -273,7 +273,6 @@ public:
 
     bool operator() (const eterm<Alloc>& a_term,
                      varbind<Alloc>* a_binding) const 
-        throw (eterm_exception)
     {
         varbind<Alloc> binding;
         if (a_binding)

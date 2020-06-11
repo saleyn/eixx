@@ -86,6 +86,9 @@ public:
     template <typename T>
     bool operator==(const T&) const { return false; }
 
+    template <typename T>
+    bool operator<(const T&)  const { return false; }
+
     size_t encode_size() const { throw err_encode_exception("Cannot encode vars!"); }
 
     void encode(char* buf, int& idx, size_t size) const {
@@ -100,7 +103,6 @@ public:
 
     template <typename Alloc>
     bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
-        throw (err_unbound_variable)
     {
         const eterm<Alloc>* term = binding ? binding->find(name()) : NULL;
         if (!term || !check_type(*term))
@@ -111,7 +113,6 @@ public:
 
     template <typename Alloc>
     bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const
-        throw (err_unbound_variable)
     {
         if (is_any()) return true;
         if (!binding) return false;

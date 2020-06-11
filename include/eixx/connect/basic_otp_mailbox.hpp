@@ -332,7 +332,8 @@ public:
     }
 
     /// Set up a monitor of a remote \a a_target_pid.
-    const ref<Alloc>& monitor(const epid<Alloc>& a_target_pid) {
+    //const ref<Alloc>& monitor(const epid<Alloc>& a_target_pid) {
+    void monitor(const epid<Alloc>& a_target_pid) {
         if (self() == a_target_pid)
             return;
         const ref<Alloc>& l_ref = m_node.send_monitor(self(), a_target_pid);

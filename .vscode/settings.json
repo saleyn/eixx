@@ -1,0 +1,33 @@
+{
+    "files.associations": {
+        "initializer_list": "cpp",
+        "valarray": "cpp",
+        "array": "cpp",
+        "atomic": "cpp",
+        "chrono": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "exception": "cpp",
+        "functional": "cpp",
+        "iosfwd": "cpp",
+        "istream": "cpp",
+        "mutex": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp"
+    },
+    "cmake.configureSettings": {
+        "TOOLCHAIN" : "gcc",
+        "CMAKE_USER_MAKE_RULES_OVERRIDE" : "${workspaceFolder}/build-aux/CMakeInit.txt",
+        "CMAKE_INSTALL_PREFIX" : "/opt/pkg/eixx/1.4",
+        "BOOST_ROOT" : "/opt/pkg/boost/current",
+        "BOOST_LIBRARYDIR" : "/opt/pkg/boost/current/lib"
+    },
+    "cmake.buildArgs": [
+    ]
+}

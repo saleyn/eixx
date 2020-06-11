@@ -43,6 +43,7 @@ typedef marshal::port<allocator_t>                   port;
 typedef marshal::ref<allocator_t>                    ref;
 typedef marshal::tuple<allocator_t>                  tuple;
 typedef marshal::list<allocator_t>                   list;
+typedef marshal::map<allocator_t>                    map;
 typedef marshal::trace<allocator_t>                  trace;
 typedef marshal::var                                 var;
 typedef marshal::varbind<allocator_t>                varbind;
@@ -59,6 +60,7 @@ namespace detail {
     BOOST_STATIC_ASSERT(sizeof(ref)       <= sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(tuple)     <= sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(list)      <= sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(map)       <= sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(trace)     <= sizeof(uint64_t));
     BOOST_STATIC_ASSERT(sizeof(var)       == sizeof(uint64_t));
 } // namespace detail

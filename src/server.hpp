@@ -10,6 +10,10 @@
 
 #pragma once
 
+#include <boost/version.hpp>
+
+#if BOOST_VERSION < 106500
+
 #include <boost/asio.hpp>
 #include <string>
 #include <boost/noncopyable.hpp>
@@ -337,3 +341,5 @@ private:
 };
 
 } // namespace eixx
+
+#endif // BOOST_VERSION

@@ -73,7 +73,7 @@ class ref {
 
     // Must only be called from constructor!
     void init(const atom& a_node, uint32_t a_id0, uint64_t a_id1, uint8_t a_cre,
-              const Alloc& alloc) throw(err_bad_argument)
+              const Alloc& alloc)
     {
         m_blob = new blob<ref_blob, Alloc>(1, alloc);
         new (m_blob->data()) ref_blob(a_node, a_id0, a_id1, a_cre);
@@ -110,26 +110,26 @@ public:
      */
     template <int N>
     ref(const char* node, uint32_t (&ids)[N], unsigned int creation,
-        const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
+        const Alloc& a_alloc = Alloc())
         : ref(atom(node), ids[0], ids[1], ids[2], creation, a_alloc)
     {}
 
     template <int N>
     ref(const atom& node, uint32_t (&ids)[N], unsigned int creation,
-        const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
+        const Alloc& a_alloc = Alloc())
         : ref(node, ids[0], ids[1], ids[2], creation, a_alloc)
     {
         BOOST_STATIC_ASSERT(N == 3);
     }
 
     ref(const atom& node, uint32_t id0, uint32_t id1, uint32_t id2, unsigned int creation,
-        const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
+        const Alloc& a_alloc = Alloc())
         : ref(node, id0, id1 | ((uint64_t)id2 << 32), creation, a_alloc)
     {}
 
     // For internal use
     ref(const atom& node, uint32_t id0, uint64_t id1, uint8_t creation,
-        const Alloc& a_alloc = Alloc()) throw(err_bad_argument)
+        const Alloc& a_alloc = Alloc())
     {
         detail::check_node_length(node.size());
         init(node, id0, id1, creation, a_alloc);
@@ -143,8 +143,7 @@ public:
      * @param size is the size of the \a buf buffer.
      * @param a_alloc is the allocator to use.
      */
-    ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
-        throw(err_decode_exception);
+    ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ref(const ref& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
     ref(ref&& rhs) : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }

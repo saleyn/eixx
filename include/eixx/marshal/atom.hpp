@@ -86,29 +86,29 @@ public:
 
     /// Create an atom from the given string.
     /// @param atom the string to create the atom from.
-    /// @throws std::runtime_error if atom table is full.
-    /// @throws err_bad_argument if atom size is longer than MAXATOMLEN
-    atom(const char* s) throw(std::runtime_error, err_bad_argument)
+    /// @throw std::runtime_error if atom table is full.
+    /// @throw err_bad_argument if atom size is longer than MAXATOMLEN
+    atom(const char* s)
         : m_index(atom_table().lookup(std::string(s))) {}
 
     /// @copydoc atom::atom
     template <int N>
-    atom(const char (&s)[N]) throw(std::runtime_error, err_bad_argument)
+    atom(const char (&s)[N])
         : m_index(atom_table().lookup(std::string(s, N))) {}
 
     /// @copydoc atom::atom
-    explicit atom(const std::string& s) throw(std::runtime_error)
+    explicit atom(const std::string& s)
         : m_index(atom_table().lookup(s))
     {}
 
     /// @copydoc atom::atom
     template<typename Alloc>
-    explicit atom(const string<Alloc>& s) throw(std::runtime_error)
+    explicit atom(const string<Alloc>& s)
         : m_index(atom_table().lookup(std::string(s.c_str(), s.size())))
     {}
 
     /// @copydoc atom::atom
-    atom(const char* s, size_t n) throw(std::runtime_error)
+    atom(const char* s, size_t n)
         : m_index(atom_table().lookup(std::string(s, n)))
     {}
 
@@ -119,7 +119,6 @@ public:
     /// Decode an atom from a binary buffer encoded in 
     /// Erlang external binary format.
     atom(const char* a_buf, int& idx, size_t a_size)
-        throw (err_decode_exception, std::runtime_error)
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
@@ -194,10 +193,9 @@ public:
 /// @param s is the string representation of the node name that must be
 ///        in the form: \c Alivename@Hostname.
 /// @return atom representing node name
-/// @throws std::runtime_error if atom table is full.
-/// @throws err_bad_argument if atom size is longer than MAXNODELEN
+/// @throw  std::runtime_error if atom table is full.
+/// @throw  err_bad_argument if atom size is longer than MAXNODELEN
 inline atom make_node_name(const std::string& s)
-    throw(std::runtime_error, err_bad_argument)
 {
     if (!s.find('@')) throw err_bad_argument("Invalid node name", s);
     detail::check_node_length(s.size());

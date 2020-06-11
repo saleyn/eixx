@@ -29,10 +29,7 @@ limitations under the License.
 #ifndef _EIXX_MARSHAL_ETERM_HPP_
 #define _EIXX_MARSHAL_ETERM_HPP_
 
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/noncopyable.hpp>
+#include <type_traits>
 
 #include <initializer_list>
 
@@ -46,6 +43,7 @@ limitations under the License.
 #include <eixx/marshal/ref.hpp>
 #include <eixx/marshal/tuple.hpp>
 #include <eixx/marshal/list.hpp>
+#include <eixx/marshal/map.hpp>
 #include <eixx/marshal/trace.hpp>
 #include <eixx/marshal/var.hpp>
 #include <eixx/marshal/varbind.hpp>
@@ -56,19 +54,20 @@ namespace marshal {
 
 namespace {
     template <typename T, typename Alloc> struct enum_type;
-    template <typename Alloc> struct enum_type<long,   Alloc>        { typedef long   type; };
-    template <typename Alloc> struct enum_type<double, Alloc>        { typedef double type; };
-    template <typename Alloc> struct enum_type<bool,   Alloc>        { typedef bool   type; };
-    template <typename Alloc> struct enum_type<atom,   Alloc>        { typedef atom   type; };
-    template <typename Alloc> struct enum_type<string<Alloc>, Alloc> { typedef string<Alloc> type; };
-    template <typename Alloc> struct enum_type<binary<Alloc>, Alloc> { typedef binary<Alloc> type; };
-    template <typename Alloc> struct enum_type<epid<Alloc>,   Alloc> { typedef epid<Alloc>   type; };
-    template <typename Alloc> struct enum_type<port<Alloc>,   Alloc> { typedef port<Alloc>   type; };
-    template <typename Alloc> struct enum_type<ref<Alloc>,    Alloc> { typedef ref<Alloc>    type; };
-    template <typename Alloc> struct enum_type<var,    Alloc>        { typedef var type; };
-    template <typename Alloc> struct enum_type<tuple<Alloc>,  Alloc> { typedef tuple<Alloc>  type; };
-    template <typename Alloc> struct enum_type<list<Alloc>,   Alloc> { typedef list<Alloc>   type; };
-    template <typename Alloc> struct enum_type<trace<Alloc>,  Alloc> { typedef trace<Alloc>  type; };
+    template <typename Alloc> struct enum_type<long,   Alloc>        { using type = long         ; };
+    template <typename Alloc> struct enum_type<double, Alloc>        { using type = double       ; };
+    template <typename Alloc> struct enum_type<bool,   Alloc>        { using type = bool         ; };
+    template <typename Alloc> struct enum_type<atom,   Alloc>        { using type = atom         ; };
+    template <typename Alloc> struct enum_type<string<Alloc>, Alloc> { using type = string<Alloc>; };
+    template <typename Alloc> struct enum_type<binary<Alloc>, Alloc> { using type = binary<Alloc>; };
+    template <typename Alloc> struct enum_type<epid<Alloc>,   Alloc> { using type = epid<Alloc>  ; };
+    template <typename Alloc> struct enum_type<port<Alloc>,   Alloc> { using type = port<Alloc>  ; };
+    template <typename Alloc> struct enum_type<ref<Alloc>,    Alloc> { using type = ref<Alloc>   ; };
+    template <typename Alloc> struct enum_type<var,           Alloc> { using type = var          ; };
+    template <typename Alloc> struct enum_type<tuple<Alloc>,  Alloc> { using type = tuple<Alloc> ; };
+    template <typename Alloc> struct enum_type<list<Alloc>,   Alloc> { using type = list<Alloc>  ; };
+    template <typename Alloc> struct enum_type<map<Alloc>,    Alloc> { using type = map<Alloc>   ; };
+    template <typename Alloc> struct enum_type<trace<Alloc>,  Alloc> { using type = trace<Alloc> ; };
 }
 
 /**
@@ -141,6 +140,7 @@ class eterm {
         ref<Alloc>      r;
         tuple<Alloc>    t;
         list<Alloc>     l;
+        map<Alloc>      m;
         trace<Alloc>  trc;
 
         uint64_t value; // this is for ease of copying
@@ -170,6 +170,7 @@ class eterm {
         vartype(const ref<Alloc>&    x) :   r(x) {}
         vartype(const tuple<Alloc>&  x) :   t(x) {}
         vartype(const list<Alloc>&   x) :   l(x) {}
+        vartype(const map<Alloc>&    x) :   m(x) {}
         vartype(const trace<Alloc>&  x) : trc(x) {}
 
         vartype() : i(0) {}
@@ -184,9 +185,9 @@ class eterm {
 
     /**
      * Decode a term from the Erlang external binary format.
+     * @throw err_decode_exception
      */
-    void decode(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc)
-        throw (err_decode_exception);
+    void decode(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc);
 
     long&           get(long*)                  { check(LONG);   return vt.i; }
     double&         get(double*)                { check(DOUBLE); return vt.d; }
@@ -200,6 +201,7 @@ class eterm {
     ref<Alloc>&     get(const ref<Alloc>*)      { check(REF);    return vt.r; }
     tuple<Alloc>&   get(const tuple<Alloc>*)    { check(TUPLE);  return vt.t; }
     list<Alloc>&    get(const list<Alloc>*)     { check(LIST);   return vt.l; }
+    map<Alloc>&     get(const map<Alloc>*)      { check(MAP);    return vt.m; }
     trace<Alloc>&   get(const trace<Alloc>*)    { check(TRACE);  return vt.trc; }
 
     template <typename T, typename A> friend T& get(eterm<A>& t);
@@ -211,11 +213,12 @@ class eterm {
         a->vt.reset();
     }
 
-    static eterm<Alloc> format(const Alloc& a_alloc, const char** fmt, va_list* args)
-        throw (err_format_exception);
+    /// @throw err_format_exception
+    static eterm<Alloc> format(const Alloc& a_alloc, const char** fmt, va_list* args);
 
+    /// @throw err_format_exception
     static void format(const Alloc& a_alloc, atom& m, atom& f, eterm<Alloc>& args,
-        const char** fmt, va_list* pa) throw (err_format_exception);
+        const char** fmt, va_list* pa);
 public:
     eterm_type  type()        const { return m_type; }
     const char* type_string() const;
@@ -237,12 +240,13 @@ public:
         : m_type(STRING), vt(string<Alloc>(a.c_str(), a.size(), alloc)) {}
     eterm(const string<Alloc>& a)  : m_type(STRING), vt(a) {}
     eterm(const binary<Alloc>& a)  : m_type(BINARY), vt(a) {}
-    eterm(const epid<Alloc>& a)    : m_type(PID),    vt(a) {}
-    eterm(const port<Alloc>& a)    : m_type(PORT),   vt(a) {}
-    eterm(const ref<Alloc>& a)     : m_type(REF),    vt(a) {}
-    eterm(const tuple<Alloc>& a)   : m_type(TUPLE),  vt(a) {}
-    eterm(const list<Alloc>&  a)   : m_type(LIST),   vt(a) {}
-    eterm(const trace<Alloc>& a)   : m_type(TRACE),  vt(a) {}
+    eterm(const epid<Alloc>&   a)  : m_type(PID),    vt(a) {}
+    eterm(const port<Alloc>&   a)  : m_type(PORT),   vt(a) {}
+    eterm(const ref<Alloc>&    a)  : m_type(REF),    vt(a) {}
+    eterm(const tuple<Alloc>&  a)  : m_type(TUPLE),  vt(a) {}
+    eterm(const list<Alloc>&   a)  : m_type(LIST),   vt(a) {}
+    eterm(const map<Alloc>&    a)  : m_type(MAP),    vt(a) {}
+    eterm(const trace<Alloc>&  a)  : m_type(TRACE),  vt(a) {}
 
     /**
      * Tuple initialization
@@ -258,8 +262,7 @@ public:
      * @param a_size is the total size of the term stored in \a a_buf buffer.
      * @param a_alloc is the custom allocator.
      */
-    eterm(const char* a_buf, size_t a_size, const Alloc& a_alloc = Alloc())
-        throw(err_decode_exception);
+    eterm(const char* a_buf, size_t a_size, const Alloc& a_alloc = Alloc());
 
     /**
      * Construct a term by decoding it from an \a idx offset of the
@@ -270,8 +273,7 @@ public:
      * @param a_size is the total size of the term stored in \a a_buf buffer.
      * @param a_alloc is the custom allocator.
      */
-    eterm(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc = Alloc())
-        throw(err_decode_exception) {
+    eterm(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc = Alloc()) {
         decode(a_buf, idx, a_size, a_alloc);
     }
 
@@ -288,6 +290,7 @@ public:
             case REF:       { new (&vt.r)   ref<Alloc>(a.vt.r);       break; }
             case TUPLE:     { new (&vt.t)   tuple<Alloc>(a.vt.t);     break; }
             case LIST:      { new (&vt.l)   list<Alloc>(a.vt.l);      break; }
+            case MAP:       { new (&vt.m)   map<Alloc>(a.vt.m);       break; }
             case TRACE:     { new (&vt.trc) trace<Alloc>(a.vt.trc);   break; }
             default:
                 vt.value = a.vt.value;
@@ -318,6 +321,7 @@ public:
             case REF:    { vt.r.~ref();      return; }
             case TUPLE:  { vt.t.~tuple();    return; }
             case LIST:   { vt.l.~list();     return; }
+            case MAP:    { vt.m.~map();      return; }
             case TRACE:  { vt.trc.~trace();  return; }
             default: return;
         }
@@ -348,6 +352,14 @@ public:
         return *this;
     }
 #endif
+
+    /**
+     * Check that one term is less than the other. The function returns true
+     * if the term's type is less than the type of term "rhs" accorting to
+     * type_precedence() or if they have identical precedence, the check is
+     * made that the terms value is less than the value of the "rhs" term.
+     */
+    bool operator<(const eterm<Alloc>& rhs) const;
 
     template <typename T>
     void set(const T& a) {
@@ -420,11 +432,13 @@ public:
     const binary<Alloc>& to_binary() const { check(BINARY); return vt.bin; }
     const epid<Alloc>&   to_pid()    const { check(PID);    return vt.pid; }
     const port<Alloc>&   to_port()   const { check(PORT);   return vt.prt; }
-    const ref<Alloc>&    to_ref()    const { check(REF);    return vt.r; }
-    const tuple<Alloc>&  to_tuple()  const { check(TUPLE);  return vt.t; }
-    tuple<Alloc>&        to_tuple()        { check(TUPLE);  return vt.t; }
-    const list<Alloc>&   to_list()   const { check(LIST);   return vt.l; }
-    list<Alloc>&         to_list()         { check(LIST);   return vt.l; }
+    const ref<Alloc>&    to_ref()    const { check(REF);    return vt.r;   }
+    const tuple<Alloc>&  to_tuple()  const { check(TUPLE);  return vt.t;   }
+    tuple<Alloc>&        to_tuple()        { check(TUPLE);  return vt.t;   }
+    const list<Alloc>&   to_list()   const { check(LIST);   return vt.l;   }
+    list<Alloc>&         to_list()         { check(LIST);   return vt.l;   }
+    const map<Alloc>&    to_map()    const { check(MAP);    return vt.m;   }
+    map<Alloc>&          to_map()          { check(MAP);    return vt.m;   }
     const trace<Alloc>&  to_trace()  const { check(TRACE);  return vt.trc; }
     trace<Alloc>&        to_trace()        { check(TRACE);  return vt.trc; }
 
@@ -456,6 +470,7 @@ public:
     bool is_var()    const { return m_type == VAR   ; }
     bool is_tuple()  const { return m_type == TUPLE ; }
     bool is_list()   const { return m_type == LIST  ; }
+    bool is_map()    const { return m_type == MAP   ; }
     bool is_trace()  const { return m_type == TRACE ; }
 
     /**
@@ -464,15 +479,15 @@ public:
      * @param binding varbind to use in pattern matching.
      *  This binding will be updated with new bound variables if
      *  match succeeds.
+     * @throw  err_unbound_variable
      * @return true if matching succeeded or false if failed.
      */
     bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding,
-               const Alloc& a_alloc = Alloc()) const
-        throw (err_unbound_variable);
+               const Alloc& a_alloc = Alloc()) const;
 
     // Separated into a separate function without default args for ease of gdb debugging
-    bool match(const eterm<Alloc>& pattern) const
-        throw (err_unbound_variable) { return match(pattern, NULL, Alloc()); }
+    /// @throw  err_unbound_variable
+    bool match(const eterm<Alloc>& pattern) const { return match(pattern, NULL, Alloc()); }
 
     /**
      * Returns the equivalent without inner variables, using the
@@ -487,15 +502,16 @@ public:
      *  err_unbound_variable if there is a variable.
      * @returns a smart pointer to the new term with all eterm_var
      *    variables replaced by bound values.
-     * @throws err_invalid_term if the term is invalid
-     * @throws err_unbound_variable if a variable is unbound
+     * @throw err_invalid_term if the term is invalid
+     * @throw err_unbound_variable if a variable is unbound
      */
-    bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
-        throw (err_invalid_term, err_unbound_variable);
+    bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const;
 
-    /** Substitutes all variables in the term \a a. */
-    eterm<Alloc> apply(const varbind<Alloc>& binding) const
-        throw (err_invalid_term, err_unbound_variable);
+    /** Substitutes all variables in the term \a a.
+     * @throw err_invalid_term
+     * @throw err_unbound_variable
+    */
+    eterm<Alloc> apply(const varbind<Alloc>& binding) const;
 
     /**
      * This method finds the first unbound variable in a term for
@@ -535,10 +551,10 @@ public:
      * @param a_header_size is the size of packet header (valid values: 0, 1, 2, 4).
      * @param a_with_version indicates if a magic version byte
      *        needs to be encoded in the beginning of the buffer.
+     * @throw err_encode_exception
      */
     void encode(char* buf, size_t size,
-        size_t a_header_size = DEF_HEADER_SIZE, bool a_with_version = true) const
-        throw (err_encode_exception);
+        size_t a_header_size = DEF_HEADER_SIZE, bool a_with_version = true) const;
 
     /**
      * Create an eterm from an string representation. Like sprintf()
@@ -563,21 +579,19 @@ public:
      *          "alex", 40, eterm_t("1955-10-1"));
      * </code>
      * @return compiled eterm
-     * @throws err_format_exception
+     * @throw err_format_exception
      */
-    static eterm<Alloc> format(const Alloc& a_alloc, const char* fmt, ...)
-        throw (err_format_exception);
-    static eterm<Alloc> format(const char* fmt, ...)
-        throw (err_format_exception);
+    static eterm<Alloc> format(const Alloc& a_alloc, const char* fmt, ...);
+    static eterm<Alloc> format(const char* fmt, ...);
 
     /**
      * Same as format(a_alloc, fmt, ...), but parses string in format:
      * <code>"Module:Function(Arg1, Arg2, ...)</code>
+     * @throw err_format_exception
      */
     static void format(const Alloc& a_alloc, atom& mod, atom& fun, eterm<Alloc>& args,
-                       const char* fmt, ...) throw (err_format_exception);
-    static void format(atom& mod, atom& fun, eterm<Alloc>& args, const char* fmt, ...)
-        throw (err_format_exception);
+                       const char* fmt, ...);
+    static void format(atom& mod, atom& fun, eterm<Alloc>& args, const char* fmt, ...);
 
     /// Cast a value to eterm. If t is of eterm type, it is returned as is.
     template <typename T>
@@ -602,12 +616,13 @@ public:
             case REF:    return wrapper(v, vt.r);
             case TUPLE:  return wrapper(v, vt.t);
             case LIST:   return wrapper(v, vt.l);
+            case MAP:    return wrapper(v, vt.m);
             case TRACE:  return wrapper(v, vt.trc);
             default: {
                 std::stringstream s; s << "Undefined term_type (" << m_type << ')';
                 throw err_invalid_term(s.str());
             }
-            BOOST_STATIC_ASSERT(MAX_ETERM_TYPE == 13);
+            BOOST_STATIC_ASSERT(MAX_ETERM_TYPE == 14);
         }
     }
 };

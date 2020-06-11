@@ -59,7 +59,9 @@ limitations under the License.
 #endif
 
 #include <eixx/eterm.hpp>
+#if BOOST_VERSION < 106000
 #include <eixx/connect.hpp>
+#endif
 
 #endif // _EIXX_HPP_
 

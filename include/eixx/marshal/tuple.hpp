@@ -86,7 +86,10 @@ public:
     explicit tuple(size_t arity, const Alloc& alloc = Alloc())
         : m_blob(new blob<eterm<Alloc>, Alloc>(arity+1, alloc))
     {
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wclass-memaccess"
         memset(m_blob->data(), 0, sizeof(eterm<Alloc>)*m_blob->size());
+        #pragma GCC diagnostic pop
         set_init_size(0);
     }
 
@@ -117,8 +120,7 @@ public:
     /**
      * Decode the tuple from a binary buffer.
      */
-    tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
-        throw(err_decode_exception);
+    tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ~tuple() {
         release();
@@ -156,6 +158,20 @@ public:
         return true;
     }
 
+    bool operator< (const tuple<Alloc>& rhs) const {
+        if (size() < rhs.size())
+            return true;
+        if (size() > rhs.size())
+            return false;
+        for(const_iterator it1 = begin(),
+            it2 = rhs.begin(), iend = end(); it1 != iend; ++it1, ++it2)
+        {
+            if (!(*it1 < *it2))
+                return false;
+        }
+        return true;
+    }
+
     const eterm<Alloc>& operator[] (int idx) const {
         BOOST_ASSERT(m_blob && (size_t)idx < size());
         return m_blob->data()[idx];
@@ -167,7 +183,7 @@ public:
     }
 
     template <typename T>
-    void push_back(const T& t) throw (err_invalid_term) {
+    void push_back(const T& t) {
         BOOST_ASSERT(m_blob);
         if (initialized())
             throw err_invalid_term("Attempt to change immutable tuple!");
@@ -195,11 +211,9 @@ public:
 
     void encode(char* buf, int& idx, size_t size) const;
 
-    bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
-        throw (err_unbound_variable);
+    bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const;
 
-    bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const
-        throw (err_invalid_term, err_unbound_variable);
+    bool match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const;
 
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* vars = NULL) const;
 

@@ -31,7 +31,6 @@ limitations under the License.
 
 #include <eixx/connect/transport_otp_connection.hpp>
 #include <ei.h>
-#include <erl_interface.h>
 
 #include <eixx/config.h>
 

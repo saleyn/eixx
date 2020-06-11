@@ -78,7 +78,6 @@ public:
 
     /// Decode the pid from a binary buffer.
     trace(const char* buf, int& idx, size_t a_size, const Alloc& a_alloc = Alloc())
-        throw (err_decode_exception)
         : tuple<Alloc>(buf, idx, a_size, a_alloc)
     {
         if (size() != 5 || (*this)[0].type() != LONG
@@ -120,7 +119,7 @@ public:
     }
 
     bool operator< (const trace<Alloc>& rhs) const {
-        return static_cast<const tuple<Alloc>&>(this) < static_cast<const tuple<Alloc>&>(rhs);
+        return *static_cast<const tuple<Alloc>*>(this) < static_cast<const tuple<Alloc>&>(rhs);
     }
 
     size_t encode_size() const { return tuple<Alloc>::encode_size(); }

@@ -107,12 +107,11 @@ namespace util {
         /// Lookup an atom in the atom table by name. If the atom is not
         /// present in the atom table - add it.  Return the index of the 
         /// atom in the atom table.
-        /// @throws std::runtime_error if atom table is full.
-        /// @throws err_bad_argument if atom size is longer than MAXATOMLEN
+        /// @throw std::runtime_error if atom table is full.
+        /// @throw err_bad_argument if atom size is longer than MAXATOMLEN
         int lookup(const char* a_name, size_t n) { return lookup(String(a_name, n)); }
         int lookup(const char* a_name)           { return lookup(String(a_name)); }
         int lookup(const String& a_name)
-            throw(std::runtime_error, err_bad_argument)
         {
             if (a_name.size() == 0)
                 return 0;

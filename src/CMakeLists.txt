@@ -2,9 +2,14 @@
 
 list(APPEND EIXX_SRCS
   am.cpp
-  basic_otp_node_local.cpp
-  test_node.cpp
 )
+
+if (NOT EIXX_MARSHAL_ONLY)
+  list(APPEND EIXX_SRCS
+    basic_otp_node_local.cpp
+    test_node.cpp
+  )
+endif()
 
 add_library(${PROJECT_NAME} SHARED ${EIXX_SRCS})
 add_library(${PROJECT_NAME}_static STATIC ${EIXX_SRCS})
@@ -22,9 +27,11 @@ endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
-add_executable(test-node test_node.cpp)
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-target_link_libraries(test-node eixx pthread)
+if (NOT EIXX_MARSHAL_ONLY)
+  add_executable(test-node test_node.cpp)
+  target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+  target_link_libraries(test-node eixx pthread)
+endif()
 
 # In the install below we split library installation in a separate library clause
 # so that it's possible to build/install both Release and Debug versions of the
@@ -53,8 +60,10 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "release")
   )
 endif()
 
-install(
-  TARGETS
-    test-node
-  RUNTIME DESTINATION test
-)
+if (NOT EIXX_MARSHAL_ONLY)
+  install(
+    TARGETS
+      test-node
+    RUNTIME DESTINATION test
+  )
+endif()

@@ -105,8 +105,7 @@ public:
         s.m_blob = nullptr;
     }
 
-    string(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
-        throw(err_decode_exception);
+    string(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ~string() {
         release();
@@ -199,7 +198,6 @@ static std::string to_binary_string(const string<Alloc>& a) {
 
 template <class Alloc>
 string<Alloc>::string(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
-    throw(err_decode_exception)
 {
     const char *s = buf + idx;
     const char *s0 = s;

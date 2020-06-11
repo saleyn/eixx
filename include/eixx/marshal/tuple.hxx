@@ -38,7 +38,6 @@ namespace marshal {
 
 template <class Alloc>
 tuple<Alloc>::tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
-    throw(err_decode_exception)
 {
     int arity;
     if (ei_decode_tuple_header(buf, &idx, &arity) < 0)
@@ -65,7 +64,6 @@ void tuple<Alloc>::encode(char* buf, int& idx, size_t size) const
 
 template <class Alloc>
 bool tuple<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
-    throw (err_unbound_variable)
 {
     // We check if any contained term changes.
     bool changed = false;
@@ -92,7 +90,6 @@ bool tuple<Alloc>::subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const
 
 template <class Alloc>
 bool tuple<Alloc>::match(const eterm<Alloc>& pattern, varbind<Alloc>* binding) const
-    throw (err_invalid_term, err_unbound_variable)
 {
     switch (pattern.type()) {
         case VAR:   return pattern.match(eterm<Alloc>(*this), binding);

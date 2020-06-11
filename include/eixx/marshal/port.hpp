@@ -63,7 +63,7 @@ class port {
 
     // Must only be called from constructor!
     void init(const atom& node, int id, uint8_t creation, 
-              const Alloc& alloc) throw(err_bad_argument) 
+              const Alloc& alloc)
     {
         m_blob = new blob<port_blob, Alloc>(1, alloc);
         new (m_blob->data()) port_blob(node, id & 0x0fffffff, creation & 0x03);
@@ -86,7 +86,6 @@ public:
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      **/
     port(const char* node, const int id, const int creation, const Alloc& a_alloc = Alloc())
-        throw (err_bad_argument)
     {
         size_t n = strlen(node);
         detail::check_node_length(n);
@@ -95,7 +94,6 @@ public:
     }
 
     port(const atom& node, const int id, const int creation, const Alloc& a_alloc = Alloc())
-        throw (err_bad_argument)
     {
         detail::check_node_length(node.size());
         init(node, id, creation, a_alloc);
@@ -109,8 +107,7 @@ public:
      * @param size is the size of the \a buf buffer.
      * @param a_alloc is the allocator to use.
      */
-    port(const char *buf, int& idx, size_t size, const Alloc& a_alloc = Alloc())
-        throw (err_decode_exception);
+    port(const char *buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     port(const port& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
     port(port&& rhs)      : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }

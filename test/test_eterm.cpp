@@ -391,6 +391,37 @@ BOOST_AUTO_TEST_CASE( test_pid )
     }
 }
 
+BOOST_AUTO_TEST_CASE( test_map )
+{
+    allocator_t alloc;
+    {
+        map m00, m01;
+        BOOST_REQUIRE_EQUAL(m00, m01);
+
+        map m{{1, 2.00}, {"abc", 10}};
+        BOOST_REQUIRE_EQUAL(2ul,  m.size());
+        BOOST_REQUIRE_EQUAL(2.00, m[1].to_double());
+        BOOST_REQUIRE_EQUAL(10,   m["abc"].to_long());
+
+        map m1{{1, 2.00}, {"abc", 10}};
+        BOOST_REQUIRE_EQUAL(m, m1);
+
+        map m2{{1, 3.00}, {"abc", 10}};
+        BOOST_REQUIRE_LT(m, m2);
+    }
+    {
+        // #{1=>2, a => 3}
+        const uint8_t buf[] = {ERL_MAP_EXT,0,0,0,2,97,1,97,2,100,0,1,97,97,3};
+        int i = 0;
+        eterm term((const char*)buf, i, sizeof(buf), alloc);
+        BOOST_REQUIRE_EQUAL(15, i);
+        BOOST_REQUIRE(term.is_map());
+        BOOST_REQUIRE_EQUAL(2, term.to_map().size());
+        BOOST_REQUIRE_EQUAL(2, term.to_map()[1].to_long());
+        BOOST_REQUIRE_EQUAL(3, term.to_map()[atom("a")].to_long());
+    }
+}
+
 BOOST_AUTO_TEST_CASE( test_less_then )
 {
     {
@@ -403,6 +434,7 @@ BOOST_AUTO_TEST_CASE( test_less_then )
         std::set<string>();
         std::set<trace>();
         std::set<tuple>();
+        std::set<map>();
     }
 
     {

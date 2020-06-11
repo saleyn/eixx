@@ -6,6 +6,7 @@ project(eixx VERSION 1.4)
 # CMAKE options customization
 #===============================================================================
 option(VERBOSE                 "Turn verbosity on|off"                      OFF)
+option(EIXX_MARSHAL_ONLY       "Limit build to eterm marshal lib on|off"    ON)
 
 if(VERBOSE)
   set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -72,8 +73,6 @@ message(STATUS "Configuring for the "
 #-------------------------------------------------------------------------------
 # Policies
 #-------------------------------------------------------------------------------
-# Don't curse at non-existing dependencies (since we use code generation)
-cmake_policy(SET CMP0046 OLD)
 
 # RPATH configuration
 # ===================

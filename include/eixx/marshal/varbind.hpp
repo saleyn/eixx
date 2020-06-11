@@ -129,17 +129,17 @@ public:
     }
 
     const eterm<Alloc>*
-    operator[] (const char* a_var_name) const throw(err_unbound_variable) {
+    operator[] (const char* a_var_name) const {
         return (*this)[atom(a_var_name)];
     }
 
     const eterm<Alloc>*
-    operator[] (const string<Alloc>& a_var_name) const throw(err_unbound_variable) {
+    operator[] (const string<Alloc>& a_var_name) const {
         return (*this)[atom(a_var_name)];
     }
 
     const eterm<Alloc>*
-    operator[] (atom a_var_name) const throw(err_unbound_variable) {
+    operator[] (atom a_var_name) const {
         const eterm<Alloc>* p = find(a_var_name);
         if (!p) throw err_unbound_variable(a_var_name.c_str());
         return p;

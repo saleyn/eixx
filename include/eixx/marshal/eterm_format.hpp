@@ -50,13 +50,14 @@ namespace marshal {
  */
 
 // Forward declaration
+/// @throw err_format_exception
 template <class Alloc>
-static eterm<Alloc> eformat(const char** fmt, va_list* args, const Alloc& a_alloc = Alloc())
-    throw(err_format_exception);
+static eterm<Alloc> eformat(const char** fmt, va_list* args, const Alloc& a_alloc = Alloc());
 
 /**
  * Parse a format string in the form "Module:Function(Args...)" into corresponding
  * \a mod, \a fun, \a args
+ * @throw err_format_exception
  */
 template <class Alloc>
 static void eformat(atom& mod, atom& fun, eterm<Alloc>& args,
