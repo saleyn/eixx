@@ -36,22 +36,23 @@ struct counted_alloc : public std::allocator<char> {
     template <typename _T>
     counted_alloc(const _T&) {}
 
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
+    using pointer         = T*;
+    using const_pointer   = T const*;
+    using reference       = T&;
+    using const_reference = T const&;
+    using value_type      = T;
 
-    template <typename _T> struct rebind {
-        typedef counted_alloc<_T> other;
+    template <typename U> struct rebind {
+        using other = counted_alloc<U>;
     };
 
     void construct(pointer p, const T& value) {
         ::new((void*)p) T(value);
     }
 
-    pointer allocate(size_t sz) {
+    pointer allocate(size_t n) {
         ++g_alloc_count;
-        return static_cast<pointer>(::operator new(sz * sizeof(T)));
+        return static_cast<pointer>(::operator new(n * sizeof(T)));
     }
 
     void deallocate(pointer p, size_t sz) {
@@ -59,7 +60,7 @@ struct counted_alloc : public std::allocator<char> {
         ::operator delete(p);
     }
 
-    void destroy(pointer __p) { __p->~T(); }
+    void destroy(pointer p) { p->~T(); }
 };
 
 BOOST_AUTO_TEST_CASE( test_refc_format )
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE( test_refc_format )
 
 BOOST_AUTO_TEST_CASE( test_refc_pool_format )
 {
-    typedef boost::pool_allocator<char> my_alloc;
+    using my_alloc = boost::pool_allocator<char>;
     my_alloc alloc;
     {
         for (int i=0; i < 10; i++) {
@@ -111,25 +112,26 @@ BOOST_AUTO_TEST_CASE( test_refc_pool_format )
 
 BOOST_AUTO_TEST_CASE( test_refc_list )
 {
-    typedef counted_alloc<char> my_alloc;
+    using my_alloc = counted_alloc<char>;
+    using term     = eterm<my_alloc>;
     my_alloc alloc;
 
     list<my_alloc> lst(nullptr);  // Allocates static global empty list
     BOOST_CHECK_EQUAL(2, g_alloc_count);
 
     {
-        eterm<my_alloc> term = list<my_alloc>({1, 2, 3}, alloc);
+        term et = list<my_alloc>({1, 2, 3}, alloc);
         BOOST_CHECK_EQUAL(4, g_alloc_count); // 1 for blob_t, 1 for blob's data
-        auto term2 = term;
+        auto am = et;
         BOOST_CHECK_EQUAL(4, g_alloc_count);
     }
     BOOST_CHECK_EQUAL(2, g_alloc_count);
 
     {
-        // Construct a NIL list
-        eterm<my_alloc> term = list<my_alloc>(nullptr);
+        // Construct a nil list
+        term et = list<my_alloc>(nullptr);
         BOOST_CHECK_EQUAL(2, g_alloc_count);
-        auto term2 = term;
+        auto am = et;
         BOOST_CHECK_EQUAL(2, g_alloc_count);
     }
     BOOST_CHECK_EQUAL(2, g_alloc_count);

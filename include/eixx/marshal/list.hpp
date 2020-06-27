@@ -118,8 +118,8 @@ public:
     class iterator;
     typedef const iterator const_iterator;
 
-    iterator begin()             { iterator it(empty() ? NULL : head()); return it; }
-    iterator end()               { return iterator::end(); }
+    iterator       begin()       { iterator it(empty() ? NULL : head()); return it; }
+    iterator       end()         { return iterator::end(); }
 
     const_iterator begin() const { const_iterator it(empty() ? NULL : head()); return it; }
     const_iterator end()   const { return iterator::end(); }
@@ -177,9 +177,7 @@ public:
      */
     explicit list(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
 
-    ~list() {
-        release();
-    }
+    ~list() { release(); }
 
     /**
      * Add a term to list. Tuples added must be fully filled

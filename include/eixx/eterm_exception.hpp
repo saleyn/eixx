@@ -124,38 +124,40 @@ private:
 class err_format_exception: public eterm_exception {
     const char* m_pos;
     const char* m_start;
+    std::string m_what;
 public:
     err_format_exception(
-        const std::string &msg, const char* pos, const char* start = nullptr)
+        const std::string& msg, const char* pos, const char* start = nullptr)
         : eterm_exception(msg)
         , m_pos(pos)
         , m_start(start)
-    {}
-
-    const char* what() const throw() {
+    {
         std::stringstream s; s << m_msg << " (" << (m_pos - m_start) << ").";
-        return s.str().c_str();
+        m_what = s.str();
     }
-    const char* pos() const         { return m_pos; }
-    void start(const char* a_start) { m_start = a_start; }
+
+    const char* what() const throw() { return m_what.c_str(); }
+    const char* pos() const          { return m_pos; }
+    void start(const char* a_start)  { m_start = a_start; }
 };
 
 /**
  * Exception while encoding
  */
 class err_encode_exception: public eterm_exception {
-    int m_code;
+    int         m_code;
+    std::string m_what;
 public:
     err_encode_exception(const std::string &msg, int code=0)
         : eterm_exception(msg)
         , m_code(code)
-    {}
-
-    const char* what() const throw() {
+    {
         std::stringstream s; s << m_msg << " (" << m_code << ").";
-        return s.str().c_str();
+        m_what = s.str();
     }
-    int code() const { return m_code; }
+
+    const char* what() const throw() { return m_what.c_str(); }
+    int         code() const         { return m_code; }
 };
 
 /**

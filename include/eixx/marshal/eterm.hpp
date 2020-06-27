@@ -126,7 +126,7 @@ namespace {
 template <typename Alloc>
 class eterm {
     eterm_type m_type;
-
+public:
     union vartype {
         double          d;
         bool            b;
@@ -173,13 +173,23 @@ class eterm {
         vartype(const map<Alloc>&    x) :   m(x) {}
         vartype(const trace<Alloc>&  x) : trc(x) {}
 
+        vartype(string<Alloc>&& x) :   s(std::move(x)) {}
+        vartype(binary<Alloc>&& x) : bin(std::move(x)) {}
+        vartype(epid<Alloc>&&   x) : pid(std::move(x)) {}
+        vartype(port<Alloc>&&   x) : prt(std::move(x)) {}
+        vartype(ref<Alloc>&&    x) :   r(std::move(x)) {}
+        vartype(tuple<Alloc>&&  x) :   t(std::move(x)) {}
+        vartype(list<Alloc>&&   x) :   l(std::move(x)) {}
+        vartype(map<Alloc>&&    x) :   m(std::move(x)) {}
+        vartype(trace<Alloc>&&  x) : trc(std::move(x)) {}
+
         vartype() : i(0) {}
         ~vartype() {}
 
         void reset() { i = 0; }
     } vt;
 
-    BOOST_STATIC_ASSERT(sizeof(vartype) == sizeof(uint64_t));
+    static_assert(sizeof(vartype) == sizeof(uint64_t), "Invalid class size!");
 
     void check(eterm_type tp) const { if (unlikely(m_type != tp)) throw err_wrong_type(tp, m_type); }
 
@@ -206,11 +216,12 @@ class eterm {
 
     template <typename T, typename A> friend T& get(eterm<A>& t);
 
+    void reset() { m_type = UNDEFINED; vt.reset(); }
+
     void replace(eterm* a) {
         m_type    = a->m_type;
         vt.value  = a->vt.value;
-        a->m_type = UNDEFINED;
-        a->vt.reset();
+        a->reset();
     }
 
     /// @throw err_format_exception
@@ -223,7 +234,9 @@ public:
     eterm_type  type()        const { return m_type; }
     const char* type_string() const;
 
-    eterm() : m_type(UNDEFINED) {}
+    eterm() : m_type(UNDEFINED) {
+        static_assert(sizeof(eterm<Alloc>)==2*sizeof(uint64_t), "Invalid size!");
+    }
 
     eterm(unsigned int  a)          : m_type(LONG),  vt((int)a)  {}
     eterm(unsigned long a)          : m_type(LONG),  vt((long)a) {}
@@ -248,9 +261,40 @@ public:
     eterm(const map<Alloc>&    a)  : m_type(MAP),    vt(a) {}
     eterm(const trace<Alloc>&  a)  : m_type(TRACE),  vt(a) {}
 
+    eterm(string<Alloc>&&      a)  : m_type(STRING), vt(std::move(a)) {}
+    eterm(binary<Alloc>&&      a)  : m_type(BINARY), vt(std::move(a)) {}
+    eterm(epid<Alloc>&&        a)  : m_type(PID),    vt(std::move(a)) {}
+    eterm(port<Alloc>&&        a)  : m_type(PORT),   vt(std::move(a)) {}
+    eterm(ref<Alloc>&&         a)  : m_type(REF),    vt(std::move(a)) {}
+    eterm(tuple<Alloc>&&       a)  : m_type(TUPLE),  vt(std::move(a)) {}
+    eterm(list<Alloc>&&        a)  : m_type(LIST),   vt(std::move(a)) {}
+    eterm(map<Alloc>&&         a)  : m_type(MAP),    vt(std::move(a)) {}
+    eterm(trace<Alloc>&&       a)  : m_type(TRACE),  vt(std::move(a)) {}
+
     /**
-     * Tuple initialization
+     * Copy construct a term from another one. The term is copied by value
+     * and for compound terms the storage is reference counted.
      */
+    eterm(const eterm& a) : m_type(a.m_type) {
+        switch (m_type) {
+            case STRING:    { new (&vt.s)   string<Alloc>(a.vt.s);    break; }
+            case BINARY:    { new (&vt.bin) binary<Alloc>(a.vt.bin);  break; }
+            case PID:       { new (&vt.pid) epid<Alloc>(a.vt.pid);    break; }
+            case PORT:      { new (&vt.prt) port<Alloc>(a.vt.prt);    break; }
+            case REF:       { new (&vt.r)   ref<Alloc>(a.vt.r);       break; }
+            case TUPLE:     { new (&vt.t)   tuple<Alloc>(a.vt.t);     break; }
+            case LIST:      { new (&vt.l)   list<Alloc>(a.vt.l);      break; }
+            case MAP:       { new (&vt.m)   map<Alloc>(a.vt.m);       break; }
+            case TRACE:     { new (&vt.trc) trace<Alloc>(a.vt.trc);   break; }
+            default:
+                vt.value = a.vt.value;
+        }
+    }
+
+    /// Move constructor
+    eterm(eterm&& a) { replace(&a); }
+
+    /// Tuple initialization
     eterm(std::initializer_list<eterm<Alloc>> items, const Alloc& alloc = Alloc())
         : eterm(tuple<Alloc>(items, alloc)) {}
 
@@ -276,35 +320,6 @@ public:
     eterm(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc = Alloc()) {
         decode(a_buf, idx, a_size, a_alloc);
     }
-
-    /**
-     * Copy construct a term from another one. The term is copied by value
-     * and for compound terms the storage is reference counted.
-     */
-    eterm(const eterm& a) : m_type(a.m_type) {
-        switch (m_type) {
-            case STRING:    { new (&vt.s)   string<Alloc>(a.vt.s);    break; }
-            case BINARY:    { new (&vt.bin) binary<Alloc>(a.vt.bin);  break; }
-            case PID:       { new (&vt.pid) epid<Alloc>(a.vt.pid);    break; }
-            case PORT:      { new (&vt.prt) port<Alloc>(a.vt.prt);    break; }
-            case REF:       { new (&vt.r)   ref<Alloc>(a.vt.r);       break; }
-            case TUPLE:     { new (&vt.t)   tuple<Alloc>(a.vt.t);     break; }
-            case LIST:      { new (&vt.l)   list<Alloc>(a.vt.l);      break; }
-            case MAP:       { new (&vt.m)   map<Alloc>(a.vt.m);       break; }
-            case TRACE:     { new (&vt.trc) trace<Alloc>(a.vt.trc);   break; }
-            default:
-                vt.value = a.vt.value;
-        }
-    }
-
-    /**
-     * Move constructor
-     */
-#if __cplusplus >= 201103L
-    eterm(eterm&& a) {
-        replace(&a);
-    }
-#endif
 
     /**
      * Destruct this term. For compound terms it decreases the
@@ -342,16 +357,19 @@ public:
      * Assign the value to this term.  If current term has been initialized,
      * its old value is destructed.
      */
-#if __cplusplus >= 201103L
     eterm& operator= (eterm&& a) {
         if (this != &a) {
-            if (m_type >= STRING)
-                this->~eterm();
+            if (m_type >= STRING) this->~eterm();
             replace(&a);
         }
         return *this;
     }
-#endif
+
+    template <typename T>
+    void operator= (T&& a) {
+        if (m_type >= STRING) this->~eterm();
+        new (this) eterm(std::move(a));
+    }
 
     /**
      * Check that one term is less than the other. The function returns true

@@ -81,7 +81,7 @@ public:
 
     /// Create an empty atom
     atom() : m_index(0) {
-        BOOST_STATIC_ASSERT(sizeof(atom) == 4);
+        static_assert(sizeof(atom) == 4, "Invalid atom size!");
     }
 
     /// Create an atom from the given string.

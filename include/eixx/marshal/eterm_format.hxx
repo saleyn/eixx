@@ -57,8 +57,11 @@ namespace marshal {
     namespace {
 
         template <typename Alloc>
-        struct vector : public std::vector<eterm<Alloc>, Alloc> {
-            typedef std::vector<eterm<Alloc>, Alloc> base;
+        struct vector : public
+            std::vector<eterm<Alloc>,
+                        typename Alloc::template rebind<eterm<Alloc>>::other> {
+            using VecAlloc = typename Alloc::template rebind<eterm<Alloc>>::other;
+            using base     = std::vector<eterm<Alloc>, VecAlloc>;
 
             explicit vector(const Alloc& a_alloc = Alloc()) : base(a_alloc)
             {}

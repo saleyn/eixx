@@ -52,12 +52,12 @@ class eterm_pattern_action;
  */
 template <class Alloc>
 class eterm_pattern_matcher {
-    std::list<eterm_pattern_action<Alloc>, Alloc> m_pattern_list;
-    std::list< eterm_pattern_action< Alloc >, Alloc > it;
+    using ListAlloc   = typename Alloc::template
+                            rebind<eterm_pattern_action<Alloc>>::other;
 public:
-    typedef std::list<eterm_pattern_action<Alloc>, Alloc> list_t;
-    typedef typename list_t::const_iterator const_iterator;
-    typedef typename list_t::iterator       iterator;
+    using list_t = std::list<eterm_pattern_action<Alloc>, ListAlloc>;
+    using const_iterator = typename list_t::const_iterator;
+    using iterator       = typename list_t::iterator;
 
     struct init_struct {
         eterm<Alloc> p;
@@ -195,6 +195,8 @@ public:
         }
         return res;
     }
+private:
+    list_t m_pattern_list;
 };
 
 /**

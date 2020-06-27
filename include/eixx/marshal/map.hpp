@@ -49,11 +49,13 @@ public:
     using MapAlloc = typename Alloc::template rebind<std::pair<const eterm<Alloc>, eterm<Alloc>>>::other;
     using MapT     = std::map<eterm<Alloc>, eterm<Alloc>, std::less<eterm<Alloc>>, MapAlloc>;
 protected:
-    blob<MapT, Alloc>* m_blob;
+    using BlobT    = blob<MapT, Alloc>;
+
+    BlobT* m_blob;
 
     void release() { release(m_blob); m_blob = nullptr; }
 
-    void release(blob<MapT, Alloc>* p) {
+    void release(BlobT* p) {
         if (p && p->release(false)) {
             p->data()->~MapT();
             p->free();
@@ -61,7 +63,7 @@ protected:
     }
 
     void initialize(const Alloc& alloc = Alloc()) {
-        m_blob = new blob<MapT, Alloc>(1, alloc);
+        m_blob = new BlobT(1, alloc);
         auto* m = m_blob->data();
         new  (m)  MapT();
     }
@@ -73,7 +75,8 @@ public:
 
     explicit map(std::nullptr_t) : m_blob(nullptr) {}
 
-    map(const Alloc& a = Alloc()) {
+    explicit map(const Alloc& a = Alloc()) {
+        static_assert(sizeof(map<Alloc>) == sizeof(void*), "Invalid class size!");
         initialize(a);
     }
 
@@ -85,7 +88,7 @@ public:
         s.m_blob = nullptr;
     }
 
-    map(std::initializer_list<std::pair<eterm<Alloc>,eterm<Alloc>>> items, const Alloc& alloc = Alloc()) {
+    map(std::initializer_list<std::pair<const eterm<Alloc>,eterm<Alloc>>> items, const Alloc& alloc = Alloc()) {
         initialize(alloc);
         auto* m = m_blob->data();
         for  (auto& pair : items)

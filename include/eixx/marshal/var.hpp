@@ -59,7 +59,12 @@ class var
     eterm_type set(eterm_type t) { return m_name == am_ANY_ ? UNDEFINED : t; }
 
 public:
-    var(eterm_type t = UNDEFINED)                   : var(am_ANY_, t) {}
+    var(eterm_type t = UNDEFINED)
+        : var(am_ANY_, t)
+    {
+        static_assert(sizeof(var) == sizeof(uint64_t), "Invalid class size!");
+    }
+
     var(const atom& s, eterm_type t = UNDEFINED)    : m_name(s) { m_type = set(t); }
 
     var(const char* s, eterm_type t = UNDEFINED)            : var(atom(s), t) {}

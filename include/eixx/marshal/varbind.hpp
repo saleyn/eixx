@@ -71,7 +71,11 @@ class varbind {
         std::ostream& out, const varbind<AllocT>& binding);
 
 protected:
-    typedef std::map<atom, eterm<Alloc>, std::less<atom>, Alloc> eterm_map_t;
+    using eterm_map_t =
+        std::map<
+            atom, eterm<Alloc>, std::less<atom>,
+            typename Alloc::template rebind<std::pair<const atom, eterm<Alloc>>>::other
+        >;
 
 public:
     explicit varbind(const Alloc& a_alloc = Alloc())

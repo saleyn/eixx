@@ -24,10 +24,11 @@
     "cmake.configureSettings": {
         "TOOLCHAIN" : "gcc",
         "CMAKE_USER_MAKE_RULES_OVERRIDE" : "${workspaceFolder}/build-aux/CMakeInit.txt",
-        "CMAKE_INSTALL_PREFIX" : "/opt/pkg/eixx/1.4",
-        "BOOST_ROOT" : "/opt/pkg/boost/current",
-        "BOOST_LIBRARYDIR" : "/opt/pkg/boost/current/lib"
+        "CMAKE_INSTALL_PREFIX" : "/opt/pkg/eixx/1.4"
     },
     "cmake.buildArgs": [
+    ],
+    "cmake.preferredGenerators": [
+        "Unix Makefiles"
     ]
 }

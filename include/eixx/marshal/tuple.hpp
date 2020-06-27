@@ -86,10 +86,14 @@ public:
     explicit tuple(size_t arity, const Alloc& alloc = Alloc())
         : m_blob(new blob<eterm<Alloc>, Alloc>(arity+1, alloc))
     {
+        #ifndef __clang__
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wclass-memaccess"
+        #endif
         memset(m_blob->data(), 0, sizeof(eterm<Alloc>)*m_blob->size());
+        #ifndef __clang__
         #pragma GCC diagnostic pop
+        #endif
         set_init_size(0);
     }
 

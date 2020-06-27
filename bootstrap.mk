@@ -84,6 +84,7 @@ info:
 	@echo "OPT_FILE:  $(OPT_FILE)"
 	@echo "BLD_DIR:   $(BLD_DIR)"
 	@echo "DIR:       $(DIR)"
+	@echo "TOOLCHAIN: $(toolchain)"
 	@echo "build:     $(BUILD)"
 	@echo "prefix:    $(prefix)"
 	@echo "generator: $(generator)"
