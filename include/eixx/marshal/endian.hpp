@@ -29,32 +29,53 @@ limitations under the License.
 #ifndef _EIXX_ENDIAN_HPP_
 #define _EIXX_ENDIAN_HPP_
 
+#include <cstdint>
 #include <boost/version.hpp>
+#if BOOST_VERSION >= 107100
+#include <boost/endian/conversion.hpp>
+#else
 #include <boost/spirit/home/support/detail/endian.hpp>
+#endif
 
 namespace eixx {
 
+namespace {
+#if BOOST_VERSION >= 107100
+    namespace bsd = boost::endian;
+#elif BOOST_VERSION >= 104800
+    namespace bsd = boost::spirit::detail;
+#else
+    namespace bsd = boost::detail;
+#endif
+}
+
+template <typename T>
+inline void store_be(char* s, T n) {
+#if BOOST_VERSION >= 107100
+    bsd::endian_store<T, sizeof(T), bsd::order::big>(reinterpret_cast<uint8_t*>(s), n);
+#else
+    bsd::store_big_endian<T, sizeof(T)>(static_cast<void*>(s), n);
+#endif
+}
+
 template <typename T>
 inline void put_be(char*& s, T n) {
-    #if BOOST_VERSION >= 104900
-    boost::spirit::detail::store_big_endian<T, sizeof(T)>(s, n);
-    #else
-    boost::detail::store_big_endian<T, sizeof(T)>(s, n);
-    #endif
+    store_be<T>(s, n);
     s += sizeof(T);
 }
 
 template <typename T>
 inline T cast_be(const char* s) {
-    #if BOOST_VERSION >= 104900
-    return boost::spirit::detail::load_big_endian<T, sizeof(T)>(s);
-    #else
-    return boost::detail::load_big_endian<T, sizeof(T)>(s);
-    #endif
+#if BOOST_VERSION >= 107100
+    return bsd::endian_load<T, sizeof(T), bsd::order::big>
+        (reinterpret_cast<const uint8_t*>(s));
+#else
+    return bsd::load_big_endian<T, sizeof(T)>((const void*)s);
+#endif
 }
 
-template <typename T>
-inline void get_be(const char*& s, T& n) {
+template <typename T, typename Ch>
+inline void get_be(const Ch*& s, T& n) {
     n = cast_be<T>(s);
     s += sizeof(T);
 }

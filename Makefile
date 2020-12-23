@@ -20,7 +20,7 @@ distclean:
 	@[ -n "$(DIR)" -a -d "$(DIR)" ] && echo "Removing $(DIR)" && rm -fr $(DIR) build inst || true
 
 bootstrap:
-	@$(MAKE) -f bootstrap.mk --no-print-directory $@ $(MAKEOVERRIDES)
+	@$(MAKE) -f build-aux/bootstrap.mk --no-print-directory $@ $(MAKEOVERRIDES)
 
 rebootstrap: .build/.bootstrap
 	$(if $(build),$(filter-out build=%,$(shell cat $(REBOOSTR_FILE))) \
@@ -30,7 +30,7 @@ test:
 	CTEST_OUTPUT_ON_FAILURE=TRUE $(generator) -C$(DIR) $(VERBOSE) -j$(shell nproc) $@
 
 info ver:
-	@$(MAKE) -sf bootstrap.mk --no-print-directory $@
+	@$(MAKE) -sf build-aux/bootstrap.mk --no-print-directory $@
 
 vars:
 	@cmake -H. -B$(DIR) -LA
@@ -45,7 +45,7 @@ build/cache.mk:
 
 .DEFAULT:
 	@if [ ! -f build/cache.mk ]; then \
-	    $(MAKE) -f bootstrap.mk --no-print-directory; \
+	    $(MAKE) -f build-aux/bootstrap.mk --no-print-directory; \
     else \
         $(generator) -C$(DIR) $(VERBOSE)\
             $(if $(findstring $(generator),ninja),, --no-print-directory)\

@@ -103,7 +103,6 @@ makecmd      = $(envvars) cmake -H. -B$(DIR) \
                $(if $(findstring $(generator),ninja),-GNinja,-G'Unix Makefiles') \
                $(if $(findstring $(verbose),true on 1),-DCMAKE_VERBOSE_MAKEFILE=true) \
                -DTOOLCHAIN=$(toolchain) \
-               -DCMAKE_USER_MAKE_RULES_OVERRIDE=$(ROOT_DIR:%/=%)/build-aux/CMakeInit.txt \
                -DCMAKE_INSTALL_PREFIX=$(prefix) \
                -DCMAKE_BUILD_TYPE=$(build) $(makevars)
 

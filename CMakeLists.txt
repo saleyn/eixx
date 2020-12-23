@@ -1,5 +1,9 @@
 # vim:ts=2:sw=2:et
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+
+# Overrides - must be placed before 'project'
+set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_SOURCE_DIR}/build-aux/CMakeInit.txt")
+
 project(eixx VERSION 1.4)
 
 #===============================================================================
