@@ -8,6 +8,6 @@ Name: @PROJECT_NAME@
 Description: EIXX: C++ Interface to Erlang
 #Requires: boost_1_55_0
 Version: @PROJECT_VERSION@
-Libs: -L${libdir} -L@Erlang_EI_LIBRARY_PATH@ -Wl,-rpath,${libdir} -leixx${libsuffix} -lei -lssl -lcrypto
+Libs: -L${libdir} -L@Erlang_EI_LIBRARY_DIR@ -Wl,-rpath,${libdir} -leixx${libsuffix} -lei -lssl -lcrypto
 Cflags: -I${includedir} -I@Erlang_EI_INCLUDE_DIR@
 
