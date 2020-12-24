@@ -132,13 +132,25 @@ public:
         return m_pattern_list.back();
     }
 
+    const eterm_pattern_action<Alloc>& 
+    push_back(const eterm<Alloc>& a_pattern) {
+        m_pattern_list.push_back(eterm_pattern_action<Alloc>(a_pattern));
+        return m_pattern_list.back();
+    }
+
     /**
      * Add a pattern to the beginning of the list.
      * The pattern is assign to a smart pointer.
      */
     const eterm_pattern_action<Alloc>& 
     push_front(const eterm<Alloc>& a_pattern, pattern_functor_t a_fun, long a_opaque=0) {
-        m_pattern_list.push_back(eterm_pattern_action<Alloc>(a_pattern, a_fun, a_opaque));
+        m_pattern_list.push_front(eterm_pattern_action<Alloc>(a_pattern, a_fun, a_opaque));
+        return m_pattern_list.front();
+    }
+
+    const eterm_pattern_action<Alloc>& 
+    push_front(const eterm<Alloc>& a_pattern) {
+        m_pattern_list.push_front(eterm_pattern_action<Alloc>(a_pattern));
         return m_pattern_list.front();
     }
 
@@ -181,19 +193,16 @@ public:
      * @param a_binding is an optional object containing
      *        predefined variable bindings that will be passed
      *        to every pattern.
-     * @return true if any one pattern matched the term.
+     * @return 0 if no terms matched, or the matched term's index + 1.
      */
-    bool match(const eterm<Alloc>& a_term,
-               varbind<Alloc>* a_binding = NULL) const
+    int match(const eterm<Alloc>& a_term,
+              varbind<Alloc>* a_binding = NULL) const
     {
-        bool res = false;
-        for(auto it = m_pattern_list.begin(), end = m_pattern_list.end(); it != end; ++it) {
-            if (it->operator() (a_term, a_binding)) {
-                res = true;
-                break;
-            }
-        }
-        return res;
+        int i = 1;
+        for(auto it = m_pattern_list.begin(), end = m_pattern_list.end(); it != end; ++it, ++i)
+            if ((*it)(a_term, a_binding))
+                return i;
+        return 0;
     }
 private:
     list_t m_pattern_list;
@@ -212,6 +221,17 @@ class eterm_pattern_action {
     pattern_functor_t   m_fun;
     long                m_opaque;
 public:
+    /**
+     * Create a new pattern match action without a functor.
+     * @param a_pattern pattern to match
+     */
+    explicit eterm_pattern_action(const eterm<Alloc>& a_pattern)
+        : m_pattern(a_pattern), m_opaque(0)
+    {
+      auto fun = [](auto& pattern, auto& vars, long opaque) { return true; };
+      m_fun = fun;
+    }
+
     /**
      * Create a new pattern match functor.
      * @param a_pattern pattern to match

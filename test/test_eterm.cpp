@@ -40,6 +40,13 @@ BOOST_AUTO_TEST_CASE( test_atomable )
 BOOST_AUTO_TEST_CASE( test_atom )
 {
     {
+        EIXX_DECL_ATOM(temp);
+        BOOST_REQUIRE_EQUAL("temp",  am_temp);
+
+        EIXX_DECL_ATOM_VAR(am_temp2, "temp2");
+        BOOST_REQUIRE_EQUAL("temp2", am_temp2);
+    }
+    {
         atom a("");
         BOOST_REQUIRE_EQUAL(0, a.index());
         BOOST_REQUIRE_EQUAL(atom(), a);

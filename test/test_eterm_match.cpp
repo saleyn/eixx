@@ -106,10 +106,12 @@ namespace {
                         BOOST_REQUIRE(a_varbind.find("X") != NULL);
                         BOOST_REQUIRE_EQUAL(TUPLE, a_varbind.find("X")->type());
                         break;
+                    case 5:
+                        match[4]++;
+                        break;
                     default:
                         throw "Invalid opaque value!";
                 }
-                return true;
             }
             return true;
         }
@@ -144,9 +146,10 @@ BOOST_AUTO_TEST_CASE( test_match2 )
         etm.push_back(eterm::format("{xxx, [_, _, {c, N}], \"abc\", X}"),
             std::bind(&cb_t::operator(), &cb,
                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 4);
+    etm.push_back(eterm::format("{login, I::int()}"));
 
     // Make sure we registered 4 pattern above.
-    BOOST_REQUIRE_EQUAL(4u, etm.size());
+    BOOST_REQUIRE_EQUAL(5u, etm.size());
 
     static const eterm t0 = atom("test");
     eterm f0 = eterm::format("test");
@@ -157,17 +160,18 @@ BOOST_AUTO_TEST_CASE( test_match2 )
     auto f1 = eterm::format("{test, 1, 123}");
     auto m1 = etm.match(f1);
     BOOST_REQUIRE(m1);  // N = 1
-    BOOST_REQUIRE(etm.match(eterm::format("{test, 1, 234}")));  // N = 1
+    BOOST_REQUIRE_EQUAL(1, etm.match(eterm::format("{test, 1, 234}")));  // N = 1
 
-    BOOST_REQUIRE(etm.match(eterm::format("{ok, 2, 3, 4}")));   // N = 2
-    BOOST_REQUIRE(!etm.match(eterm::format("{ok, 2}")));
+    BOOST_REQUIRE_EQUAL(2, etm.match(eterm::format("{ok, 2, 3, 4}")));   // N = 2
+    BOOST_REQUIRE_EQUAL(0, etm.match(eterm::format("{ok, 2}")));
 
-    BOOST_REQUIRE(etm.match(eterm::format("{error, 3, not_found}"))); // N = 3
+    BOOST_REQUIRE_EQUAL(3, etm.match(eterm::format("{error, 3, not_found}"))); // N = 3
 
-    BOOST_REQUIRE(etm.match(
+    BOOST_REQUIRE_EQUAL(4, etm.match(
         eterm::format("{xxx, [{a, 1}, {b, 2}, {c, 4}], \"abc\", {5,6,7}}"))); // N = 4
-    BOOST_REQUIRE(!etm.match(
+    BOOST_REQUIRE_EQUAL(0, etm.match(
         eterm::format("{xxx, [1, 2, 3, {c, 4}], \"abc\", 5}")));
+    BOOST_REQUIRE_EQUAL(5, etm.match(eterm::format("{login, 1}")));
 
     // Verify number of successful matches for each pattern.
     BOOST_REQUIRE_EQUAL(2, cb.match[0]);
@@ -175,13 +179,10 @@ BOOST_AUTO_TEST_CASE( test_match2 )
     BOOST_REQUIRE_EQUAL(1, cb.match[2]);
     BOOST_REQUIRE_EQUAL(1, cb.match[3]);
 
-    // Make sure we registered 4 pattern above.
-    BOOST_REQUIRE_EQUAL(4u, etm.size());
-
     // Test pattern deletion.
     etm.erase(action);
     // Make sure we registered 4 pattern above.
-    BOOST_REQUIRE_EQUAL(3u, etm.size());
+    BOOST_REQUIRE_EQUAL(4u, etm.size());
 }
 
 BOOST_AUTO_TEST_CASE( test_match3 )
