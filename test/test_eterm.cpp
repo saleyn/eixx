@@ -661,20 +661,23 @@ BOOST_AUTO_TEST_CASE( test_varbind )
     allocator_t alloc;
 
     varbind binding1;
-    binding1.bind(atom("Name"),  20.0);
+    EIXX_DECL_ATOM(Name);
+    binding1.bind(am_Name,       20.0);
     binding1.bind(atom("Long"),  123);
     varbind binding2;
-    binding2.bind(atom("Name"),  atom("test"));
+    binding2.bind(am_Name,       atom("test"));
     binding2.bind(atom("Other"), "vasya");
 
     binding1.merge(binding2);
 
     BOOST_REQUIRE_EQUAL(3ul, binding1.count());
+    BOOST_REQUIRE(binding1[am_Name]);
+    BOOST_REQUIRE_EQUAL(eterm(20.0), binding1.get(am_Name));
 
 #if __cplusplus >= 201103L
-    atom am_a("A");
-    atom am_b("B");
-    atom am_c("C");
+    EIXX_DECL_ATOM_VAR(am_a, "A");
+    EIXX_DECL_ATOM_VAR(am_b, "B");
+    EIXX_DECL_ATOM_VAR(am_c, "C");
 
     varbind binding3{ {am_a, 10}, {am_b, 200.0}, {"C", "abc"} };
     BOOST_CHECK_EQUAL(3u, binding3.count());

@@ -149,6 +149,18 @@ public:
         return p;
     }
 
+    const eterm<Alloc>& get(const char* a_var_name) const {
+        auto    res = (*this)[a_var_name];
+        assert (res);
+        return *res;
+    }
+
+    const eterm<Alloc>& get(atom a_var_name) const {
+        auto    res = (*this)[a_var_name];
+        assert (res);
+        return *res;
+    }
+
     /**
      * Merge all data in a variable binding with data in this
      * variable binding.
