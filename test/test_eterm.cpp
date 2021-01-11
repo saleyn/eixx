@@ -26,6 +26,35 @@ limitations under the License.
 
 using namespace eixx;
 
+BOOST_AUTO_TEST_CASE( test_type )
+{
+  {
+    eterm t(10);
+    BOOST_REQUIRE_EQUAL(10, t.get<int>());
+    BOOST_REQUIRE_EQUAL(10, t.get<long>());
+    BOOST_REQUIRE_EQUAL(10, t.get<size_t>());
+    BOOST_REQUIRE_EQUAL(10, t.get<char>());
+    BOOST_REQUIRE_EQUAL(10, t.get<uint8_t>());
+    BOOST_REQUIRE_EQUAL(10, t.get<short>());
+    BOOST_CHECK_THROW(t.get<double>(), err_wrong_type);
+  }
+  {
+    eterm t(10.0);
+    BOOST_REQUIRE_EQUAL(10.0, t.get<double>());
+    BOOST_CHECK_THROW(t.get<int>(), err_wrong_type);
+  }
+  {
+    eterm t(true);
+    BOOST_REQUIRE_EQUAL(true, t.get<bool>());
+    BOOST_CHECK_THROW(t.get<int>(), err_wrong_type);
+  }
+  {
+    eterm t("ABC");
+    BOOST_REQUIRE_EQUAL("ABC", t.get<std::string>());
+    BOOST_CHECK_THROW(t.get<int>(), err_wrong_type);
+  }
+}
+
 BOOST_AUTO_TEST_CASE( test_atomable )
 {
 	util::atom_table t(10);

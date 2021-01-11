@@ -434,12 +434,12 @@ public:
     // Return the term as a value of given type.
     // NOTE: only integer | double | bool | string types are supported
     template <typename T>
-    typename std::enable_if<std::is_same<T, double>::value, bool>::type
-    to_type() const { return to_double(); }
+    typename std::enable_if<std::is_same<T, double>::value, double>::type
+    get() const { return to_double(); }
 
     template <typename T>
     typename std::enable_if<std::is_same<T, bool>::value, bool>::type
-    to_type() const { return to_bool(); }
+    get() const { return to_bool(); }
 
     template <typename T>
     typename std::enable_if<std::is_same<T, char>::value     ||
@@ -450,12 +450,12 @@ public:
                             std::is_same<T, uint16_t>::value ||
                             std::is_same<T, uint32_t>::value ||
                             std::is_same<T, uint64_t>::value
-                            , bool>::type
-    to_type() const { return to_long(); }
+                            , T>::type
+    get() const { return T(to_long()); }
 
     template <typename T>
-    typename std::enable_if<std::is_same<T, std::string>::value, bool>::type
-    to_type() const { return to_str(); }
+    typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type
+    get() const { return to_str().to_str(); }
 
     // Convert a term to its underlying type.  Will throw an exception
     // when the underlying type doesn't correspond to the requested operation.
