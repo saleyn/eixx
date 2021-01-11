@@ -67,6 +67,7 @@ class atom
 {
     int m_index;
 
+    atom(int idx) : m_index(idx) { assert(idx >= 0); }
 public:
     inline static util::atom_table& atom_table() {
        static util::atom_table s_atom_table;
@@ -98,8 +99,19 @@ public:
 
     /// @copydoc atom::atom
     explicit atom(const std::string& s)
-        : m_index(atom_table().lookup(s))
-    {}
+        : m_index(atom_table().lookup(s)) {}
+
+    /// Try to create an atom without throwing exceptions
+    /// NOTE: if the atom name is invalid or it doesn't exist and \a existing
+    ///       is true, then an empty atom is returned.
+    static atom create(const std::string& s, bool existing) {
+        auto   idx = atom_table().try_lookup(s);
+        return idx > 0 && existing ? atom(idx) : atom();
+    }
+    /// @copydoc atom::create
+    static atom create(const char* s, bool existing) {
+        return create(std::string(s), existing);
+    }
 
     /// @copydoc atom::atom
     /// @param existing    if true, check that the atom already exists, otherwise throw
@@ -113,9 +125,8 @@ public:
             m_index = atom_table().lookup(s);
             return;
         }
-        bool found;
-        std::tie(m_index, found) = atom_table().try_lookup(s);
-        if (!found)
+        m_index = atom_table().try_lookup(s);
+        if (m_index <= 0)
             throw err_atom_not_found(s);
     }
 

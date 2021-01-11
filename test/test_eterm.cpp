@@ -47,8 +47,14 @@ BOOST_AUTO_TEST_CASE( test_atom )
         BOOST_REQUIRE_EQUAL("temp2", am_temp2);
     }
     {
-        auto [n, found] = util::atom_table().try_lookup("temp3");
-        BOOST_REQUIRE(found == false);
+        auto n = util::atom_table().try_lookup("temp3");
+        BOOST_REQUIRE_EQUAL(-1, n);
+        auto s = std::string(MAXATOMLEN+1, 'X');
+        n = util::atom_table().try_lookup(s);
+        BOOST_REQUIRE_EQUAL(-2, n);
+        n = util::atom_table().try_lookup("");
+        BOOST_REQUIRE_EQUAL(0, n);
+
         BOOST_CHECK_THROW(atom("temp3", true), err_atom_not_found);
         auto a = atom("temp3", false);
         BOOST_CHECK_EQUAL("temp3", a);

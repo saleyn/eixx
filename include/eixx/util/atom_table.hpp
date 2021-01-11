@@ -105,20 +105,19 @@ namespace util {
         }
 
         /// Try to lookup an atom in the atom table
-        /// @return {-1, false} if the atom is not found, {-2, false} if the atom is invalid,
-        ///         or {AtomIndex, true} if existing atom is found.
-        std::pair<int, bool> try_lookup(const char* a_name, size_t n) { return try_lookup(String(a_name, n)); }
-        std::pair<int, bool> try_lookup(const char* a_name)           { return try_lookup(String(a_name)); }
-        std::pair<int, bool> try_lookup(const String& a_name)
+        /// @return -1 if the atom by name is not found, -2 if the atom is invalid,
+        ///         or a value >= 0, if an existing atom is found.
+        int try_lookup(const char* a_name, size_t n) { return try_lookup(String(a_name, n)); }
+        int try_lookup(const char* a_name)           { return try_lookup(String(a_name)); }
+        int try_lookup(const String& a_name)
         {
             if (a_name.size() == 0)
-                return std::make_pair(0, true);
+                return 0;
             if (a_name.size() > MAXATOMLEN)
-                return std::make_pair(-2, false);
+                return -2;
             size_t bucket = m_index.bucket(a_name.c_str());
-            int n = find_value(bucket, a_name.c_str());
-            return n >= 0 ? std::make_pair(n,  true)
-                          : std::make_pair(-1, false);
+            int    n      = find_value(bucket, a_name.c_str());
+            return n > 0 ? n : -1;
         }
 
         /// Lookup an atom in the atom table by name. If the atom is not
@@ -130,11 +129,9 @@ namespace util {
         int lookup(const char* a_name)           { return lookup(String(a_name)); }
         int lookup(const String& a_name)
         {
-            auto [n, found] = try_lookup(a_name);
-            if (found)
-                return n;
-            if (n == -2)
-                throw err_bad_argument("Atom size is too long!");
+            auto n = try_lookup(a_name);
+            if  (n >=  0) return n;
+            if  (n == -2) throw  err_bad_argument("Atom size is too long!");
 
             lock_guard<Mutex> guard(m_lock);
             if constexpr (!std::is_same<Mutex, eid::null_mutex>::value) {
