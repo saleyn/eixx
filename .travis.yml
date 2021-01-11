@@ -17,7 +17,7 @@ matrix:
             - gcc-9
             - g++-9
             #- boost-latest
-            - boost1.70
+            - boost1.74
             #- cmake
             #- cmake-data
             - libxslt1.1
