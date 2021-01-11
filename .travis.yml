@@ -14,8 +14,8 @@ matrix:
             - sourceline: 'ppa:mhier/libboost-latest'
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
-            - gcc-9
-            - g++-9
+            - gcc-10
+            - g++-10
             #- boost-latest
             - boost1.74
             #- cmake
@@ -24,7 +24,7 @@ matrix:
             - python-lxml
             - doxygen
       env:
-        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
 
 before_install:
   - eval "${MATRIX_EVAL}"
