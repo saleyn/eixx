@@ -102,11 +102,33 @@ public:
     {}
 
     /// @copydoc atom::atom
+    /// @param existing    if true, check that the atom already exists, otherwise throw
+    ///                    err_atom_not_found
+    atom(const char* s, bool existing)
+        : atom(std::string(s), existing)
+    {}
+    atom(const std::string& s, bool existing)
+    {
+        if (!existing) {
+            m_index = atom_table().lookup(s);
+            return;
+        }
+        bool found;
+        std::tie(m_index, found) = atom_table().try_lookup(s);
+        if (!found)
+            throw err_atom_not_found(s);
+    }
+
+    /// @copydoc atom::atom
     template<typename Alloc>
     explicit atom(const string<Alloc>& s)
         : m_index(atom_table().lookup(std::string(s.c_str(), s.size())))
     {}
 
+    /// @copydoc atom::atom
+    atom(const char* s, int    n) : atom(s, size_t(n)) {}
+    /// @copydoc atom::atom
+    atom(const char* s, long   n) : atom(s, size_t(n)) {}
     /// @copydoc atom::atom
     atom(const char* s, size_t n)
         : m_index(atom_table().lookup(std::string(s, n)))

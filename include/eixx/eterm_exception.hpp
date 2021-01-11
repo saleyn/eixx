@@ -59,11 +59,16 @@ protected:
     std::string m_msg;
 };
 
-/**
- * Exception for invalid terms
- */
-class err_invalid_term: public eterm_exception {
-public:
+/// Exception for invalid atoms
+struct err_atom_not_found: public eterm_exception {
+    err_atom_not_found(std::string const& atom)
+        : eterm_exception("Atom '" + atom + "' not found")
+    {}
+    err_atom_not_found() : eterm_exception("Atom not found") {}
+};
+
+/// Exception for invalid terms
+struct err_invalid_term: public eterm_exception {
     err_invalid_term(const std::string &msg) : eterm_exception(msg) {}
 };
 

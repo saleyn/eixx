@@ -31,25 +31,38 @@ limitations under the License.
 namespace eixx {
 namespace detail {
 
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-typedef std::mutex                  mutex;
-typedef std::recursive_mutex        recursive_mutex;
-template <typename Mutex> struct lock_guard: public std::lock_guard<Mutex> {
-    lock_guard(Mutex& a_m) : std::lock_guard<Mutex>(a_m) {}
+struct null_mutex {
+     void lock()            {}
+     void unlock() noexcept {}
+     bool try_lock()        { return true; }
 };
-#else
+
+#if __cplusplus < 201103L
 typedef boost::mutex                mutex;
 typedef boost::recursive_mutex      recursive_mutex;
 // Note that definition of boost::lock_guard is missing mutex_type compared
 // to the definition of std::lock_guard.
 template <typename Mutex> struct lock_guard: public boost::lock_guard<Mutex> {
-    typedef boost::mutex mutex_type;
+    typedef Mutex mutex_type;
     lock_guard(Mutex& a_m) : boost::lock_guard<Mutex>(a_m) {}
 };
+#else
+template <typename Mutex> struct lock_guard: public std::lock_guard<Mutex> {
+    lock_guard(Mutex& a_m) : std::lock_guard<Mutex>(a_m) {}
+};
+  #ifdef EIXX_NULL_MUTEX
+  typedef null_mutex                  mutex;
+  typedef null_mutex                  recursive_mutex;
+  template <typename Mutex> struct lock_guard: public std::lock_guard<Mutex> {
+      lock_guard(Mutex& a_m) : std::lock_guard<Mutex>(a_m) {}
+  };
+  #else
+  typedef std::mutex                  mutex;
+  typedef std::recursive_mutex        recursive_mutex;
+  #endif
 #endif
 
 } // namespace detail
 } // namespace eixx
 
 #endif // _EIXX_SYNC_HPP_
-

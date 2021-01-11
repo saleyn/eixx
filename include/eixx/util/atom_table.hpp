@@ -104,6 +104,23 @@ namespace util {
             return m_atoms[n];
         }
 
+        /// Try to lookup an atom in the atom table
+        /// @return {-1, false} if the atom is not found, {-2, false} if the atom is invalid,
+        ///         or {AtomIndex, true} if existing atom is found.
+        std::pair<int, bool> try_lookup(const char* a_name, size_t n) { return try_lookup(String(a_name, n)); }
+        std::pair<int, bool> try_lookup(const char* a_name)           { return try_lookup(String(a_name)); }
+        std::pair<int, bool> try_lookup(const String& a_name)
+        {
+            if (a_name.size() == 0)
+                return std::make_pair(0, true);
+            if (a_name.size() > MAXATOMLEN)
+                return std::make_pair(-2, false);
+            size_t bucket = m_index.bucket(a_name.c_str());
+            int n = find_value(bucket, a_name.c_str());
+            return n >= 0 ? std::make_pair(n,  true)
+                          : std::make_pair(-1, false);
+        }
+
         /// Lookup an atom in the atom table by name. If the atom is not
         /// present in the atom table - add it.  Return the index of the 
         /// atom in the atom table.
@@ -113,19 +130,19 @@ namespace util {
         int lookup(const char* a_name)           { return lookup(String(a_name)); }
         int lookup(const String& a_name)
         {
-            if (a_name.size() == 0)
-                return 0;
-            if (a_name.size() > MAXATOMLEN)
-                throw err_bad_argument("Atom size is too long!");
-            size_t bucket = m_index.bucket(a_name.c_str());
-            int n = find_value(bucket, a_name.c_str());
-            if (n >= 0)
+            auto [n, found] = try_lookup(a_name);
+            if (found)
                 return n;
+            if (n == -2)
+                throw err_bad_argument("Atom size is too long!");
 
             lock_guard<Mutex> guard(m_lock);
-            n = find_value(bucket, a_name.c_str());
-            if (n >= 0)
-                return n;
+            if constexpr (!std::is_same<Mutex, eid::null_mutex>::value) {
+                size_t bucket = m_index.bucket(a_name.c_str());
+                n = find_value(bucket, a_name.c_str());
+                if (n >= 0)
+                    return n;
+            }
 
             n = m_atoms.size();
             if ((size_t)(n+1) == m_atoms.capacity())

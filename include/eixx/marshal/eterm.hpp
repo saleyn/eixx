@@ -431,6 +431,32 @@ public:
     // Separated into a separate function without default args for ease of gdb debugging
     std::string to_string() const { return to_string(std::string::npos, NULL); }
 
+    // Return the term as a value of given type.
+    // NOTE: only integer | double | bool | string types are supported
+    template <typename T>
+    typename std::enable_if<std::is_same<T, double>::value, bool>::type
+    to_type() const { return to_double(); }
+
+    template <typename T>
+    typename std::enable_if<std::is_same<T, bool>::value, bool>::type
+    to_type() const { return to_bool(); }
+
+    template <typename T>
+    typename std::enable_if<std::is_same<T, char>::value     ||
+                            std::is_same<T, short>::value    ||
+                            std::is_same<T, int>::value      ||
+                            std::is_same<T, long>::value     ||
+                            std::is_same<T, uint8_t>::value  ||
+                            std::is_same<T, uint16_t>::value ||
+                            std::is_same<T, uint32_t>::value ||
+                            std::is_same<T, uint64_t>::value
+                            , bool>::type
+    to_type() const { return to_long(); }
+
+    template <typename T>
+    typename std::enable_if<std::is_same<T, std::string>::value, bool>::type
+    to_type() const { return to_str(); }
+
     // Convert a term to its underlying type.  Will throw an exception
     // when the underlying type doesn't correspond to the requested operation.
 
@@ -444,8 +470,11 @@ public:
         check(STRING); return vt.s;
     }
     const std::string    as_str()    const {
-        if (m_type==LIST && vt.l.empty()) return std::string();
-        check(STRING); return vt.s.to_str();
+        static const std::string s_null;
+        return m_type==LIST && vt.l.empty()
+             ? s_null
+             : m_type==STRING
+             ? vt.s.to_str() : to_string();
     }
     const binary<Alloc>& to_binary() const { check(BINARY); return vt.bin; }
     const epid<Alloc>&   to_pid()    const { check(PID);    return vt.pid; }

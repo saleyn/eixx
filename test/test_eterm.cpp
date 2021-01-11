@@ -47,6 +47,13 @@ BOOST_AUTO_TEST_CASE( test_atom )
         BOOST_REQUIRE_EQUAL("temp2", am_temp2);
     }
     {
+        auto [n, found] = util::atom_table().try_lookup("temp3");
+        BOOST_REQUIRE(found == false);
+        BOOST_CHECK_THROW(atom("temp3", true), err_atom_not_found);
+        auto a = atom("temp3", false);
+        BOOST_CHECK_EQUAL("temp3", a);
+    }
+    {
         atom a("");
         BOOST_REQUIRE_EQUAL(0, a.index());
         BOOST_REQUIRE_EQUAL(atom(), a);
