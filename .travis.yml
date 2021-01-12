@@ -18,13 +18,11 @@ matrix:
             - g++-9
             #- boost-latest
             - boost1.74
-            #- cmake
-            #- cmake-data
             - libxslt1.1
             - python-lxml
             - doxygen
       env:
-        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
 
 before_install:
   - eval "${MATRIX_EVAL}"
