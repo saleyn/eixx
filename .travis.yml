@@ -14,8 +14,8 @@ matrix:
             - sourceline: 'ppa:mhier/libboost-latest'
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
-            - gcc-10
-            - g++-10
+            - gcc-9
+            - g++-9
             #- boost-latest
             - boost1.74
             #- cmake

@@ -134,7 +134,7 @@ namespace util {
             if  (n == -2) throw  err_bad_argument("Atom size is too long!");
 
             lock_guard<Mutex> guard(m_lock);
-            if constexpr (!std::is_same<Mutex, eid::null_mutex>::value) {
+            if (!std::is_same<Mutex, eid::null_mutex>::value) {
                 size_t bucket = m_index.bucket(a_name.c_str());
                 n = find_value(bucket, a_name.c_str());
                 if (n >= 0)
