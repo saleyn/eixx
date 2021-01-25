@@ -33,7 +33,7 @@ limitations under the License.
 #include <eixx/marshal/eterm.hpp>
 
 #define EIXX_DECL_ATOM(Atom)           static const eixx::atom am_##Atom(#Atom)
-#define EIXX_DECL_ATOM_VAL(Atom, Val)  static const eixx::atom am_##Atom(#Val)
+#define EIXX_DECL_ATOM_VAL(Atom, Val)  static const eixx::atom am_##Atom(Val)
 #define EIXX_DECL_ATOM_VAR(Name, Atom) static const eixx::atom Name(Atom)
 
 namespace eixx {
