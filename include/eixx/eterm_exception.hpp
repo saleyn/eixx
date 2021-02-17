@@ -43,10 +43,11 @@ public:
     eterm_exception() {}
     eterm_exception(const std::string& msg): m_msg(msg) {}
 
-    template <typename Arg>
-    eterm_exception(const std::string& msg, Arg a) {
+    template <typename... Arg>
+    eterm_exception(const std::string& msg, Arg&&... a) {
         std::ostringstream str;
-        str << msg << ": " << a;
+        str  << msg << ": ";
+        (str << ... << a); // Fold expression
         m_msg = str.str();
     }
 

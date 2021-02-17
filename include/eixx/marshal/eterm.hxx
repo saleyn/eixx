@@ -118,6 +118,7 @@ const char* eterm<Alloc>::type_string() const {
         case LIST:      return "list";
         case MAP:       return "map";
         case TRACE:     return "trace";
+        default:        throw err_invalid_term("Term type not supported: ", int(m_type));
     }
     static_assert(MAX_ETERM_TYPE == 14, "Invalid number of terms");
 }
