@@ -23,6 +23,7 @@ limitations under the License.
 #include "test_alloc.hpp"
 #include <eixx/eixx.hpp>
 #include <set>
+#include <ei.h>
 
 using namespace eixx;
 
@@ -124,9 +125,26 @@ BOOST_AUTO_TEST_CASE( test_bool )
 {
     allocator_t alloc;
     {
+        int n;
         eterm et(true);
         BOOST_REQUIRE(et.initialized());
         BOOST_REQUIRE_EQUAL(BOOL, et.type());
+        // Since the encode_size() functions for bool and double don't call
+        // ei's implementation but have hard-coded values inlined for efficiency,
+        // test that our assumption of the return matches the return of the
+        // corresponding ei's implementation:
+        BOOST_REQUIRE_EQUAL(6, marshal::visit_eterm_encode_size_calc<allocator_t>()(true));
+        BOOST_REQUIRE_EQUAL(7, marshal::visit_eterm_encode_size_calc<allocator_t>()(false));
+        BOOST_REQUIRE_EQUAL(9, marshal::visit_eterm_encode_size_calc<allocator_t>()(0.0));
+        n = 0;
+        BOOST_REQUIRE_EQUAL(0, ei_encode_boolean(NULL, &n, true));
+        BOOST_CHECK_EQUAL(n, marshal::visit_eterm_encode_size_calc<allocator_t>()(true));
+        n = 0;
+        BOOST_REQUIRE_EQUAL(0, ei_encode_boolean(NULL, &n, false));
+        BOOST_CHECK_EQUAL(n, marshal::visit_eterm_encode_size_calc<allocator_t>()(false));
+        n = 0;
+        BOOST_REQUIRE_EQUAL(0, ei_encode_double(NULL, &n, 0.0));
+        BOOST_CHECK_EQUAL(n, marshal::visit_eterm_encode_size_calc<allocator_t>()(0.0));
     }
 
     {
