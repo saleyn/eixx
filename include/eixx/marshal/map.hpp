@@ -46,7 +46,7 @@ template <typename Alloc> class eterm;
 template <typename Alloc>
 class map {
 public:
-    using MapAlloc = typename Alloc::template rebind<std::pair<const eterm<Alloc>, eterm<Alloc>>>::other;
+    using MapAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<std::pair<const eterm<Alloc>, eterm<Alloc>>>;
     using MapT     = std::map<eterm<Alloc>, eterm<Alloc>, std::less<eterm<Alloc>>, MapAlloc>;
 protected:
     using BlobT    = blob<MapT, Alloc>;

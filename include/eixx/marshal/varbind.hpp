@@ -74,7 +74,8 @@ protected:
     using eterm_map_t =
         std::map<
             atom, eterm<Alloc>, std::less<atom>,
-            typename Alloc::template rebind<std::pair<const atom, eterm<Alloc>>>::other
+            typename std::allocator_traits<Alloc>::
+                template rebind_alloc<std::pair<const atom, eterm<Alloc>>>
         >;
 
 public:

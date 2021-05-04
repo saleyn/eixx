@@ -52,8 +52,8 @@ class eterm_pattern_action;
  */
 template <class Alloc>
 class eterm_pattern_matcher {
-    using ListAlloc   = typename Alloc::template
-                            rebind<eterm_pattern_action<Alloc>>::other;
+    using ListAlloc   = typename std::allocator_traits<Alloc>::
+                        template rebind_alloc<eterm_pattern_action<Alloc>>;
 public:
     using list_t = std::list<eterm_pattern_action<Alloc>, ListAlloc>;
     using const_iterator = typename list_t::const_iterator;
