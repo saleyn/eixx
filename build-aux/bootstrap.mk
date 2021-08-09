@@ -134,6 +134,7 @@ bootstrap: | $(DIR)
 	@echo "export VERSION   := $(VERSION)"             >> $(DIR)/cache.mk
 	@echo "export OPT_FILE  := $(abspath $(OPT_FILE))" >> $(DIR)/cache.mk
 	@echo "export generator := $(generator)"           >> $(DIR)/cache.mk
+	@echo "export toolchain := $(toolchain)"           >> $(DIR)/cache.mk
 	@echo "export build     := $(BUILD)"               >> $(DIR)/cache.mk
 	@echo "export DIR       := $(DIR)"                 >> $(DIR)/cache.mk
 	@echo "export prefix    := $(prefix)"              >> $(DIR)/cache.mk

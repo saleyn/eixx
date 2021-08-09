@@ -204,6 +204,12 @@ BOOST_AUTO_TEST_CASE( test_list )
         BOOST_REQUIRE(et.initialized());
     }
     {
+        list l{1, 2, 3, "abc", 2.0, atom("efg")};
+        eterm et = l;
+        BOOST_REQUIRE_EQUAL(6, l.length());
+        BOOST_REQUIRE(et.initialized());
+    }
+    {
         eterm items[] = { 
             eterm(atom("abc")),
             eterm(atom("efg"))
@@ -603,6 +609,12 @@ BOOST_AUTO_TEST_CASE( test_tuple )
             eterm(atom("efg"))
         };
         eterm et = tuple(l);
+        BOOST_REQUIRE(et.initialized());
+    }
+
+    {
+        tuple t{1, 2, 3, "abc", 2.0, atom("efg")};
+        eterm et = t;
         BOOST_REQUIRE(et.initialized());
     }
 
