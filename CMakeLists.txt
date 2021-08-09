@@ -30,8 +30,12 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/build-aux/CMakeEx.txt)
 #-------------------------------------------------------------------------------
 # See also build/CMakeInit.txt
 if("${toolchain}" STREQUAL "gcc")
-  set(CMAKE_C_COMPILER   "gcc")
-  set(CMAKE_CXX_COMPILER "g++")
+  if(NOT CMAKE_C_COMPILER)
+    set(CMAKE_C_COMPILER   "gcc")
+  endif()
+  if(NOT CMAKE_CXX_COMPILER)
+    set(CMAKE_CXX_COMPILER "g++")
+  endif()
   add_definitions(-fopenmp -Wall -Wno-strict-aliasing)
 
   if("${CMAKE_BUILD_TYPE}" STREQUAL "release")
@@ -185,7 +189,10 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pc.in"
 #-------------------------------------------------------------------------------
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
-add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+if(CMAKE_SYSTEM_NAME STREQUAL Linux OR
+   CMAKE_SYSTEM_NAME STREQUAL Android)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+endif()
 
 #===============================================================================
 # Installation

@@ -6,9 +6,9 @@
 # Date: 2014-08-12
 #-------------------------------------------------------------------------------
 
-PROJECT  := $(shell sed -n '/^project/{s/^project. *\([a-zA-Z0-9]\+\).*/\1/p; q}'\
+PROJECT  := $(shell sed -n '/^project/{s/^project. *\([a-zA-Z0-9]\{1,\}\).*/\1/p; q;}'\
                     CMakeLists.txt)
-VERSION  := $(shell sed -n '/^project/{s/^.\+VERSION \+//; s/[^\.0-9]\+//; p; q}'\
+VERSION  := $(shell sed -n '/^project/{s/^.\{1,\}VERSION \{1,\}//; s/[^\.0-9]\{1,\}//; p; q;}'\
                     CMakeLists.txt)
 
 HOSTNAME := $(shell hostname)
@@ -61,11 +61,7 @@ endif
 
 # Function that replaces variables in a given entry in a file 
 # E.g.: $(call substitute,ENTRY,FILENAME)
-substitute   = $(shell sed -n '/^$(1)=/{s!$(1)=!!; s!/\+$$!!;     \
-                                       s!@PROJECT@!$(PROJECT)!gI; \
-                                       s!@VERSION@!$(VERSION)!gI; \
-                                       s!@BUILD@!$(BUILD)!gI;     \
-                                       p; q}' $(2) 2>/dev/null)
+substitute   = $(shell sed -n '/^$(1)=/{s!$(1)=!!; s!/\{1,\}$$!!; s!@PROJECT@!$(PROJECT)!g; s!@VERSION@!$(VERSION)!g; s!@BUILD@!$(BUILD)!g; p; q;}' $(2) 2>/dev/null)
 BLD_DIR     := $(call substitute,DIR:BUILD,$(OPT_FILE))
 ROOT_DIR    := $(dir $(abspath include))
 DEF_BLD_DIR := $(ROOT_DIR:%/=%)/build
@@ -95,8 +91,8 @@ ver:
 variables   := $(filter-out toolchain=% generator=% build=% verbose=% prefix=%,$(MAKEOVERRIDES))
 makevars    := $(variables:%=-D%)
 
-envvars     += $(shell sed -n '/^ENV:/{s/^ENV://;p}' $(OPT_FILE) 2>/dev/null)
-makevars    += $(patsubst %,-D%,$(shell sed -n '/^...:/!{s/ *\#.*$$//; /^$$/!p}' \
+envvars     += $(shell sed -n '/^ENV:/{s/^ENV://;p;}' $(OPT_FILE) 2>/dev/null)
+makevars    += $(patsubst %,-D%,$(shell sed -n '/^...:/!{s/ *\#.*$$//; /^$$/!p;}' \
                                             $(OPT_FILE) 2>/dev/null))
 
 makecmd      = $(envvars) cmake -H. -B$(DIR) \
