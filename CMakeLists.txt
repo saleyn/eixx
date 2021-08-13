@@ -71,6 +71,7 @@ add_definitions(
 	-D_REENTRANT
 	-Wno-unused-local-typedefs
   -Wno-deprecated-declarations
+  -Wpedantic
 	-DBOOST_SYSTEM_NO_DEPRECATED
 )
 

@@ -62,7 +62,10 @@ private:
         unsigned int    alloc_size;
         unsigned int    size;
         cons_t*         tail;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpedantic"
         cons_t          head[0];
+        #pragma GCC diagnostic pop
     };
 
     typedef blob<char, Alloc> blob_t;
