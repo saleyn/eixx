@@ -54,7 +54,7 @@ void tcp_connection<Handler, Alloc>::start()
 
 template <class Handler, class Alloc>
 void tcp_connection<Handler, Alloc>::connect(
-    atom a_this_node, atom a_remote_node, atom a_cookie) throw(std::runtime_error)
+    atom a_this_node, atom a_remote_node, atom a_cookie)
 {
     using boost::asio::ip::tcp;
 

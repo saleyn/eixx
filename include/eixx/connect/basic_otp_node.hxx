@@ -75,7 +75,6 @@ basic_otp_node(
     boost::asio::io_service& a_io_svc,
     const std::string& a_nodename, const std::string& a_cookie,
     const Alloc& a_alloc, int8_t a_creation)
-    throw (err_bad_argument, err_connection, eterm_exception)
     : basic_otp_node_local(a_nodename, a_cookie)
     , m_creation((a_creation < 0 ? time(NULL) : (int)a_creation) & 0x03)
     , m_pid_count(1)
@@ -190,7 +189,6 @@ template <typename Alloc, typename Mutex>
 template <typename CompletionHandler>
 inline void basic_otp_node<Alloc, Mutex>::
 connect(CompletionHandler h, const atom& a_remote_nodename, size_t a_reconnect_secs)
-    throw(err_connection)
 {
     connect(h, a_remote_nodename, atom(), a_reconnect_secs);
 }
@@ -210,7 +208,7 @@ template <typename Alloc, typename Mutex>
 template <typename CompletionHandler>
 void basic_otp_node<Alloc, Mutex>::
 connect(CompletionHandler h, const atom& a_remote_node, const atom& a_cookie,
-        size_t a_reconnect_secs) throw(err_connection)
+        size_t a_reconnect_secs)
 {
     lock_guard<Mutex> guard(m_lock);
     typename conn_hash_map::iterator it = m_connections.find(a_remote_node);
@@ -251,20 +249,20 @@ rpc_call(const epid<Alloc>& a_from, const ref<Alloc>& a_ref,
 
 template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
-publish_port() throw (err_connection)
+publish_port()
 {
     throw err_connection("Not implemented!");
 }
 
 template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
-unpublish_port() throw (err_connection)
+unpublish_port()
 {
     throw std::runtime_error("Not implemented");
 }
 
 template <typename Alloc, typename Mutex>
-void basic_otp_node<Alloc, Mutex>::start_server() throw(err_connection)
+void basic_otp_node<Alloc, Mutex>::start_server()
 {
     throw std::runtime_error("Not implemented");
 }
@@ -289,7 +287,6 @@ report_status(report_level a_level, const connection_t* a_con, const std::string
 template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
 deliver(const transport_msg<Alloc>& a_msg)
-    throw (err_bad_argument, err_no_process, err_connection)
 {
     try {
         const eterm<Alloc>& l_to = a_msg.recipient();
@@ -307,7 +304,6 @@ template <typename Alloc, typename Mutex>
 template <typename ToProc>
 void basic_otp_node<Alloc, Mutex>::
 send(const atom& a_to_node, ToProc a_to, const transport_msg<Alloc>& a_msg)
-    throw (err_no_process, err_connection)
 {
     if (a_to_node == nodename()) {
         basic_otp_mailbox<Alloc, Mutex>* mbox = m_mailboxes.get(a_to);
@@ -323,7 +319,6 @@ send(const atom& a_to_node, ToProc a_to, const transport_msg<Alloc>& a_msg)
 template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
 send(const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_send(a_to, a_msg, m_allocator);
@@ -333,7 +328,6 @@ send(const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
 template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
 send(const atom& a_node, const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_send(a_to, a_msg, m_allocator);
@@ -343,7 +337,6 @@ send(const atom& a_node, const epid<Alloc>& a_to, const eterm<Alloc>& a_msg)
 template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
 send(const epid<Alloc>& a_from, const atom& a_to, const eterm<Alloc>& a_msg)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_reg_send(a_from, a_to, a_msg, m_allocator);
@@ -353,7 +346,6 @@ send(const epid<Alloc>& a_from, const atom& a_to, const eterm<Alloc>& a_msg)
 template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
 send(const epid<Alloc>& a_from, const atom& a_to_node, const atom& a_to, const eterm<Alloc>& a_msg)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_reg_send(a_from, a_to, a_msg, m_allocator);
@@ -365,7 +357,6 @@ void inline basic_otp_node<Alloc, Mutex>::
 send_rpc(const epid<Alloc>& a_from,
          const atom& a_node, const atom& a_mod, const atom& a_fun, 
          const list<Alloc>& args, const epid<Alloc>* gleader)
-    throw (err_bad_argument, err_no_process, err_connection)
 {
     static const atom rex("rex");
     transport_msg<Alloc> tm;
@@ -378,7 +369,6 @@ void inline basic_otp_node<Alloc, Mutex>::
 send_rpc_cast(const epid<Alloc>& a_from,
          const atom& a_node, const atom& a_mod, const atom& a_fun,
          const list<Alloc>& args, const epid<Alloc>* gleader)
-    throw (err_bad_argument, err_no_process, err_connection)
 {
     static const atom rex("rex");
     transport_msg<Alloc> tm;
@@ -390,7 +380,6 @@ template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
 send_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
           const eterm<Alloc>& a_reason)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_exit(a_from, a_to, a_reason, m_allocator);
@@ -401,7 +390,6 @@ template <typename Alloc, typename Mutex>
 void inline basic_otp_node<Alloc, Mutex>::
 send_exit2(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
           const eterm<Alloc>& a_reason)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_exit2(a_from, a_to, a_reason, m_allocator);
@@ -411,7 +399,6 @@ send_exit2(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
 template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
 send_link(const epid<Alloc>& a_from, const epid<Alloc>& a_to)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_link(a_from, a_to, m_allocator);
@@ -421,7 +408,6 @@ send_link(const epid<Alloc>& a_from, const epid<Alloc>& a_to)
 template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
 send_unlink(const epid<Alloc>& a_from, const epid<Alloc>& a_to)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_unlink(a_from, a_to, m_allocator);
@@ -431,7 +417,6 @@ send_unlink(const epid<Alloc>& a_from, const epid<Alloc>& a_to)
 template <typename Alloc, typename Mutex>
 const ref<Alloc>& basic_otp_node<Alloc, Mutex>::
 send_monitor(const epid<Alloc>& a_from, const epid<Alloc>& a_to)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     ref<Alloc> r = create_ref();
@@ -444,7 +429,6 @@ template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
 send_demonitor(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
                const ref<Alloc>& a_ref)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_demonitor(a_from, a_to, a_ref, m_allocator);
@@ -455,7 +439,6 @@ template <typename Alloc, typename Mutex>
 void basic_otp_node<Alloc, Mutex>::
 send_monitor_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
                   const ref<Alloc>& a_ref, const eterm<Alloc>& a_reason)
-    throw (err_no_process, err_connection)
 {
     transport_msg<Alloc> tm;
     tm.set_monitor_exit(a_from, a_to, a_ref, a_reason, m_allocator);

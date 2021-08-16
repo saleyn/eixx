@@ -200,6 +200,7 @@ public:
      * @param a_timeout is the timeout interval to wait for message (-1 = infinity)
      * @param a_repeat_count is the number of messages to wait (-1 = infinite)
      * @return true if the message was synchronously received
+     * @throws std::runtime_error
      **/
     template <typename OnReceive>
     bool async_receive
@@ -207,8 +208,7 @@ public:
         const OnReceive& h,
         std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
         int a_repeat_count = 0
-    )
-    throw (std::runtime_error);
+    );
 
     /**
      * Cancel pending asynchronous receive operation
@@ -227,6 +227,7 @@ public:
      *      void on_timeout(basic_otp_mailbox<Alloc,Mutex>&);
      *   \endcode
      * @param a_repeat_count number of messages to wait (-1 = infinite)
+     * @throws std::runtime_error
      */
     template <typename OnTimeout>
     bool async_match
@@ -235,8 +236,7 @@ public:
         const OnTimeout& a_on_timeout,
         std::chrono::milliseconds a_timeout = std::chrono::milliseconds(-1),
         int a_repeat_count = 0
-    )
-    throw (std::runtime_error);
+    );
 
     /// Deliver a message to this mailbox. The call is thread-safe.
 	void deliver(const transport_msg<Alloc>& a_msg) {
@@ -294,11 +294,15 @@ public:
         m_node.send_rpc(self(), a_node, a_mod, a_fun, args);
     }
 
-    /// Execute an equivalent of rpc:cast(...). Doesn't return any value.
+    /**
+     * Execute an equivalent of rpc:cast(...). Doesn't return any value.
+     * @throws err_bad_argument
+     * @throws err_no_process
+     * @throws err_connection
+     */
     void send_rpc_cast(const atom& a_node, const atom& a_mod,
             const atom& a_fun, const list<Alloc>& args,
-            const epid<Alloc>* gleader = NULL)
-            throw (err_bad_argument, err_no_process, err_connection) {
+            const epid<Alloc>* gleader = NULL) {
         m_node.send_rpc_cast(self(), a_node, a_mod, a_fun, args, gleader);
     }
 
@@ -315,7 +319,7 @@ public:
     /// The given pid will receive an exit message when \a a_pid dies.
     /// @throws err_no_process
     /// @throws err_connection
-    void link(const epid<Alloc>& a_to) throw (err_no_process, err_connection) {
+    void link(const epid<Alloc>& a_to) {
         if (self() == a_to)
             return;
         if (m_links.find(a_to) != m_links.end())

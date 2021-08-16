@@ -87,8 +87,8 @@ private:
     boost::asio::local::stream_protocol::socket m_socket;
     std::string m_uds_filename;
 
+    /// @throws std::runtime_error
     void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
-        throw(std::runtime_error)
     {
         base_t::connect(a_this_node, a_remote_nodename, a_cookie);
 

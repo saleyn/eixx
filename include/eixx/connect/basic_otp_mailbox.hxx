@@ -51,7 +51,7 @@ template <typename Alloc, typename Mutex>
 template <typename OnReceive>
 bool basic_otp_mailbox<Alloc, Mutex>::
 async_receive(const OnReceive& h, std::chrono::milliseconds a_timeout,
-              int   a_repeat_count) throw (std::runtime_error)
+              int   a_repeat_count)
 {
     return m_queue->async_dequeue(
         [this, &h](transport_msg<Alloc>*& a_msg, const boost::system::error_code& ec) {
@@ -81,7 +81,7 @@ bool basic_otp_mailbox<Alloc, Mutex>::
 async_match(const marshal::eterm_pattern_matcher<Alloc>& a_matcher,
             const OnTimeout& a_on_timeout,
             std::chrono::milliseconds a_timeout,
-            int a_repeat_count) throw (std::runtime_error)
+            int a_repeat_count)
 {
     auto f =
         [this, &a_matcher, &a_on_timeout]
