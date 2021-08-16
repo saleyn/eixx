@@ -37,8 +37,11 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 {
     const char* s  = buf + idx;
     const char* s0 = s;
-    if (get8(s) != ERL_PORT_EXT || get8(s) != ERL_ATOM_EXT)
+    if (get8(s) != ERL_PORT_EXT)
         throw err_decode_exception("Error decoding port", -1);
+    auto n  = get8(s);
+    if (n != ERL_ATOM_UTF8_EXT && n != ERL_ATOM_EXT)
+        throw err_decode_exception("Error decoding port node", -1);
     int len = get16be(s);
     detail::check_node_length(len);
     atom l_node(s, len);
@@ -58,7 +61,7 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     char* s  = buf + idx;
     char* s0 = s;
     put8(s,ERL_PORT_EXT);
-    put8(s,ERL_ATOM_EXT);
+    put8(s,ERL_ATOM_UTF8_EXT);
     const std::string& str = node().to_string();
     unsigned short n = str.size();
     put16be(s, n);

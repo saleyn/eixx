@@ -186,6 +186,13 @@ public:
         ei_encode_string_len(buf, &idx, c_str(), length());
     }
 
+    template <typename Stream>
+    Stream& to_binary_string(Stream& out) {
+        return eixx::to_binary_string(out, c_str(), size());
+    }
+
+    std::string to_binary_string() const { return eixx::to_binary_string(c_str(), size()); }
+
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
         return out << *this;
     }
@@ -193,7 +200,7 @@ public:
 
 template <typename Alloc>
 static std::string to_binary_string(const string<Alloc>& a) {
-    return to_binary_string(a.c_str(), a.size());
+    return a.to_binary_string();
 }
 
 template <class Alloc>

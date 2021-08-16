@@ -37,8 +37,11 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
 {
     const char* s  = buf + idx;
     const char* s0 = s;
-    if (get8(s) != ERL_PID_EXT || get8(s) != ERL_ATOM_EXT)
+    if (get8(s) != ERL_PID_EXT)
         throw err_decode_exception("Error decoding pid", -1);
+    auto n = get8(s);
+    if (n != ERL_ATOM_UTF8_EXT && n != ERL_ATOM_EXT)
+        throw err_decode_exception("Error decoding pid node", -1);
 
     int len = get16be(s);
     detail::check_node_length(len);
@@ -63,7 +66,7 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
     char* s  = buf + idx;
     char* s0 = s;
     put8(s,ERL_PID_EXT);
-    put8(s,ERL_ATOM_EXT);
+    put8(s,ERL_ATOM_UTF8_EXT);
     const std::string& nd = node().to_string();
     unsigned short n = nd.size();
     put16be(s, n);

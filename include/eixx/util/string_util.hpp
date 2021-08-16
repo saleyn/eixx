@@ -39,7 +39,8 @@ namespace eixx {
 /// Print the content of a buffer to \a out stream in the form:
 /// \verbatim <<I1, I2, ..., In>> \endverbatim where <tt>Ik</tt> is
 /// unsigned integer less than 256.
-inline std::ostream& to_binary_string(std::ostream& out, const char* buf, size_t sz) {
+template <typename Stream>
+inline Stream& to_binary_string(Stream& out, const char* buf, size_t sz) {
     out << "<<";
     const char* begin = buf, *end = buf + sz;
     for(const char* p = begin; p != end; ++p) {

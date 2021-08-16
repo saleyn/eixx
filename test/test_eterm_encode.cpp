@@ -21,6 +21,7 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 #include "test_alloc.hpp"
 #include <eixx/eixx.hpp>
+#include <ei.h>
 
 using namespace eixx;
 
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE( test_encode_atom )
 {
     eterm a(atom("abc"));
     string s(a.encode(0));
-    const uint8_t expect[] = {131,100,0,3,97,98,99};
+    const uint8_t expect[] = {131,ERL_ATOM_UTF8_EXT,0,3,97,98,99};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
     atom t1((const char*)expect, idx, sizeof(expect));
@@ -99,8 +100,8 @@ BOOST_AUTO_TEST_CASE( test_encode_list )
     list l(ll);
     eterm t(l);
     string s(t.encode(0));
-    const uint8_t expect[] = {131,108,0,0,0,4,100,0,3,97,98,99,107,0,2,101,102,
-                              97,1,107,0,2,103,104,106};
+    const uint8_t expect[] = {131,108,0,0,0,4,ERL_ATOM_UTF8_EXT,0,3,97,98,99,
+                              107,0,2,101,102,97,1,107,0,2,103,104,106};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
     list t1((const char*)expect, idx, sizeof(expect));
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE( test_encode_pid )
         string s(t.encode(0));
         //std::cout << s.to_binary_string() << std::endl;
         const uint8_t expect[] = 
-            {131,103,100,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0};
+            {131,103,ERL_ATOM_UTF8_EXT,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0};
         BOOST_REQUIRE(s.equal(expect));
         int idx = 1;  // skipping the magic byte
         eterm pid(epid((const char*)expect, idx, sizeof(expect)));
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE( test_encode_pid )
     }
     {
         const uint8_t expect[] =
-            {131,103,100,0,8,97,98,99,64,102,99,49,50,0,0,0,96,0,0,0,0,3};
+            {131,103,ERL_ATOM_UTF8_EXT,0,8,97,98,99,64,102,99,49,50,0,0,0,96,0,0,0,0,3};
         int idx = 1;  // skipping the magic byte
         epid decode_pid((const char*)expect, idx, sizeof(expect));
         epid expect_pid("abc@fc12", 96, 0, 3);
@@ -182,7 +183,7 @@ BOOST_AUTO_TEST_CASE( test_encode_port )
     string s(t.encode(0));
     //std::cout << s.to_binary_string() << std::endl;
     const uint8_t expect[] =
-        {131,102,100,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0};
+        {131,102,ERL_ATOM_UTF8_EXT,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
     eterm t1((const char*)expect, idx, sizeof(expect));
@@ -196,7 +197,7 @@ BOOST_AUTO_TEST_CASE( test_encode_ref )
     BOOST_REQUIRE_EQUAL("#Ref<test@host.1.2.3>", t.to_string());
     string s(t.encode(0));
     //std::cout << s.to_binary_string() << std::endl;
-    const uint8_t expect[] = {131,114,0,3,100,0,9,116,101,115,116,64,104,111,115,
+    const uint8_t expect[] = {131,114,0,3,ERL_ATOM_UTF8_EXT,0,9,116,101,115,116,64,104,111,115,
                               116,0,0,0,0,1,0,0,0,2,0,0,0,3};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
@@ -205,7 +206,7 @@ BOOST_AUTO_TEST_CASE( test_encode_ref )
     {
         ref t(atom("abc@fc12"), 993, 0, 0, 2);
         const uint8_t expect[] =
-            {131,114,0,3,100,0,8,97,98,99,64,102,99,49,50,2,0,0,3,225,0,0,0,0,0,0,0,0};
+            {131,114,0,3,ERL_ATOM_UTF8_EXT,0,8,97,98,99,64,102,99,49,50,2,0,0,3,225,0,0,0,0,0,0,0,0};
         int idx = 1;  // skipping the magic byte
         ref t1((const char*)expect, idx, sizeof(expect));
         BOOST_REQUIRE_EQUAL(t1, t);
@@ -231,8 +232,8 @@ BOOST_AUTO_TEST_CASE( test_encode_tuple )
     eterm t(tup);
     string s(t.encode(0));
     //std::cout << s.to_binary_string() << std::endl;
-    const uint8_t expect[] = {131,104,5,100,0,3,97,98,99,107,0,2,101,102,97,1,
-                              104,4,100,0,1,97,107,0,2,120,120,70,64,94,198,102,
+    const uint8_t expect[] = {131,104,5,ERL_ATOM_UTF8_EXT,0,3,97,98,99,107,0,2,101,102,97,1,
+                              104,4,ERL_ATOM_UTF8_EXT,0,1,97,107,0,2,120,120,70,64,94,198,102,
                               102,102,102,102,97,5,107,0,2,103,104};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
@@ -247,8 +248,8 @@ BOOST_AUTO_TEST_CASE( test_encode_trace )
     trace tr(1,2,3,self,4);
     eterm t(tr);
     string s(t.encode(0));
-    //std::cout << s.to_binary_string() << std::endl;
-    const uint8_t expect[] = {131,104,5,97,1,97,2,97,3,103,100,0,8,97,98,99,64,
+    //std::cout << to_binary_string(s) << std::endl;
+    const uint8_t expect[] = {131,104,5,97,1,97,2,97,3,103,ERL_ATOM_UTF8_EXT,0,8,97,98,99,64,
                               102,99,49,50,0,0,0,96,0,0,0,0,3,97,4};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte

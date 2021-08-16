@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE( test_atom )
     }
 
     {
-        const uint8_t buf[] = {ERL_ATOM_EXT,0,3,97,98,99};
+        const uint8_t buf[] = {ERL_ATOM_UTF8_EXT,0,3,97,98,99};
         int i = 0;
         atom atom((const char*)buf, i, sizeof(buf));
         BOOST_REQUIRE_EQUAL(6, i);
@@ -148,14 +148,14 @@ BOOST_AUTO_TEST_CASE( test_bool )
     }
 
     {
-        const uint8_t buf[] = {ERL_ATOM_EXT,0,4,116,114,117,101};
+        const uint8_t buf[] = {ERL_ATOM_UTF8_EXT,0,4,116,114,117,101};
         int i = 0;
         eterm t((const char*)buf, i, sizeof(buf), alloc);
         BOOST_REQUIRE_EQUAL(true, t.to_bool());
         BOOST_REQUIRE_EQUAL(std::string("true"), t.to_string());
     }
     {
-        const uint8_t buf[] = {ERL_ATOM_EXT,0,5,102,97,108,115,101};
+        const uint8_t buf[] = {ERL_ATOM_UTF8_EXT,0,5,102,97,108,115,101};
         int i = 0;
         eterm t((const char*)buf, i, sizeof(buf), alloc);
         BOOST_REQUIRE_EQUAL(sizeof(buf), (size_t)i);

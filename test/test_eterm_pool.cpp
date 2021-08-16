@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE( test_encode_atom_t )
 {
     atom a("abc");
     string s(eterm(a).encode(0));
-    const uint8_t expect[] = {131,100,0,3,97,98,99};
+    const uint8_t expect[] = {131,ERL_ATOM_UTF8_EXT,0,3,97,98,99};
     BOOST_REQUIRE(s.equal(expect));
 }
 

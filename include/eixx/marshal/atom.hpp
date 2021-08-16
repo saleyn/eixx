@@ -157,8 +157,10 @@ public:
         const char *s0 = s;
         int len;
         switch (get8(s)) {
-            case ERL_ATOM_EXT:       len = get16be(s);  break;
-            case ERL_SMALL_ATOM_EXT: len = get8(s);     break;
+            case ERL_ATOM_UTF8_EXT:       len = get16be(s);  break;
+            case ERL_SMALL_ATOM_UTF8_EXT: len = get8(s);     break;
+            case ERL_ATOM_EXT:            len = get16be(s);  break;
+            case ERL_SMALL_ATOM_EXT:      len = get8(s);     break;
             default: throw err_decode_exception("Error decoding atom", idx);
         }
         m_index = atom_table().lookup(std::string(s, len));
@@ -204,7 +206,7 @@ public:
         char* s0 = s;
         const int len = std::min((size_t)MAXATOMLEN, length());
         /* This function is documented to truncate at MAXATOMLEN (256) */
-        put8(s,ERL_ATOM_EXT);
+        put8(s,ERL_ATOM_UTF8_EXT);
         put16be(s,len);
         memmove(s,c_str(),len); /* unterminated string */
         s   += len;
