@@ -39,10 +39,10 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
     const char* s0 = s;
     if (get8(s) != ERL_PORT_EXT)
         throw err_decode_exception("Error decoding port", -1);
-    auto n  = get8(s);
-    if (n != ERL_ATOM_UTF8_EXT && n != ERL_ATOM_EXT)
+
+    int len = atom::getLen(s);
+    if (len < 0)
         throw err_decode_exception("Error decoding port node", -1);
-    int len = get16be(s);
     detail::check_node_length(len);
     atom l_node(s, len);
     s += len;

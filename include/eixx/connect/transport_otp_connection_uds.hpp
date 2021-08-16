@@ -59,8 +59,12 @@ public:
     boost::asio::local::stream_protocol::socket& socket() { return m_socket; }
 
     void start() {
+#if BOOST_VERSION >= 104700
+        m_socket.non_blocking(true);
+#else
         boost::asio::local::stream_protocol::socket::non_blocking_io nb(true);
         m_socket.io_control(nb);
+#endif
         base_t::start();
     }
 
@@ -70,7 +74,13 @@ public:
         return m_uds_filename;
     }
 
-    int native_socket() { return m_socket.native(); }
+    int native_socket() {
+#if BOOST_VERSION >= 104700
+        return m_socket.native_handle();
+#else
+        return m_socket.native();
+#endif
+    }
 
 private:
     /// Socket for the connection.

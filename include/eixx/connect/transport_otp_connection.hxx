@@ -44,7 +44,7 @@ template <class Handler, class Alloc>
 const size_t connection<Handler, Alloc>::s_header_size = 4;
 
 template <class Handler, class Alloc>
-const char   connection<Handler, Alloc>::s_header_magic = 132;
+const char   connection<Handler, Alloc>::s_header_magic = static_cast<char>(132);
 
 template <class Handler, class Alloc>
 const eterm<Alloc> connection<Handler, Alloc>::s_null_cookie;
@@ -172,7 +172,7 @@ handle_write(const boost::system::error_code& err)
         return;
     }
 
-    if (unlikely(err)) {
+    if (unlikely(bool(err))) {
         if (verbose() >= VERBOSE_TRACE) {
             std::stringstream s;
             s << "connection::handle_write(" << err.value() << ')';
@@ -223,7 +223,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
                 "Connection aborted - exiting connection::handle_read");
         }
         return;
-    } else if (unlikely(err)) {
+    } else if (unlikely(bool(err))) {
         // We use operation_aborted as a user-initiated connection reset,
         // therefore check to substitute the error since bytes_transferred == 0
         // means a connection loss.

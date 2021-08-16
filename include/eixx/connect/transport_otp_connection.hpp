@@ -141,21 +141,33 @@ protected:
 
     void do_write_internal() {
         if (!m_is_writing && !m_out_msg_queue[available_queue()].empty()) {
+#if BOOST_VERSION >= 106600
+            std::deque<boost::asio::const_buffer> buffers = m_out_msg_queue[available_queue()];
+#else
             typedef boost::asio::detail::consuming_buffers<
                 boost::asio::const_buffer, 
                 std::deque<boost::asio::const_buffer> 
             > cb_t;
             cb_t buffers(m_out_msg_queue[available_queue()]);
+#endif            
             m_is_writing = true;
             flip_queues(); // Work on the data accumulated in the available_queue.
-            if (unlikely(verbose() >= VERBOSE_WIRE))
-                for(cb_t::const_iterator it=buffers.begin(); it != buffers.end(); ++it) {
+            if (unlikely(verbose() >= VERBOSE_WIRE)) {
+#if BOOST_VERSION >= 106600
+                auto begin = boost::asio::buffer_sequence_begin(buffers);
+                auto end = boost::asio::buffer_sequence_end(buffers);
+#else
+                auto begin = buffers.begin();
+                auto end = buffers.end();
+#endif
+                for(auto it=begin; it != end; ++it) {
                     std::stringstream s;
                     s << "  async_write " << boost::asio::buffer_size(*it) << " bytes: " 
                       << to_binary_string(boost::asio::buffer_cast<const char*>(*it),
                                           boost::asio::buffer_size(*it));
                     m_handler->report_status(REPORT_INFO, s.str());
                 }
+            }
             auto pthis = this->shared_from_this();
             async_write(buffers, boost::asio::transfer_all(), 
                 [pthis](auto& ec, std::size_t) { pthis->handle_write(ec); });

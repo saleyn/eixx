@@ -26,7 +26,6 @@ target_link_libraries(
   eixx
   ${Erlang_EI_LIBRARIES}
   ${Boost_LIBRARIES}
-  boost_system
 )
 
 add_executable(test-perf test_perf.cpp)

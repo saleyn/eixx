@@ -101,7 +101,7 @@ public:
     template<typename T, typename A> friend struct util::async_queue;
     template<typename A, typename M> friend class basic_otp_mailbox_registry;
     template<typename _R> friend class std::function;
-    template<typename _R, typename _F> friend class std::_Function_handler;
+    // template<typename _R, typename _F> friend class std::_Function_handler;
 
 private:
     boost::asio::io_service&            m_io_service;

@@ -62,7 +62,13 @@ static const int   DFLAG_DIST_MONITOR           = 8;
 static const int   DFLAG_FUN_TAGS               = 16;
 static const int   DFLAG_NEW_FUN_TAGS           = 0x80;
 static const int   DFLAG_EXTENDED_PIDS_PORTS    = 0x100;
+static const int   DFLAG_EXPORT_PTR_TAG         = 0x200;
+static const int   DFLAG_BIT_BINARIES           = 0x400;
 static const int   DFLAG_NEW_FLOATS             = 0x800;
+static const int   DFLAG_SMALL_ATOM_TAGS        = 0x4000;
+static const int   DFLAG_UTF8_ATOMS             = 0x10000;
+static const int   DFLAG_MAP_TAG                = 0x20000;
+static const int   DFLAG_BIG_CREATION           = 0x40000;
 #endif
 
 //----------------------------------------------------------------------------
@@ -100,7 +106,13 @@ public:
         return s.str();
     }
 
-    int native_socket() { return m_socket.native(); }
+    int native_socket() {
+#if BOOST_VERSION >= 104700
+        return m_socket.native_handle();
+#else
+        return m_socket.native();
+#endif
+    }
 
 private:
     /// Authentication state
@@ -141,7 +153,7 @@ private:
 
     boost::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
         boost::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();
-        return *reinterpret_cast<boost::shared_ptr<tcp_connection<Handler, Alloc> >*>(&p);
+        return boost::reinterpret_pointer_cast<tcp_connection<Handler, Alloc> >(p);
     }
 
     /// Set the socket to non-blocking mode and issue on_connect() callback.

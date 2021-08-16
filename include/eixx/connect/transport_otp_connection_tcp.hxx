@@ -42,8 +42,12 @@ namespace connect {
 template <class Handler, class Alloc>
 void tcp_connection<Handler, Alloc>::start() 
 {
+#if BOOST_VERSION >= 104700
+    m_socket.non_blocking(true);
+#else
     boost::asio::ip::tcp::socket::non_blocking_io nb(true);
     m_socket.io_control(nb);
+#endif
 
     base_t::start(); // trigger on_connect callback
 }
@@ -331,12 +335,20 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
     put16be(w, siz - 2);
     put8(w, 'n');
     put16be(w, m_dist_version);
-    put32be(w,  ( DFLAG_EXTENDED_REFERENCES
+    unsigned int flags = (DFLAG_EXTENDED_REFERENCES
+                | DFLAG_DIST_MONITOR
                 | DFLAG_EXTENDED_PIDS_PORTS
                 | DFLAG_FUN_TAGS
                 | DFLAG_NEW_FUN_TAGS
                 | DFLAG_NEW_FLOATS
-                | DFLAG_DIST_MONITOR));
+                | DFLAG_SMALL_ATOM_TAGS
+                | DFLAG_UTF8_ATOMS
+                | DFLAG_MAP_TAG
+                // | DFLAG_BIG_CREATION
+                // | DFLAG_EXPORT_PTR_TAG
+                // | DFLAG_BIT_BINARIES
+                );
+    put32be(w, flags);
     memcpy(w, this->local_nodename().c_str(), this->local_nodename().size());
 
     if (this->handler()->verbose() >= VERBOSE_TRACE) {

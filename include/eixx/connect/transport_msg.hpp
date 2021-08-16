@@ -450,8 +450,9 @@ const char* transport_msg<Alloc>::type_string() const {
         case DEMONITOR_P:       return "DEMONITOR_P";
         case MONITOR_P_EXIT:    return "MONITOR_P_EXIT";
         default: {
-            std::stringstream str; str << "UNSUPPORTED(" << bit_scan_forward(m_type) << ')';
-            return str.str().c_str();
+            // std::stringstream str; str << "UNSUPPORTED(" << bit_scan_forward(m_type) << ')';
+            // return str.str().c_str();
+            return "UNSUPPORTED";
         }
     }
 }
