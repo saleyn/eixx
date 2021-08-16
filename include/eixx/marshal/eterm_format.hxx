@@ -387,7 +387,7 @@ namespace marshal {
                     const char* end = strstr(++(*fmt), ">>");
                     if (!end)
                         throw err_format_exception("Cannot find end of binary", *fmt);
-                    std::vector<char> v;
+                    std::vector<char> v2;
                     auto p = *fmt;
 
                     while (p < end) {
@@ -399,15 +399,15 @@ namespace marshal {
                         p = q;
                         if (byte < 0 || byte > 255)
                             throw err_format_exception("Invalid byte value in binary", p);
-                        v.push_back((char)byte);
+                        v2.push_back((char)byte);
                         while (*p == ' ' || *p == '\t') ++p;
                         if (*p == ',')
                             ++p;
                         else if (p < end)
                             throw err_format_exception("Invalid byte delimiter in binary", p);
                     }
-                    auto begin = &v[0];
-                    ret = eterm<Alloc>(binary<Alloc>(begin, v.size(), alloc));
+                    auto begin = &v2[0];
+                    ret = eterm<Alloc>(binary<Alloc>(begin, v2.size(), alloc));
                     *fmt = end + 2;
                 }
                 break;
