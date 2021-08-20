@@ -48,11 +48,16 @@ using marshal::atom;
 class basic_otp_node_local {
 public:
     basic_otp_node_local() {}
+
+    /// @throws std::runtime_error
+    /// @throws err_bad_argument
     basic_otp_node_local(const std::string& a_nodename, const std::string& a_cookie = "");
 
     virtual ~basic_otp_node_local() {}
 
     /// Change the nodename of current node.
+    /// @throws std::runtime_error
+    /// @throws err_bad_argument
     void set_nodename(const std::string& a_nodename, const std::string& a_cookie = "");
 
     /// Get node name in the form <tt>node@host</tt>.

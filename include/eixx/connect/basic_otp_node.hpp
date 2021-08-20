@@ -107,13 +107,17 @@ class basic_otp_node: public basic_otp_node_local {
 
 protected:
     /// Publish the node port to epmd making this node known to the world.
+    /// @throws err_connection
     void publish_port();
 
     /// Unregister this node from epmd.
+    /// @throws err_connection
     void unpublish_port();
 
     /// Send a message to a process ToProc which is either epid<Alloc> or
     /// atom<Alloc> for registered names.
+    /// @throws err_no_process
+    /// @throws err_connection
     template <typename ToProc>
     void send(const atom& a_to_node,
         ToProc a_to, const transport_msg<Alloc>& a_msg);
@@ -218,6 +222,7 @@ public:
      *          attempts in case of connection drops.
      * @returns A new connection. The connection has no receiver defined
      * and is not started.
+     * @throws err_connection
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_node,
@@ -230,6 +235,7 @@ public:
      *          attempts in case of connection drops.
      * @returns A new connection. The connection has no receiver defined
      * and is not started.
+     * @throws err_connection
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_nodename,
@@ -277,11 +283,16 @@ public:
     void stop_server();
 
     /// Deliver a message to its local receipient mailbox.
+    /// @throws err_bad_argument
+    /// @throws err_no_process
+    /// @throws err_connection
     void deliver(const transport_msg<Alloc>& a_tm);
 
     /// Send a message \a a_msg from \a a_from pid to \a a_to pid.
     /// @param a_to is a remote process.
     /// @param a_msg is the message to send.
+    /// @throws err_no_process
+    /// @throws err_connection
     void send(const epid<Alloc>& a_to, const eterm<Alloc>& a_msg);
 
     /// Send a message \a a_msg to the remote process \a a_to on node \a a_node.
@@ -289,13 +300,19 @@ public:
     /// @param a_node is the node to send the message to.
     /// @param a_to is a remote process.
     /// @param a_msg is the message to send.
+    /// @throws err_no_process
+    /// @throws err_connection
     void send(const atom& a_node, const epid<Alloc>& a_to, const eterm<Alloc>& a_msg);
 
     /// Send a message \a a_msg to the local process registered as \a a_to.
+    /// @throws err_no_process
+    /// @throws err_connection
     void send(const epid<Alloc>& a_from, const atom& a_to, const eterm<Alloc>& a_msg);
 
     /// Send a message \a a_msg to the process registered as \a a_to_name
     /// on remote node \a a_node.
+    /// @throws err_no_process
+    /// @throws err_connection
     void send(const epid<Alloc>& a_from, const atom& a_to_node, const atom& a_to_name,
         const eterm<Alloc>& a_msg);
 
@@ -319,17 +336,24 @@ public:
                   const epid<Alloc>* gleader = NULL);
 
     /// Execute an equivalent of rpc:cast(...). Doesn't return any value.
+    /// @throws err_bad_argument
+    /// @throws err_no_process
+    /// @throws err_connection
     void send_rpc_cast(const epid<Alloc>& a_from, const atom& a_to_node,
                    const atom& a_mod, const atom& a_fun, const list<Alloc>& args,
                   const epid<Alloc>* gleader = NULL);
 
     /// Attempt to kill a remote process by sending
     /// an exit message to a_pid, with reason \a a_reason
+    /// @throws err_no_process
+    /// @throws err_connection
     void send_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
         const eterm<Alloc>& a_reason);
 
     /// Attempt to kill a remote process by sending
     /// an exit2 message to a_pid, with reason \a a_reason
+    /// @throws err_no_process
+    /// @throws err_connection
     void send_exit2(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
         const eterm<Alloc>& a_reason);
 
@@ -340,14 +364,22 @@ public:
     void send_link(const epid<Alloc>& a_from, const epid<Alloc>& a_to);
 
     /// UnLink the given pid
+    /// @throws err_no_process
+    /// @throws err_connection
     void send_unlink(const epid<Alloc>& a_from, const epid<Alloc>& a_to);
 
+    /// @throws err_no_process
+    /// @throws err_connection
     const ref<Alloc>&
     send_monitor(const epid<Alloc>& a_from, const epid<Alloc>& a_to_pid);
 
     /// Demonitor the \a a_to pid monitored by \a a_from pid using \a a_ref reference.
+    /// @throws err_no_process
+    /// @throws err_connection
     void send_demonitor(const epid<Alloc>& a_from, const epid<Alloc>& a_to, const ref<Alloc>& a_ref);
 
+    /// @throws err_no_process
+    /// @throws err_connection
     void send_monitor_exit(const epid<Alloc>& a_from, const epid<Alloc>& a_to,
         const ref<Alloc>& a_ref, const eterm<Alloc>& a_reason);
 

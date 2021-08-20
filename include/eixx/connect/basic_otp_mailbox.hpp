@@ -200,7 +200,7 @@ public:
      * @param a_timeout is the timeout interval to wait for message (-1 = infinity)
      * @param a_repeat_count is the number of messages to wait (-1 = infinite)
      * @return true if the message was synchronously received
-     * @throw std::runtime_error
+     * @throws std::runtime_error
      **/
     template <typename OnReceive>
     bool async_receive
@@ -227,7 +227,7 @@ public:
      *      void on_timeout(basic_otp_mailbox<Alloc,Mutex>&);
      *   \endcode
      * @param a_repeat_count number of messages to wait (-1 = infinite)
-     * @throw std::runtime_error
+     * @throws std::runtime_error
      */
     template <typename OnTimeout>
     bool async_match
@@ -269,7 +269,7 @@ public:
      * Block until response for a RPC call arrives.
      * @return a pointer to ErlTerm containing the response
      * @exception EpiConnectionException if there was an connection error
-	 * @throw EpiBadRPC if the corresponding RPC was incorrect
+	 * @throws EpiBadRPC if the corresponding RPC was incorrect
      */
     //bool receive_rpc_reply(const eterm<Alloc>& a_reply);
 
@@ -294,7 +294,12 @@ public:
         m_node.send_rpc(self(), a_node, a_mod, a_fun, args);
     }
 
-    /// Execute an equivalent of rpc:cast(...). Doesn't return any value.
+    /**
+     * Execute an equivalent of rpc:cast(...). Doesn't return any value.
+     * @throws err_bad_argument
+     * @throws err_no_process
+     * @throws err_connection
+     */
     void send_rpc_cast(const atom& a_node, const atom& a_mod,
             const atom& a_fun, const list<Alloc>& args,
             const epid<Alloc>* gleader = NULL)

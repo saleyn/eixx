@@ -153,6 +153,8 @@ erase(mailbox_ptr a_mbox)
 
 /**
  * Look up a mailbox based on its name or pid.
+ * @throws err_bad_argument
+ * @throws err_no_process
  */
 template <typename Alloc, typename Mutex>
 typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
@@ -170,6 +172,7 @@ get(const eterm<Alloc>& a_proc) const
  * Look up a mailbox based on its name. If the mailbox has gone out
  * of scope we also remove the reference from the hashtable so we
  * don't find it again.
+ * @throws err_no_process
  */
 template <typename Alloc, typename Mutex>
 typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
@@ -187,6 +190,7 @@ get(atom a_name) const
  * Look up a mailbox based on its pid. If the mailbox has gone out
  * of scope we also remove the reference from the hashtable so we
  * don't find it again.
+ * @throws err_no_process
  */
 template <typename Alloc, typename Mutex>
 typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr

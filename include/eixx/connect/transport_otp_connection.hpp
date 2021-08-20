@@ -182,6 +182,7 @@ protected:
     /// Note: TICK message is represented by msg type = 0, in this case \a a_cntrl_msg
     /// and \a a_msg are invalid.
     /// @return Control Message
+    /// @throws err_decode_exception
     int transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm);
 
     void process_message(const char* a_buf, size_t a_size);
@@ -224,12 +225,14 @@ protected:
     /// modified to exclude the "...://" prefix.
     /// @param <s> is a connection address (e.g. "tcp://node@host").
     /// @return connection type derived from <tt>s</tt>.
+    /// @throws std::runtime_error
     static connection_type parse_connection_type(std::string& s);
 
     /// Establish connection to \a a_remote_nodename. The call is non-blocking -
     /// it will immediately returned, and Handler's on_connect() or 
     /// on_error() callback will be invoked on successful/failed connection
     /// status.
+    /// @throws std::runtime_error
     virtual void connect(atom   a_this_node,
                          atom   a_remote_nodename,
                          atom   a_cookie)

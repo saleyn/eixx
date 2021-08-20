@@ -152,6 +152,7 @@ public:
             m_transport->stop();
     }
 
+    /// @throws err_connection if not connected to \a a_node._
     void send(const transport_msg<Alloc>& a_msg) {
         if (!m_transport) {
             if (m_abort)

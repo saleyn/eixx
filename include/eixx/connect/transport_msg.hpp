@@ -144,7 +144,7 @@ public:
 
     /// This function may only raise exception for MONITOR_P_EXIT
     /// message types if the message sender is given by name rather than by pid.
-    /// @throw err_wrong_type
+    /// @throws err_wrong_type
     const epid<Alloc>& sender_pid() const {
         return sender().to_pid();
     }
@@ -178,17 +178,17 @@ public:
 
     /// This function may only raise exception for MONITOR_P|DEMONITOR_P
     /// message types if the message sender is given by name rather than by pid.
-    /// @throw err_wrong_type
+    /// @throws err_wrong_type
     const epid<Alloc>& recipient_pid() const {
         return recipient().to_pid();
     }
 
-    /// @throw err_wrong_type
+    /// @throws err_wrong_type
     const atom& recipient_name() const {
         return recipient().to_atom();
     }
 
-    /// @throw err_wrong_type
+    /// @throws err_wrong_type
     const eterm<Alloc>& trace_token() const {
         switch (m_type) {
             case SEND_TT:
@@ -200,7 +200,7 @@ public:
         }
     }
 
-    /// @throw err_wrong_type
+    /// @throws err_wrong_type
     const ref<Alloc>& get_ref() const {
         switch (m_type) {
             case MONITOR_P:
@@ -212,7 +212,7 @@ public:
         }
     }
 
-    /// @throw err_wrong_type
+    /// @throws err_wrong_type
     const eterm<Alloc>& reason() const {
         switch (m_type) {
             case EXIT:
