@@ -152,18 +152,23 @@ public:
  */
 class err_encode_exception: public eterm_exception {
     int         m_code;
+    long        m_value;
     std::string m_what;
 public:
-    err_encode_exception(const std::string &msg, int code=0)
+    err_encode_exception(const std::string &msg, int code=0, long value=0)
         : eterm_exception(msg)
         , m_code(code)
+        , m_value(value)
     {
-        std::stringstream s; s << m_msg << " (" << m_code << ").";
+        std::stringstream s; s << m_msg;
+        if (value != 0) s << " ("    << m_value << ")";
+        if (code  > -1) s << " at (" << m_code  << ")";
         m_what = s.str();
     }
 
-    const char* what() const throw() { return m_what.c_str(); }
-    int         code() const         { return m_code; }
+    const char* what()  const throw() { return m_what.c_str(); }
+    int         code()  const         { return m_code;  }
+    int         value() const         { return m_value; }
 };
 
 /**
@@ -171,8 +176,11 @@ public:
  */
 class err_decode_exception: public err_encode_exception {
 public:
-    err_decode_exception(const std::string &msg, int code=0)
-        : err_encode_exception(msg, code)
+    err_decode_exception(const std::string &msg, int pos=0)
+        : err_encode_exception(msg, pos)
+    {}
+    err_decode_exception(const std::string &msg, int pos, long value)
+        : err_encode_exception(msg, pos, value)
     {}
 };
 

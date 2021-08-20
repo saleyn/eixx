@@ -45,11 +45,11 @@ namespace marshal {
 template <class Alloc>
 class port {
     struct port_blob {
-        uint8_t creation;
-        int     id;
-        atom    node;
+        uint32_t creation;
+        uint64_t id;
+        atom     node;
 
-        port_blob(const atom& a_node, int a_id, uint8_t a_cre)
+        port_blob(const atom& a_node, uint64_t a_id, uint32_t a_cre)
             : creation(a_cre), id(a_id), node(a_node)
         {}
     };
@@ -62,11 +62,11 @@ class port {
     }
 
     // Must only be called from constructor!
-    void init(const atom& node, int id, uint8_t creation, 
+    void init(const atom& node, uint64_t id, uint32_t creation, 
               const Alloc& alloc)
     {
         m_blob = new blob<port_blob, Alloc>(1, alloc);
-        new (m_blob->data()) port_blob(node, id & 0x0fffffff, creation & 0x03);
+        new (m_blob->data()) port_blob(node, id, creation);
     }
 
 public:
@@ -139,13 +139,13 @@ public:
      * Get the id number from the PORT.
      * @return the id number from the PORT.
      **/
-    int id() const { return m_blob ? m_blob->data()->id : 0; }
+    uint64_t id() const { return m_blob ? m_blob->data()->id : 0; }
 
     /**
      * Get the creation number from the PORT.
      * @return the creation number from the PORT.
      **/
-    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
+    uint32_t creation() const { return m_blob ? m_blob->data()->creation : 0; }
 
     bool operator== (const port<Alloc>& t) const {
         return id() == t.id() && node() == t.node() && creation() == t.creation();
@@ -163,7 +163,7 @@ public:
         return false;
     }
 
-    size_t encode_size() const { return 9 + node().size(); }
+    size_t encode_size() const { return (id() > 0x0fffffff ? 16 : 12) + node().size(); }
 
     void encode(char* buf, int& idx, size_t size) const;
 
@@ -178,7 +178,10 @@ public:
 namespace std {
     template <typename Alloc>
     ostream& operator<< (ostream& out, const eixx::marshal::port<Alloc>& a) {
-        return out << "#Port<" << a.node() << "." << a.id() << ">";
+        out << "#Port<" << a.node() << "." << a.id();
+        if (a.creation() > 0)
+            out << ',' << a.creation();
+        return out << '>';
     }
 
 } // namespace std

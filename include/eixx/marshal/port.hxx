@@ -35,21 +35,39 @@ namespace marshal {
 template <class Alloc>
 port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 {
-    const char* s  = buf + idx;
-    const char* s0 = s;
-    if (get8(s) != ERL_PORT_EXT)
-        throw err_decode_exception("Error decoding port", -1);
+    const char* s   = buf + idx;
+    const char* s0  = s;
+    auto        tag = get8(s);
+    if (tag != ERL_PORT_EXT     &&
+        tag != ERL_NEW_PORT_EXT &&
+        tag != ERL_V4_PORT_EXT)
+        throw err_decode_exception("Error decoding port", idx, tag);
 
     int len = atom::get_len(s);
     if (len < 0)
-        throw err_decode_exception("Error decoding port node", -1);
+        throw err_decode_exception("Error decoding port node", idx, len);
     detail::check_node_length(len);
     atom l_node(s, len);
     s += len;
 
-    int     l_id  = get32be(s)  & 0x0fffffff;   /* 28 bits */
-    uint8_t l_cre = get8(s)     & 0x03;         /* 2 bits */
-    init(l_node, l_id, l_cre, a_alloc);
+    uint64_t id;
+    uint32_t cre;
+
+    switch (tag) {
+        case ERL_V4_PORT_EXT:
+            id  = get64be(s);
+            cre = get32be(s);
+            break;
+        case ERL_NEW_PORT_EXT:
+            id  = uint64_t(get32be(s));
+            cre = get32be(s);
+            break;
+        case ERL_PORT_EXT:
+            id  = uint64_t(get32be(s)) & 0x0fffffff;  /* 28 bits */
+            cre = get8(s) & 0x03;                     /* 2 bits  */
+            break;
+    }
+    init(l_node, id, cre, a_alloc);
 
     idx += s - s0;
     BOOST_ASSERT((size_t)idx <= size);
@@ -60,7 +78,7 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
-    put8(s,ERL_PORT_EXT);
+    s++; // Skip ERL_PORT_EXT
     put8(s,ERL_ATOM_UTF8_EXT);
     const std::string& str = node().to_string();
     unsigned short n = str.size();
@@ -68,9 +86,15 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     memmove(s, str.c_str(), n);
     s += n;
 
-    /* now the integers */
-    put32be(s, id() & 0x0fffffff);  /* 28 bits */
-    put8(s,   (creation() & 0x03)); /* 2 bits */
+    if (id() > 0x0fffffff /* 28 bits */) {
+        *s0 = ERL_V4_PORT_EXT;
+        put64be(s, id());
+        put32be(s, creation());
+    } else {
+        *s0 = ERL_PORT_EXT;
+        put32be(s, id());
+        put32be(s, creation());
+    }
 
     idx += s-s0;
     BOOST_ASSERT((size_t)idx <= size);

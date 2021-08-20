@@ -156,11 +156,11 @@ BOOST_AUTO_TEST_CASE( test_encode_pid )
 {
     {
         eterm t(epid("test@host", 1, 2, 0));
-        BOOST_REQUIRE_EQUAL("#Pid<test@host.1.2.0>", t.to_string());
+        BOOST_REQUIRE_EQUAL("#Pid<test@host.1.2>", t.to_string());
         string s(t.encode(0));
         //std::cout << s.to_binary_string() << std::endl;
         const uint8_t expect[] = 
-            {131,103,ERL_ATOM_UTF8_EXT,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0};
+            {131,88,118,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0,0,0,0};
         BOOST_REQUIRE(s.equal(expect));
         int idx = 1;  // skipping the magic byte
         eterm pid(epid((const char*)expect, idx, sizeof(expect)));
@@ -168,10 +168,10 @@ BOOST_AUTO_TEST_CASE( test_encode_pid )
     }
     {
         const uint8_t expect[] =
-            {131,103,ERL_ATOM_UTF8_EXT,0,8,97,98,99,64,102,99,49,50,0,0,0,96,0,0,0,0,3};
+            {131,88,118,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0,0,0,3};
         int idx = 1;  // skipping the magic byte
         epid decode_pid((const char*)expect, idx, sizeof(expect));
-        epid expect_pid("abc@fc12", 96, 0, 3);
+        epid expect_pid("test@host", 1, 2, 3);
         BOOST_REQUIRE_EQUAL(expect_pid, decode_pid);
     }
 }
@@ -197,16 +197,17 @@ BOOST_AUTO_TEST_CASE( test_encode_ref )
     BOOST_REQUIRE_EQUAL("#Ref<test@host.1.2.3>", t.to_string());
     string s(t.encode(0));
     //std::cout << s.to_binary_string() << std::endl;
-    const uint8_t expect[] = {131,114,0,3,ERL_ATOM_UTF8_EXT,0,9,116,101,115,116,64,104,111,115,
-                              116,0,0,0,0,1,0,0,0,2,0,0,0,3};
+    const uint8_t expect[] =
+        {131,90,0,3,100,0,9,116,101,115,116,64,104,111,115,116,0,0,0,0,0,0,0,1,0,0,0,2,0,0,0,3};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
     ref t1((const char*)expect, idx, sizeof(expect));
     BOOST_REQUIRE_EQUAL(eterm(t1), t);
     {
         ref t(atom("abc@fc12"), 993, 0, 0, 2);
+        //std::cout << string(eterm(t).encode(0)).to_binary_string() << std::endl;
         const uint8_t expect[] =
-            {131,114,0,3,ERL_ATOM_UTF8_EXT,0,8,97,98,99,64,102,99,49,50,2,0,0,3,225,0,0,0,0,0,0,0,0};
+            {131,90,0,3,118,0,8,97,98,99,64,102,99,49,50,0,0,0,2,0,0,3,225,0,0,0,0,0,0,0,0};
         int idx = 1;  // skipping the magic byte
         ref t1((const char*)expect, idx, sizeof(expect));
         BOOST_REQUIRE_EQUAL(t1, t);
@@ -249,8 +250,8 @@ BOOST_AUTO_TEST_CASE( test_encode_trace )
     eterm t(tr);
     string s(t.encode(0));
     //std::cout << to_binary_string(s) << std::endl;
-    const uint8_t expect[] = {131,104,5,97,1,97,2,97,3,103,ERL_ATOM_UTF8_EXT,0,8,97,98,99,64,
-                              102,99,49,50,0,0,0,96,0,0,0,0,3,97,4};
+    const uint8_t expect[] = 
+        {131,104,5,97,1,97,2,97,3,88,118,0,8,97,98,99,64,102,99,49,50,0,0,0,96,0,0,0,0,0,0,0,3,97,4};
     BOOST_REQUIRE(s.equal(expect));
     int idx = 1;  // skipping the magic byte
     trace t1((const char*)expect, idx, sizeof(expect));
@@ -260,18 +261,18 @@ BOOST_AUTO_TEST_CASE( test_encode_trace )
     BOOST_REQUIRE_EQUAL(3,   t1.serial());
     BOOST_REQUIRE(self == t1.from());
     BOOST_REQUIRE_EQUAL(4,   t1.prev());
-    BOOST_REQUIRE_EQUAL("{1,2,3,#Pid<abc@fc12.96.0.3>,4}", eterm(t1).to_string());
+    BOOST_REQUIRE_EQUAL("{1,2,3,#Pid<abc@fc12.96.0,3>,4}", eterm(t1).to_string());
 }
 
 BOOST_AUTO_TEST_CASE( test_encode_rpc )
 {
     static const unsigned char s_expected[] = {
-        131,104,2,103,100,0,14,69,67,71,46,72,49,46,48,48,49,64,102,49,54,0,0,0,1,
-        0,0,0,0,0,104,5,100,0,4,99,97,108,108,100,0,7,101,99,103,95,97,112,105,100,
-        0,11,114,101,103,95,112,114,111,99,101,115,115,108,0,0,0,5,100,0,3,69,67,71,
-        100,0,10,69,67,71,46,72,49,46,48,48,49,103,100,0,14,69,67,71,46,72,49,46,48,
-        48,49,64,102,49,54,0,0,0,1,0,0,0,0,0,107,0,12,101,120,97,109,112,108,101,95,
-        99,111,114,101,98,0,0,7,208,106,100,0,4,117,115,101,114
+        131,104,2,88,118,0,14,69,67,71,46,72,49,46,48,48,49,64,102,49,54,0,0,0,1,0,
+        0,0,0,0,0,0,0,104,5,118,0,4,99,97,108,108,118,0,7,101,99,103,95,97,112,105,
+        118,0,11,114,101,103,95,112,114,111,99,101,115,115,108,0,0,0,5,118,0,3,69,
+        67,71,118,0,10,69,67,71,46,72,49,46,48,48,49,88,118,0,14,69,67,71,46,72,49,
+        46,48,48,49,64,102,49,54,0,0,0,1,0,0,0,0,0,0,0,0,107,0,12,101,120,97,109,
+        112,108,101,95,99,111,114,101,98,0,0,7,208,106,118,0,4,117,115,101,114
     };
 
     epid l_pid("ECG.H1.001@f16", 1, 0, 0);

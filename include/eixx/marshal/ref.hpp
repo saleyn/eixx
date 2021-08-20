@@ -47,36 +47,48 @@ namespace detail {
  */
 template <class Alloc>
 class ref {
-    enum { COUNT = 3 };
+    enum { COUNT = 5 };
 
     struct ref_blob {
-        atom node;
-        union {
-            uint32_t ids[COUNT+1];
-            struct {
-                uint32_t id0;
-                uint64_t id1;
-                uint32_t creation;
-            } __attribute__((__packed__)) s;
-        } u;
+        atom     node;
+        uint32_t len;
+        uint32_t ids[COUNT];
+        uint32_t creation;
 
-        ref_blob(const atom& a_node, uint32_t a_id0, uint64_t a_id1, uint8_t a_cre)
+        ref_blob(const atom& a_node, const uint32_t* a_ids, size_t n, uint32_t a_cre)
             : node(a_node)
+            , len(n)
+            , creation(a_cre)
         {
-            u.s.id0      = a_id0 & 0x3ffff;
-            u.s.id1      = a_id1;
-            u.s.creation = a_cre & 0x3;
+            assert(n >= 3 && n <= COUNT);
+
+            int i = 0;
+            for (auto p = a_ids, e = a_ids+std::min<size_t>(COUNT,n); p != e; ++p)
+                ids[i++] = *p;
+
+            while(i < COUNT)
+                ids[i++] = 0;
         }
+        template <int N>
+        ref_blob(const atom& node, uint32_t (&ids)[N], uint32_t creation)
+            : ref_blob(node, ids, N, creation)
+        {}
+
+        ref_blob(const atom& a_node, std::initializer_list<uint32_t> a_ids, uint32_t a_cre)
+            : ref_blob(node, &*a_ids.begin(), a_ids.size(), creation)
+        {}
     };
 
     blob<ref_blob, Alloc>* m_blob;
 
     // Must only be called from constructor!
-    void init(const atom& a_node, uint32_t a_id0, uint64_t a_id1, uint8_t a_cre,
+    void init(const atom& a_node, const uint32_t* a_ids, size_t n, uint32_t a_cre,
               const Alloc& alloc)
     {
+        detail::check_node_length(a_node.size());
+
         m_blob = new blob<ref_blob, Alloc>(1, alloc);
-        new (m_blob->data()) ref_blob(a_node, a_id0, a_id1, a_cre);
+        new (m_blob->data()) ref_blob(a_node, a_ids, n, a_cre);
     }
 
     void release() {
@@ -84,12 +96,12 @@ class ref {
             m_blob->release();
     }
 
-    uint32_t id0() const { return m_blob->data()->u.s.id0; }
-    uint64_t id1() const { return m_blob->data()->u.s.id1; }
+    uint32_t id0() const { return m_blob->data()->ids[0]; }
+    uint64_t id1() const { return m_blob->data()->ids[1]; }
 
 public:
     inline static const uint32_t* s_ref_ids() {
-       static const uint32_t s_ref_ids[] = {0, 0, 0};
+       static const uint32_t s_ref_ids[] = {0, 0, 0, 0, 0};
        return s_ref_ids;
     }
 
@@ -108,32 +120,30 @@ public:
      * 2 bits will be used.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      */
-    template <int N>
-    ref(const char* node, uint32_t (&ids)[N], unsigned int creation,
+    ref(const atom& node, const uint32_t* a_ids, size_t n, unsigned int creation,
         const Alloc& a_alloc = Alloc())
-        : ref(atom(node), ids[0], ids[1], ids[2], creation, a_alloc)
-    {}
+    {
+        init(node, a_ids, n, creation, a_alloc);
+    }
 
     template <int N>
     ref(const atom& node, uint32_t (&ids)[N], unsigned int creation,
         const Alloc& a_alloc = Alloc())
-        : ref(node, ids[0], ids[1], ids[2], creation, a_alloc)
+        : ref(node, ids, N, creation, a_alloc)
     {
-        BOOST_STATIC_ASSERT(N == 3);
+        BOOST_STATIC_ASSERT(N >= 3 && N <= 5);
     }
 
     ref(const atom& node, uint32_t id0, uint32_t id1, uint32_t id2, unsigned int creation,
         const Alloc& a_alloc = Alloc())
-        : ref(node, id0, id1 | ((uint64_t)id2 << 32), creation, a_alloc)
+        : ref(node, {id0, id1, id2}, creation, a_alloc)
     {}
 
     // For internal use
-    ref(const atom& node, uint32_t id0, uint64_t id1, uint8_t creation,
+    ref(const atom& node, std::initializer_list<uint32_t> a_ids, uint8_t creation,
         const Alloc& a_alloc = Alloc())
-    {
-        detail::check_node_length(node.size());
-        init(node, id0, id1, creation, a_alloc);
-    }
+        : ref(node, &*a_ids.begin(), a_ids.size(), creation, a_alloc)
+    {}
 
     /**
      * Construct the object by decoding it from a binary
@@ -177,7 +187,7 @@ public:
      * @return the id number from the REF.
      */
     uint32_t id(uint32_t index) const {
-        BOOST_ASSERT(index < COUNT);
+        BOOST_ASSERT(index < len());
         return ids()[index];
     }
 
@@ -185,17 +195,22 @@ public:
      * Get the id array from the REF.
      * @return the id array number from the REF.
      */
-    const uint32_t* ids() const { return m_blob ? m_blob->data()->u.ids : s_ref_ids(); }
+    const uint32_t* ids() const { return m_blob ? m_blob->data()->ids : s_ref_ids(); }
+
+    /**
+     * Get the id array from the REF.
+     * @return the id array number from the REF.
+     */
+    const size_t len() const { return m_blob ? m_blob->data()->len : 0; }
 
     /**
      * Get the creation number from the REF.
      * @return the creation number from the REF.
      */
-    int creation() const { return m_blob ? m_blob->data()->u.s.creation : 0; }
+    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
 
     bool operator==(const ref<Alloc>& t) const {
-        return node() == t.node() &&
-               ::memcmp(&m_blob->data()->u, &t.m_blob->data()->u, sizeof(m_blob->data()->u)) == 0;
+        return ::memcmp(m_blob->data(), t.m_blob->data(), sizeof(ref_blob)) == 0;
     }
 
     /// Less operator, needed for maps
@@ -204,15 +219,22 @@ public:
         if (!m_blob)            return true;
         int n = node().compare(rhs.node());
         if (n != 0)             return n < 0;
-        if (id0() > rhs.id0())  return true;
-        if (id0() > rhs.id0())  return false;
-        if (id1() < rhs.id1())  return true;
-        if (id1() > rhs.id1())  return false;
+        auto e = std::min(len(), rhs.len());
+        for (size_t i=0; i < e; ++i) {
+            auto i1 = id(i);
+            auto i2 = rhs.id(i);
+            if (i1 > i2) return false;
+            if (i1 < i2) return true;
+        }
+        if (len()      < rhs.len())       return true;
+        if (len()      > rhs.len())       return false;
+        if (creation() < rhs.creation())  return true;
+        if (creation() > rhs.creation())  return false;
         return false;
     }
 
     size_t encode_size() const
-    { return 1+2+(3+node().size()) + COUNT*4 + 1; }
+    { return 1+2+(3+node().size()) + len()*4 + 4; }
 
     void encode(char* buf, int& idx, size_t size) const;
 
@@ -231,8 +253,12 @@ namespace std {
      **/
     template <class Alloc>
     ostream& operator<< (ostream& out, const eixx::marshal::ref<Alloc>& a) {
-        return out << "#Ref<" << a.node() << '.' 
-            << a.id(0) << '.' << a.id(1) << '.' << a.id(2) << '>';
+        out << "#Ref<" << a.node();
+        for (int i=0, e=a.len(); i != e; ++i)
+            out << '.' << a.id(i);
+        if (a.creation() > 0)
+            out << ',' << a.creation();
+        return out << '>';
     }
 
 } // namespace std

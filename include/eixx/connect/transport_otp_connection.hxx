@@ -264,7 +264,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
                   << ", length=" << rd_length()
                   << ", rd_buf.size=" << m_rd_buf.capacity()
                   << ", got_header=" << (m_got_header ? "true" : "false")
-                  << ", " << to_binary_string(m_rd_ptr, std::min(rd_length(), 15lu)) << "..."
+                  << ", " << to_binary_string(m_rd_ptr, std::min(rd_length(), 25lu)) << "..."
                   << std::endl;
     */
 
@@ -274,7 +274,6 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         m_in_msg_count++;
 
         try {
-            /*
             if (unlikely(verbose() >= VERBOSE_WIRE)) {
                 std::cout << " MsgCnt=" << m_in_msg_count
                           << ", pkt_size=" << m_packet_size << ", need=" << need_bytes
@@ -287,7 +286,6 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
                 to_binary_string(
                     std::cout << "client <- server: ", m_rd_ptr, m_packet_size) << std::endl;
             }
-            */
 
             // Decode the packet into a message and dispatch it.
             process_message(m_rd_ptr, m_packet_size);

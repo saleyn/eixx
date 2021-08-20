@@ -10,7 +10,7 @@ project(eixx VERSION 1.4)
 # CMAKE options customization
 #===============================================================================
 option(VERBOSE                 "Turn verbosity on|off"                      OFF)
-option(EIXX_MARSHAL_ONLY       "Limit build to eterm marshal lib on|off"    ON)
+option(EIXX_MARSHAL_ONLY       "Limit build to eterm marshal lib on|off"    OFF)
 
 if(VERBOSE)
   set(CMAKE_VERBOSE_MAKEFILE ON)

@@ -150,6 +150,10 @@ inline bool eterm<Alloc>::operator== (const eterm<Alloc>& rhs) const {
     static_assert(MAX_ETERM_TYPE == 14, "Invalid number of terms");
 }
 
+
+
+
+
 template <typename Alloc>
 inline bool eterm<Alloc>::operator< (const eterm<Alloc>& rhs) const {
     /// Term comparison precedence

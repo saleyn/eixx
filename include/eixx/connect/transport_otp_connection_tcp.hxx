@@ -336,18 +336,18 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
     put8(w, 'n');
     put16be(w, m_dist_version);
     unsigned int flags = (DFLAG_EXTENDED_REFERENCES
-                | DFLAG_DIST_MONITOR
-                | DFLAG_EXTENDED_PIDS_PORTS
-                | DFLAG_FUN_TAGS
-                | DFLAG_NEW_FUN_TAGS
-                | DFLAG_NEW_FLOATS
-                | DFLAG_SMALL_ATOM_TAGS
-                | DFLAG_UTF8_ATOMS
-                | DFLAG_MAP_TAG
-                // | DFLAG_BIG_CREATION
-                // | DFLAG_EXPORT_PTR_TAG
-                // | DFLAG_BIT_BINARIES
-                );
+                        | DFLAG_DIST_MONITOR
+                        | DFLAG_EXTENDED_PIDS_PORTS
+                        | DFLAG_FUN_TAGS
+                        | DFLAG_NEW_FUN_TAGS
+                        | DFLAG_NEW_FLOATS
+                        | DFLAG_SMALL_ATOM_TAGS
+                        | DFLAG_UTF8_ATOMS
+                        | DFLAG_MAP_TAG
+                        | DFLAG_BIG_CREATION
+                        | DFLAG_EXPORT_PTR_TAG
+                        | DFLAG_BIT_BINARIES
+                        );
     put32be(w, flags);
     memcpy(w, this->local_nodename().c_str(), this->local_nodename().size());
 

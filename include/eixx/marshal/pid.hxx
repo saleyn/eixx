@@ -37,8 +37,9 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
 {
     const char* s  = buf + idx;
     const char* s0 = s;
-    if (get8(s) != ERL_PID_EXT)
-        throw err_decode_exception("Error decoding pid", -1);
+    auto n = get8(s);
+    if (n != ERL_PID_EXT && n != ERL_NEW_PID_EXT)
+        throw err_decode_exception("Error decoding pid", n);
 
     int len = atom::get_len(s);
     if (len < 0)
@@ -48,12 +49,11 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     atom l_node(s, len);
     s += len;
 
-    uint64_t i1 = get32be(s);
-    uint64_t i2 = get32be(s);
-    uint64_t l_id  = i1 | i2 << 15;
-    int l_creation = get8(s);
+    uint32_t l_id  = get32be(s);
+    uint32_t l_ser = get32be(s);
+    uint32_t l_cre = n == ERL_NEW_PID_EXT ? get32be(s) : (get8(s) & 0x03);
 
-    init(l_node, l_id, l_creation, alloc);
+    init(l_node, l_id, l_ser, l_cre, alloc);
 
     idx += s - s0;
     BOOST_ASSERT((size_t)idx <= size);
@@ -64,7 +64,7 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
-    put8(s,ERL_PID_EXT);
+    put8(s,ERL_NEW_PID_EXT);
     put8(s,ERL_ATOM_UTF8_EXT);
     const std::string& nd = node().to_string();
     unsigned short n = nd.size();
@@ -73,9 +73,9 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
     s += n;
 
     /* now the integers */
-    put32be(s, id() & 0x7fff); /* 15 bits */
-    put32be(s, serial() & 0x1fff); /* 13 bits */
-    put8(s,   (creation() & 0x03)); /* 2 bits */
+    put32be(s, id()); /* 15 bits */
+    put32be(s, serial()); /* 13 bits */
+    put32be(s, creation()); /* 2 bits */
 
     idx += s-s0;
     BOOST_ASSERT((size_t)idx <= size);

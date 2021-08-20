@@ -48,32 +48,21 @@ class epid {
     struct pid_blob {
         // creation is a special value that allows 
         // distinguishing pid values between successive node restarts.
-        union u {
-            struct s {
-                uint16_t id      : 15;
-                uint16_t serial  : 13;
-                uint8_t  creation:  2;
-            } __attribute__((__packed__)) s;
-            uint32_t i;
+        uint32_t id;        // only 15 bits may be used and the rest must be 0
+        uint32_t serial;    // only 13 bits may be used and the rest must be 0
+        uint32_t creation;
+        atom     node;
 
-            BOOST_STATIC_ASSERT(sizeof(s) == 4);
+        pid_blob(const atom& a_node, int a_id, int a_cre)
+            : id(a_id), serial(0), creation(a_cre), node(a_node)
+        {}
 
-            u(int a_id, uint8_t a_cre) {
-                i = (a_id & 0x0FFFffff) | ((a_cre & 0x3) << 28);
-            }
-
-            u(uint16_t a_id, uint16_t a_ser, uint8_t a_cre) {
-                s.id = a_id & 0x7fff; s.serial = a_ser & 0x1fff; s.creation = a_cre & 0x03;
-            }
-        } u;
-        atom node;
-
-        pid_blob(const atom& a_node, int a_id, int8_t a_cre)
-            : u(a_id, a_cre), node(a_node)
+        pid_blob(const atom& a_node, int a_id, int serial, int a_cre)
+            : id(a_id), serial(serial), creation(a_cre), node(a_node)
         {}
     };
 
-    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(uint64_t));
+    BOOST_STATIC_ASSERT(sizeof(pid_blob) == sizeof(uint64_t)*2);
 
     blob<pid_blob, Alloc>* m_blob;
 
@@ -89,10 +78,10 @@ class epid {
     }
 
     // Must only be called from constructor!
-    void init(const atom& node, int id, uint8_t creation, const Alloc& alloc)
+    void init(const atom& node, int id, int serial, int creation, const Alloc& alloc)
     {
         m_blob = new blob<pid_blob, Alloc>(1, alloc);
-        new (m_blob->data()) pid_blob(node, id, creation);
+        new (m_blob->data()) pid_blob(node, id, serial, creation);
         #ifdef EIXX_DEBUG
         std::cerr << "Initialized pid " << *this
                   << " [addr=" << this << ", blob=" << m_blob << ']' << std::endl;
@@ -125,14 +114,14 @@ public:
         : epid(atom(node), id, serial, creation, a_alloc)
     {}
 
-    epid(const atom& node, int id, int serial, int creation, const Alloc& a_alloc = Alloc())
-        : epid(node, (id & 0x7fff) | ((serial & 0x1fff) << 15), creation, a_alloc)
+    epid(const atom& node, int id, int creation, const Alloc& a_alloc = Alloc())
+        : epid(node, id, 0, creation, a_alloc)
     {}
 
-    epid(const atom& node, int id, int creation, const Alloc& a_alloc = Alloc())
+    epid(const atom& node, int id, int serial, int creation, const Alloc& a_alloc = Alloc())
     {
         detail::check_node_length(node.size());
-        init(node, id, creation, a_alloc);
+        init(node, id, serial, creation, a_alloc);
     }
 
     /// Decode the pid from a binary buffer.
@@ -183,24 +172,24 @@ public:
      * Get the id number from the PID.
      * @return the id number from the PID.
      **/
-    int id() const { return m_blob ? m_blob->data()->u.s.id : 0; }
+    int id() const { return m_blob ? m_blob->data()->id : 0; }
 
     /**
      * Get the serial number from the PID.
      * @return the serial number from the PID.
      **/
-    int serial() const { return m_blob ? m_blob->data()->u.s.serial : 0; }
+    int serial() const { return m_blob ? m_blob->data()->serial : 0; }
 
     /**
      * Get the creation number from the PID.
      * @return the creation number from the PID.
      **/
-    int creation() const { return m_blob ? m_blob->data()->u.s.creation : 0; }
+    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
 
-    uint32_t id_internal() const { return m_blob ? m_blob->data()->u.i & 0x3FFFffff : 0; }
+    uint32_t id_internal() const { return m_blob ? m_blob->data()->id : 0; }
 
     bool operator== (const epid<Alloc>& rhs) const {
-        return id_internal() == rhs.id_internal() && node() == rhs.node();
+        return ::memcmp(m_blob->data(), rhs.m_blob->data(), sizeof(pid_blob)) == 0;
     }
     bool operator!= (const epid<Alloc>& rhs) const { return !(*this == rhs); }
 
@@ -211,17 +200,22 @@ public:
         if (n > 0)                              return false;
         if (id_internal() < t2.id_internal())   return true;
         if (id_internal() > t2.id_internal())   return false;
+        if (serial()      < t2.serial())        return true;
+        if (creation()    > t2.creation())      return false;
+        if (creation()    < t2.creation())      return true;
         return false;
     }
-    size_t encode_size() const { return 13 + node().size(); }
+    size_t encode_size() const { return 16 + node().size(); }
 
     void encode(char* buf, int& idx, size_t size) const;
 
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
-        return out << "#Pid<" << node() 
-                   << '.' << id() << '.' << serial() << '.' << creation() << ">";
+        out << "#Pid<" << node() 
+            << '.' << id() << '.' << serial();
+        if (creation() > 0)
+            out << ',' << creation();
+        return out << '>';
     }
-
 };
 
 } // namespace marshal
