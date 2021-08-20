@@ -47,7 +47,7 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
             if (count != COUNT)
                 throw err_decode_exception("Error decoding ref's count", idx+1);
 
-            int len = atom::getLen(s);
+            int len = atom::get_len(s);
             if (len < 0)
                 throw err_decode_exception("Error decoding ref's atom", idx+3);
             detail::check_node_length(len);

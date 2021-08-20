@@ -115,7 +115,7 @@ public:
 
     /// Get atom length from a binary buffer encoded in 
     /// Erlang external binary format.
-    static int getLen(const char*& s) {
+    static int get_len(const char*& s) {
         switch (get8(s)) {
 #ifdef ERL_SMALL_ATOM_UTF8_EXT
             case ERL_SMALL_ATOM_UTF8_EXT: return get8(s);
@@ -174,7 +174,7 @@ public:
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
-        int len = getLen(s);
+        int len = get_len(s);
         if (len < 0)
             throw err_decode_exception("Error decoding atom", idx);
         m_index = atom_table().lookup(std::string(s, len));

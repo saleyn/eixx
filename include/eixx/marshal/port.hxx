@@ -40,7 +40,7 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
     if (get8(s) != ERL_PORT_EXT)
         throw err_decode_exception("Error decoding port", -1);
 
-    int len = atom::getLen(s);
+    int len = atom::get_len(s);
     if (len < 0)
         throw err_decode_exception("Error decoding port node", -1);
     detail::check_node_length(len);
