@@ -269,7 +269,7 @@ public:
      * Block until response for a RPC call arrives.
      * @return a pointer to ErlTerm containing the response
      * @exception EpiConnectionException if there was an connection error
-	 * @throw EpiBadRPC if the corresponding RPC was incorrect
+	 * @throws EpiBadRPC if the corresponding RPC was incorrect
      */
     //bool receive_rpc_reply(const eterm<Alloc>& a_reply);
 
@@ -302,7 +302,8 @@ public:
      */
     void send_rpc_cast(const atom& a_node, const atom& a_mod,
             const atom& a_fun, const list<Alloc>& args,
-            const epid<Alloc>* gleader = NULL) {
+            const epid<Alloc>* gleader = NULL)
+    {
         m_node.send_rpc_cast(self(), a_node, a_mod, a_fun, args, gleader);
     }
 
