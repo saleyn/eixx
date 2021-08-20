@@ -152,7 +152,7 @@ public:
             m_transport->stop();
     }
 
-    void send(const transport_msg<Alloc>& a_msg) throw (err_connection) {
+    void send(const transport_msg<Alloc>& a_msg) {
         if (!m_transport) {
             if (m_abort)
                 return;

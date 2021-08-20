@@ -88,7 +88,6 @@ private:
     std::string m_uds_filename;
 
     void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
-        throw(std::runtime_error)
     {
         base_t::connect(a_this_node, a_remote_nodename, a_cookie);
 

@@ -148,8 +148,7 @@ private:
     uint32_t     m_remote_challenge;
     uint32_t     m_our_challenge;
 
-    void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
-        throw(std::runtime_error);
+    void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie);
 
     boost::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
         boost::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();

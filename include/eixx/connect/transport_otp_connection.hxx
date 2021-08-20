@@ -92,7 +92,7 @@ connection<Handler, Alloc>::create(
 
 template <class Handler, class Alloc>
 connection_type
-connection<Handler, Alloc>::parse_connection_type(std::string& s) throw(std::runtime_error)
+connection<Handler, Alloc>::parse_connection_type(std::string& s)
 {
     size_t pos = s.find("://", 0);
     if (pos == std::string::npos)
@@ -352,7 +352,6 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 template <class Handler, class Alloc>
 int connection<Handler, Alloc>::
 transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
-    throw(err_decode_exception)
 {
     const char* s = mbuf;
     int version;

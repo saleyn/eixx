@@ -83,7 +83,7 @@ public:
      * Look up a mailbox based on its name or pid.
      */
     mailbox_ptr
-    get(const eterm<Alloc>& a_proc) const throw (err_bad_argument, err_no_process);
+    get(const eterm<Alloc>& a_proc) const;
 
     /**
      * Look up a mailbox based on its name. If the mailbox has gone out
@@ -91,7 +91,7 @@ public:
      * don't find it again.
      */
     mailbox_ptr
-    get(atom a_name) const throw(err_no_process);
+    get(atom a_name) const;
 
     /**
      * Look up a mailbox based on its pid. If the mailbox has gone out
@@ -99,7 +99,7 @@ public:
      * don't find it again.
      */
     mailbox_ptr
-    get(const epid<Alloc>& a_pid) const throw(err_no_process);
+    get(const epid<Alloc>& a_pid) const;
 
     void names(std::list<atom>& list);
 

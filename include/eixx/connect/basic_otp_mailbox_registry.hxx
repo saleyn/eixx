@@ -157,7 +157,7 @@ erase(mailbox_ptr a_mbox)
 template <typename Alloc, typename Mutex>
 typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
 basic_otp_mailbox_registry<Alloc, Mutex>::
-get(const eterm<Alloc>& a_proc) const throw (err_bad_argument, err_no_process)
+get(const eterm<Alloc>& a_proc) const
 {
     switch (a_proc.type()) {
         case ATOM:  return get(a_proc.to_atom());
@@ -174,7 +174,7 @@ get(const eterm<Alloc>& a_proc) const throw (err_bad_argument, err_no_process)
 template <typename Alloc, typename Mutex>
 typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
 basic_otp_mailbox_registry<Alloc, Mutex>::
-get(atom a_name) const throw(err_no_process)
+get(atom a_name) const
 {
     lock_guard<Mutex> guard(m_lock);
     typename std::map<atom, mailbox_ptr>::iterator it = m_by_name.find(a_name);
@@ -191,7 +191,6 @@ get(atom a_name) const throw(err_no_process)
 template <typename Alloc, typename Mutex>
 typename basic_otp_mailbox_registry<Alloc, Mutex>::mailbox_ptr
 basic_otp_mailbox_registry<Alloc, Mutex>::get(const epid<Alloc>& a_pid) const
-    throw(err_no_process)
 {
     lock_guard<Mutex> guard(m_lock);
     typename std::map<epid<Alloc>, mailbox_ptr>::iterator it = m_by_pid.find(a_pid);

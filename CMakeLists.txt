@@ -73,6 +73,7 @@ add_definitions(
   -Wno-deprecated-declarations
   -Wpedantic
 	-DBOOST_SYSTEM_NO_DEPRECATED
+  -DBOOST_BIND_GLOBAL_PLACEHOLDERS
 )
 
 message(STATUS "Configuring for the "

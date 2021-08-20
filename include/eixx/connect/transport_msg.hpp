@@ -144,7 +144,8 @@ public:
 
     /// This function may only raise exception for MONITOR_P_EXIT
     /// message types if the message sender is given by name rather than by pid.
-    const epid<Alloc>& sender_pid() const throw (err_wrong_type) {
+    /// @throw err_wrong_type
+    const epid<Alloc>& sender_pid() const {
         return sender().to_pid();
     }
 
@@ -177,15 +178,18 @@ public:
 
     /// This function may only raise exception for MONITOR_P|DEMONITOR_P
     /// message types if the message sender is given by name rather than by pid.
-    const epid<Alloc>& recipient_pid() const throw (err_wrong_type) {
+    /// @throw err_wrong_type
+    const epid<Alloc>& recipient_pid() const {
         return recipient().to_pid();
     }
 
-    const atom& recipient_name() const throw (err_wrong_type) {
+    /// @throw err_wrong_type
+    const atom& recipient_name() const {
         return recipient().to_atom();
     }
 
-    const eterm<Alloc>& trace_token() const throw (err_wrong_type) {
+    /// @throw err_wrong_type
+    const eterm<Alloc>& trace_token() const {
         switch (m_type) {
             case SEND_TT:
             case EXIT_TT:
@@ -196,7 +200,8 @@ public:
         }
     }
 
-    const ref<Alloc>& get_ref() const throw (err_wrong_type) {
+    /// @throw err_wrong_type
+    const ref<Alloc>& get_ref() const {
         switch (m_type) {
             case MONITOR_P:
             case DEMONITOR_P:
@@ -207,7 +212,8 @@ public:
         }
     }
 
-    const eterm<Alloc>& reason() const throw (err_wrong_type) {
+    /// @throw err_wrong_type
+    const eterm<Alloc>& reason() const {
         switch (m_type) {
             case EXIT:
             case EXIT2:         return m_cntrl[3];
