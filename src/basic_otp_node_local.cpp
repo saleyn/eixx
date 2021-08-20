@@ -62,14 +62,12 @@ std::string basic_otp_node_local::s_localhost      = boost::asio::ip::host_name(
 
 basic_otp_node_local::basic_otp_node_local(
     const std::string& a_nodename, const std::string& a_cookie)
-    throw (std::runtime_error, err_bad_argument)
 {
     set_nodename(a_nodename, a_cookie);
 }
 
 void basic_otp_node_local::set_nodename(
     const std::string& a_nodename, const std::string& a_cookie)
-    throw (std::runtime_error, err_bad_argument)
 {
     if (m_cookie.size() > EI_MAX_COOKIE_SIZE)
         throw err_bad_argument("Cookie size too long", m_cookie.size());

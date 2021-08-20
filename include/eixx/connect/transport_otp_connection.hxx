@@ -349,6 +349,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 /// Note: TICK message is represented by msg type = 0, in this case \a a_cntrl_msg
 /// and \a a_msg are invalid.
 /// @return message type
+/// @throws err_decode_exception
 template <class Handler, class Alloc>
 int connection<Handler, Alloc>::
 transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
