@@ -19,8 +19,6 @@ limitations under the License.
 */
 #include <boost/version.hpp>
 
-#if BOOST_VERSION < 106500
-
 #include <fstream>
 #include <sstream>
 #include <boost/asio.hpp>
@@ -126,5 +124,3 @@ void basic_otp_node_local::set_nodename(
 
 } // namespace connect
 } // namespace eixx
-
-#endif // BOOST_VERSION

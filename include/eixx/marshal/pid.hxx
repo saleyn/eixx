@@ -39,11 +39,10 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     const char* s0 = s;
     if (get8(s) != ERL_PID_EXT)
         throw err_decode_exception("Error decoding pid", -1);
-    auto n = get8(s);
-    if (n != ERL_ATOM_UTF8_EXT && n != ERL_ATOM_EXT)
-        throw err_decode_exception("Error decoding pid node", -1);
 
-    int len = get16be(s);
+    int len = atom::get_len(s);
+    if (len < 0)
+        throw err_decode_exception("Error decoding pid node", -1);
     detail::check_node_length(len);
 
     atom l_node(s, len);

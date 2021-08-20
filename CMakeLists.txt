@@ -122,9 +122,7 @@ set(Boost_USE_MULTITHREAD ON)
 set(Boost_NO_SYSTEM_PATHS ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/build")
 
-find_package(Boost 1.55.0 REQUIRED COMPONENTS
-             system filesystem date_time program_options thread regex
-             unit_test_framework timer)
+find_package(Boost 1.55.0 REQUIRED COMPONENTS system thread)
 
 if(Boost_FOUND)
   #include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
@@ -132,16 +130,6 @@ if(Boost_FOUND)
   set(UTXX_HAVE_BOOST_TIMER_TIMER_HPP 1)
 	message(STATUS "Found boost: ${Boost_LIBRARY_DIRS}")
 endif()
-
-set(Boost_LIBRARIES
-  boost_system
-  boost_thread
-# ${Boost_REGEX_LIBRARY}
-# ${Boost_DATE_TIME_LIBRARY}
-# ${Boost_FILESYSTEM_LIBRARY}
-#  ${Boost_PROGRAM_OPTIONS_LIBRARY}
-#  ${Boost_IOSTREAMS_LIBRARY}
-)
 
 #-------------------------------------------------------------------------------
 # Platform-specific checks

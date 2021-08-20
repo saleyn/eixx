@@ -235,6 +235,15 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
         throw err_decode_exception("Cannot determine term type", idx);
 
     switch (type) {
+#ifdef ERL_ATOM_UTF8_EXT
+    case ERL_ATOM_UTF8_EXT:
+#endif
+#ifdef ERL_SMALL_ATOM_UTF8_EXT
+    case ERL_SMALL_ATOM_UTF8_EXT:
+#endif
+#ifdef ERL_SMALL_ATOM_EXT
+    case ERL_SMALL_ATOM_EXT:
+#endif
     case ERL_ATOM_EXT: {
         int b;
         int i = idx; // TODO: Eliminate this variable when there's is a fix for the bug in ei_decode_boolean

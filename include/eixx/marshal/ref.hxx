@@ -46,11 +46,10 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
             int count = get16be(s);
             if (count != COUNT)
                 throw err_decode_exception("Error decoding ref's count", idx+1);
-            auto n = get8(s);
-            if (n != ERL_ATOM_UTF8_EXT && n != ERL_ATOM_EXT)
-                throw err_decode_exception("Error decoding ref's atom", idx+3);
 
-            int len = get16be(s);
+            int len = atom::get_len(s);
+            if (len < 0)
+                throw err_decode_exception("Error decoding ref's atom", idx+3);
             detail::check_node_length(len);
             atom l_node(s, len);
             s += len;

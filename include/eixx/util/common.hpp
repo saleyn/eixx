@@ -31,7 +31,7 @@
 
 namespace eixx {
 
-#if BOOST_VERSION > 104800
+#if BOOST_VERSION >= 104800
 namespace bid = boost::interprocess::ipcdetail;
 #else
 namespace bid = boost::interprocess::detail;

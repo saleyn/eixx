@@ -113,6 +113,25 @@ public:
         return create(std::string(s), existing);
     }
 
+    /// Get atom length from a binary buffer encoded in 
+    /// Erlang external binary format.
+    static int get_len(const char*& s) {
+        switch (get8(s)) {
+#ifdef ERL_SMALL_ATOM_UTF8_EXT
+            case ERL_SMALL_ATOM_UTF8_EXT: return get8(s);
+#endif
+#ifdef ERL_ATOM_UTF8_EXT
+            case ERL_ATOM_UTF8_EXT:       return get16be(s);
+#endif
+#ifdef ERL_SMALL_ATOM_EXT
+            case ERL_SMALL_ATOM_EXT:      return get8(s);
+#endif
+            case ERL_ATOM_EXT:            return get16be(s);
+            default:
+                return -1;
+        }
+    }
+
     /// @copydoc atom::atom
     /// @param existing    if true, check that the atom already exists, otherwise throw
     ///                    err_atom_not_found
@@ -155,14 +174,9 @@ public:
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
-        int len;
-        switch (get8(s)) {
-            case ERL_ATOM_UTF8_EXT:       len = get16be(s);  break;
-            case ERL_SMALL_ATOM_UTF8_EXT: len = get8(s);     break;
-            case ERL_ATOM_EXT:            len = get16be(s);  break;
-            case ERL_SMALL_ATOM_EXT:      len = get8(s);     break;
-            default: throw err_decode_exception("Error decoding atom", idx);
-        }
+        int len = get_len(s);
+        if (len < 0)
+            throw err_decode_exception("Error decoding atom", idx);
         m_index = atom_table().lookup(std::string(s, len));
         idx += s + len - s0;
         BOOST_ASSERT((size_t)idx <= a_size);

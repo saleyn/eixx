@@ -67,7 +67,7 @@ bool on_main_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
         struct timeval tv =
             { l_binding[N1]->to_long() * 1000000 +
               l_binding[N2]->to_long(),
-              l_binding[N3]->to_long() };
+              static_cast<int>(l_binding[N3]->to_long()) };
         struct tm tm;
         localtime_r(&tv.tv_sec, &tm);
         printf(
