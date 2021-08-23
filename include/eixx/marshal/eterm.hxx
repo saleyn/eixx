@@ -239,11 +239,11 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
         throw err_decode_exception("Cannot determine term type", idx);
 
     switch (type) {
-#ifdef ERL_ATOM_UTF8_EXT
-    case ERL_ATOM_UTF8_EXT:
-#endif
 #ifdef ERL_SMALL_ATOM_UTF8_EXT
     case ERL_SMALL_ATOM_UTF8_EXT:
+#endif
+#ifdef ERL_ATOM_UTF8_EXT
+    case ERL_ATOM_UTF8_EXT:
 #endif
 #ifdef ERL_SMALL_ATOM_EXT
     case ERL_SMALL_ATOM_EXT:
@@ -291,19 +291,31 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
         new (this) eterm<Alloc>(d);
         break;
     }
+
     case ERL_BINARY_EXT:
         new (this) eterm<Alloc>(binary<Alloc>(a_buf, idx, a_size, a_alloc));
         break;
 
+#ifdef ERL_NEW_PID_EXT
+    case ERL_NEW_PID_EXT:
+#endif
     case ERL_PID_EXT:
         new (this) eterm<Alloc>(epid<Alloc>(a_buf, idx, a_size, a_alloc));
         break;
 
-    case ERL_REFERENCE_EXT:
+#ifdef ERL_NEWER_REFERENCE_EXT
+    case ERL_NEWER_REFERENCE_EXT:
+#endif
+#ifdef ERL_NEW_REFERENCE_EXT
     case ERL_NEW_REFERENCE_EXT:
+#endif
+    case ERL_REFERENCE_EXT:
         new (this) eterm<Alloc>(ref<Alloc>(a_buf, idx, a_size, a_alloc));
         break;
 
+#ifdef ERL_NEW_PORT_EXT
+    case ERL_NEW_PORT_EXT:
+#endif
     case ERL_PORT_EXT:
         new (this) eterm<Alloc>(port<Alloc>(a_buf, idx, a_size, a_alloc));
         break;

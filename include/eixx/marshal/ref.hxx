@@ -42,8 +42,11 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
     int type = get8(s);
 
     switch (type) {
-        case ERL_NEW_REFERENCE_EXT:
-        case ERL_NEWER_REFERENCE_EXT: {
+#ifdef ERL_NEWER_REFERENCE_EXT
+        case ERL_NEWER_REFERENCE_EXT:
+#endif
+#ifdef ERL_NEW_REFERENCE_EXT
+        case ERL_NEW_REFERENCE_EXT: {
             int count = get16be(s);  // First goes the count
             if (count < 0 || count > COUNT)
                 throw err_decode_exception("Error decoding ref's count", idx+1, count);
@@ -55,18 +58,23 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
             atom nd(s, len);
             s += len;
 
-            uint32_t  cre = type == ERL_NEW_REFERENCE_EXT ? (get8(s) & 0x03)
+            uint32_t cre = type == ERL_NEW_REFERENCE_EXT ? (get8(s) & 0x03)
                                                           : get32be(s);
 
             uint32_t vals[COUNT];
-            for (auto p=vals, e=p+count; p != e; ++p)
-                *p = uint32_t(get32be(s));
+            if (type == ERL_NEW_REFERENCE_EXT)
+                for (auto p=vals, e=p+count; p != e; ++p)
+                    *p = get32be(s) & 0x0003ffff;  /* 18 bits */
+            else
+                for (auto p=vals, e=p+count; p != e; ++p)
+                    *p = get32be(s);
 
             init(nd, vals, count, cre, a_alloc);
 
             idx += s-s0;
             break;
         }
+#endif
         case ERL_REFERENCE_EXT: {
             int len = atom::get_len(s);
             if (len < 0)
@@ -75,7 +83,7 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
             atom nd(s, len);
             s += len;
 
-            uint32_t id  = get32be(s);
+            uint32_t id  = get32be(s) & 0x0003ffff;  /* 18 bits */
             uint32_t cre = get8(s) & 0x03;
 
             init(nd, &id, 1u, cre, a_alloc);
@@ -93,23 +101,41 @@ void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
-    put8(s,ERL_NEWER_REFERENCE_EXT);
-    /* first, number of integers */
+    s++; // Skip ERL_NEW_REFERENCE_EXT
+
+    /* first, count of ids */
     put16be(s, len());
-    /* then the nodename */
-    put8(s,ERL_ATOM_UTF8_EXT);
+
+    /* the nodename */
+#ifdef ERL_ATOM_UTF8_EXT
+    put8(s, ERL_ATOM_UTF8_EXT);
+#else
+    put8(s, ERL_ATOM_EXT);
+#endif
     const std::string& str = node().to_string();
     unsigned short n = str.size();
     put16be(s, n);
     memmove(s, str.c_str(), n);
     s += n;
 
-    /* now the integers */
-    if (m_blob) {
-        put32be(s, m_blob->data()->creation);
+    /* the integers */
+    const uint32_t l_cre = creation();
+#ifdef ERL_NEWER_REFERENCE_EXT
+    if (l_cre > 0x03 /* 2 bits */) {
+        *s0 = ERL_NEWER_REFERENCE_EXT;
+        put32be(s, l_cre);
         for (auto* p = ids(), *e = p + len(); p != e; ++p)
             put32be(s, *p);
+    } else {
+#endif
+        *s0 = ERL_NEW_REFERENCE_EXT;
+        put8(s, l_cre & 0x03 /* 2 bits */);
+        for (auto* p = ids(), *e = p + len(); p != e; ++p)
+            put32be(s, *p & 0x0003ffff /* 18 bits */);
+#ifdef ERL_NEWER_REFERENCE_EXT
     }
+#endif
+
     idx += s-s0;
     BOOST_ASSERT((size_t)idx <= size);
 }

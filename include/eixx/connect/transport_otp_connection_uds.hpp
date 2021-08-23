@@ -82,6 +82,8 @@ public:
 #endif
     }
 
+    uint64_t remote_flags() const { return 0; }
+
 private:
     /// Socket for the connection.
     boost::asio::local::stream_protocol::socket m_socket;

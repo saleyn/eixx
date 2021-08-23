@@ -38,7 +38,11 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     const char* s  = buf + idx;
     const char* s0 = s;
     auto n = get8(s);
-    if (n != ERL_PID_EXT && n != ERL_NEW_PID_EXT)
+    if (n != ERL_PID_EXT
+#ifdef ERL_NEW_PID_EXT
+        && n != ERL_NEW_PID_EXT
+#endif
+        )
         throw err_decode_exception("Error decoding pid", n);
 
     int len = atom::get_len(s);
@@ -49,9 +53,13 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     atom l_node(s, len);
     s += len;
 
-    uint32_t l_id  = get32be(s);
-    uint32_t l_ser = get32be(s);
+    uint32_t l_id  = get32be(s); /* 15 bits if distribution flag DFLAG_V4_NC is not set */
+    uint32_t l_ser = get32be(s); /* 13 bits if distribution flag DFLAG_V4_NC is not set */
+#ifdef ERL_NEW_PID_EXT
     uint32_t l_cre = n == ERL_NEW_PID_EXT ? get32be(s) : (get8(s) & 0x03);
+#else
+    uint32_t l_cre = get8(s) & 0x03; /* 2 bits */
+#endif
 
     init(l_node, l_id, l_ser, l_cre, alloc);
 
@@ -64,18 +72,36 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
-    put8(s,ERL_NEW_PID_EXT);
-    put8(s,ERL_ATOM_UTF8_EXT);
+    s++; // Skip ERL_PID_EXT
+
+    /* the nodename */
+#ifdef ERL_ATOM_UTF8_EXT
+    put8(s, ERL_ATOM_UTF8_EXT);
+#else
+    put8(s, ERL_ATOM_EXT);
+#endif
     const std::string& nd = node().to_string();
     unsigned short n = nd.size();
     put16be(s, n);
     memmove(s, nd.c_str(), n);
     s += n;
 
-    /* now the integers */
-    put32be(s, id()); /* 15 bits */
-    put32be(s, serial()); /* 13 bits */
-    put32be(s, creation()); /* 2 bits */
+    /* the integers */
+    put32be(s, id()); /* 15 bits if distribution flag DFLAG_V4_NC is not set */
+    put32be(s, serial()); /* 13 bits if distribution flag DFLAG_V4_NC is not set */
+    const uint32_t l_cre = creation();
+#ifdef ERL_NEW_PID_EXT
+    if (l_cre > 0x03 /* 2 bits */) {
+        *s0 = ERL_NEW_PID_EXT;
+        put32be(s, l_cre);
+    } else {
+        *s0 = ERL_PID_EXT;
+        put8(s, l_cre & 0x03 /* 2 bits */);
+    }
+#else
+    *s0 = ERL_PID_EXT;
+    put8(s, l_cre & 0x03 /* 2 bits */);
+#endif
 
     idx += s-s0;
     BOOST_ASSERT((size_t)idx <= size);

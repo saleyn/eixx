@@ -67,12 +67,12 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 #endif
 #ifdef ERL_NEW_PORT_EXT
         case ERL_NEW_PORT_EXT:
-            id  = uint64_t(get32be(s));
+            id  = uint64_t(get32be(s) & 0x0fffffff);  /* 28 bits */
             cre = get32be(s);
             break;
 #endif
         case ERL_PORT_EXT:
-            id  = uint64_t(get32be(s)) & 0x0fffffff;  /* 28 bits */
+            id  = uint64_t(get32be(s) & 0x0fffffff);  /* 28 bits */
             cre = get8(s) & 0x03;                     /* 2 bits  */
             break;
     }
@@ -88,32 +88,46 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     char* s  = buf + idx;
     char* s0 = s;
     s++; // Skip ERL_PORT_EXT
-    put8(s,ERL_ATOM_UTF8_EXT);
+
+    /* the nodename */
+#ifdef ERL_ATOM_UTF8_EXT
+    put8(s, ERL_ATOM_UTF8_EXT);
+#else
+    put8(s, ERL_ATOM_EXT);
+#endif
     const std::string& str = node().to_string();
     unsigned short n = str.size();
     put16be(s, n);
     memmove(s, str.c_str(), n);
     s += n;
 
-#if defined(ERL_V4_PORT_EXT) && defined(ERL_NEW_PORT_EXT)
+    /* the integers */
+    const uint32_t l_cre = creation();
+#if defined(ERL_V4_PORT_EXT)
     if (id() > 0x0fffffff /* 28 bits */) {
         *s0 = ERL_V4_PORT_EXT;
         put64be(s, id());
-        put32be(s, creation());
-    } else if (creation() > 0x03 /* 2 bits */) {
-#elif defined(ERL_NEW_PORT_EXT)
-    if (creation() > 0x03 /* 2 bits */) {
-#endif
-#ifdef ERL_NEW_PORT_EXT
+        put32be(s, l_cre);
+
+    #ifdef ERL_NEW_PORT_EXT
+    } else if (l_cre > 0x03 /* 2 bits */) {
         *s0 = ERL_NEW_PORT_EXT;
-        put32be(s, id());
-        put32be(s, creation());
+        put32be(s, id() & 0x0fffffff /* 28 bits */);  
+        put32be(s, l_cre);
+    #else
+    } else {
+    #endif
+#elif defined(ERL_NEW_PORT_EXT)
+    if (l_cre > 0x03 /* 2 bits */) {
+        *s0 = ERL_NEW_PORT_EXT;
+        put32be(s, id() & 0x0fffffff /* 28 bits */);  
+        put32be(s, l_cre);
     } else {
 #endif
         *s0 = ERL_PORT_EXT;
-        put32be(s, id());
-        put8(s, creation());
-#ifdef ERL_NEW_PORT_EXT
+        put32be(s, id() & 0x0fffffff /* 28 bits */);
+        put8(s, l_cre);
+#if defined(ERL_V4_PORT_EXT) || defined(ERL_NEW_PORT_EXT)
     }
 #endif
 
