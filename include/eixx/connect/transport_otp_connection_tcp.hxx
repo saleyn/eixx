@@ -54,6 +54,7 @@ void tcp_connection<Handler, Alloc>::start()
 
 template <class Handler, class Alloc>
 void tcp_connection<Handler, Alloc>::connect(
+    uint32_t a_this_creation,
     atom a_this_node, atom a_remote_node, atom a_cookie)
 {
     using boost::asio::ip::tcp;
@@ -63,7 +64,7 @@ void tcp_connection<Handler, Alloc>::connect(
     if (a_remote_node.to_string().find('@') == std::string::npos)
         THROW_RUNTIME_ERROR("Invalid format of remote_node: " << a_remote_node);
 
-    base_t::connect(a_this_node, a_remote_node, a_cookie);
+    base_t::connect(a_this_creation, a_this_node, a_remote_node, a_cookie);
 
     //boost::system::error_code err = boost::asio::error::host_not_found;
     std::stringstream es;
@@ -319,7 +320,53 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
     m_our_challenge = gen_challenge();
 
     // send challenge
-    size_t siz = 2 + 1 + 2 + 4 + this->m_this_node.size();
+    // See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect.c#L2272-L2287
+#ifdef DistFlags
+    DistFlags flags = (
+#else
+    unsigned int flags = (
+#endif
+                        DFLAG_EXTENDED_REFERENCES
+                        | DFLAG_DIST_MONITOR
+                        | DFLAG_EXTENDED_PIDS_PORTS
+                        | DFLAG_FUN_TAGS
+                        | DFLAG_NEW_FUN_TAGS
+                        | DFLAG_NEW_FLOATS
+                        | DFLAG_SMALL_ATOM_TAGS
+                        | DFLAG_UTF8_ATOMS
+                        | DFLAG_MAP_TAG
+                        | DFLAG_BIG_CREATION
+                        | DFLAG_EXPORT_PTR_TAG
+                        | DFLAG_BIT_BINARIES
+#ifdef DFLAG_HANDSHAKE_23
+                        | DFLAG_HANDSHAKE_23
+#endif
+#ifdef DFLAG_V4_NC
+                        | DFLAG_V4_NC
+#endif
+#ifdef DFLAG_UNLINK_ID
+                        | DFLAG_UNLINK_ID
+#endif
+                        );
+
+#ifdef EI_DIST_5
+    char tag = (m_dist_version == EI_DIST_5) ? 'n' : 'N';
+#else
+    char tag = 'n';
+#endif
+#ifdef DFLAG_NAME_ME
+    if (this->m_this_node.empty()) {
+        /* dynamic node name */
+        tag = 'N'; /* presume ver 6 */
+        flags |= DFLAG_NAME_ME;
+    }
+#endif
+
+    size_t siz;
+    if (tag == 'n')
+        siz = 2 + 1 + 2 + 4 + this->m_this_node.size();
+    else /* tag == 'N' */
+        siz = 2 + 1 + 8 + 4 + 2 + this->m_this_node.size();
 
     if (siz > sizeof(m_buf_node)) {
         std::stringstream str;
@@ -333,22 +380,19 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
 
     char* w = m_buf_node;
     put16be(w, siz - 2);
-    put8(w, 'n');
-    put16be(w, m_dist_version);
-    unsigned int flags = (DFLAG_EXTENDED_REFERENCES
-                        | DFLAG_DIST_MONITOR
-                        | DFLAG_EXTENDED_PIDS_PORTS
-                        | DFLAG_FUN_TAGS
-                        | DFLAG_NEW_FUN_TAGS
-                        | DFLAG_NEW_FLOATS
-                        | DFLAG_SMALL_ATOM_TAGS
-                        | DFLAG_UTF8_ATOMS
-                        | DFLAG_MAP_TAG
-                        | DFLAG_BIG_CREATION
-                        | DFLAG_EXPORT_PTR_TAG
-                        | DFLAG_BIT_BINARIES
-                        );
-    put32be(w, flags);
+    put8(w, tag);
+    if (tag == 'n') {
+#ifdef EI_DIST_5
+        put16be(w, EI_DIST_5); /* spec demands ver==5 */
+#else
+        put16be(w, EI_DIST_LOW); /* spec demands ver==5 */
+#endif
+        put32be(w, flags);
+    } else { /* tag == 'N' */
+        put64be(w, flags);
+        put32be(w, this->local_creation());
+        put16be(w, this->local_nodename().size());
+    }
     memcpy(w, this->local_nodename().c_str(), this->local_nodename().size());
 
     if (this->handler()->verbose() >= VERBOSE_TRACE) {
@@ -527,23 +571,71 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     BOOST_ASSERT(got_bytes >= (int)m_expect_size);
 
     char tag = get8(m_node_rd);
-    if (tag != 'n') {
-        std::stringstream str; str << "Error reading auth challenge tag '" 
-            << this->remote_nodename() << "': " << tag;
+    if (tag != 'n' && tag != 'N') {
+        std::stringstream str; str << "<- RECV_CHALLENGE incorrect tag, "
+            << "expected 'n' or 'N', got '" << tag << "' from:"
+            << this->remote_nodename();
         this->handler()->on_connect_failure(this, str.str());
         boost::system::error_code ec;
         m_socket.close(ec);
         return;
     }
 
-    int version        = get16be(m_node_rd);
-    int flags          = get32be(m_node_rd);
-    m_remote_challenge = get32be(m_node_rd);
+    // See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect.c#L2478
+    int version;
+    if (tag == 'n') { /* OLD */
+        version = get16be(m_node_rd);
+#ifdef EI_DIST_5
+        if (version != EI_DIST_5) {
+            std::stringstream str; str << "<- RECV_CHALLENGE 'n' incorrect version=" 
+                << version;
+            this->handler()->on_connect_failure(this, str.str());
+            boost::system::error_code ec;
+            m_socket.close(ec);
+            return;
+        }
+#endif
+    
+        m_remote_flags     = get32be(m_node_rd);
+        m_remote_challenge = get32be(m_node_rd);
+    } else { /* NEW */
+        version = EI_DIST_6;
+        m_remote_flags     = get64be(m_node_rd);
+        m_remote_challenge = get32be(m_node_rd);
+        m_node_rd += 4; /* ignore peer 'creation' */
+    }
+
+    if (!(m_remote_flags & DFLAG_EXTENDED_REFERENCES)) {
+        std::stringstream str; str << "<- RECV_CHALLENGE peer cannot "
+            << "handle extended references";
+        this->handler()->on_connect_failure(this, str.str());
+        boost::system::error_code ec;
+        m_socket.close(ec);
+        return;
+    }
+
+    if (!(m_remote_flags & DFLAG_EXTENDED_PIDS_PORTS)) {
+        std::stringstream str; str << "<- RECV_CHALLENGE peer cannot "
+            << "handle extended pids and ports";
+        this->handler()->on_connect_failure(this, str.str());
+        boost::system::error_code ec;
+        m_socket.close(ec);
+        return;
+    }
+
+    if (!(m_remote_flags & DFLAG_NEW_FLOATS)) {
+        std::stringstream str; str << "<- RECV_CHALLENGE peer cannot "
+            << "handle binary float encoding";
+        this->handler()->on_connect_failure(this, str.str());
+        boost::system::error_code ec;
+        m_socket.close(ec);
+        return;
+    }
 
     if (this->handler()->verbose() >= VERBOSE_TRACE) {
         std::stringstream s;
-        s << "<- got auth challenge (version=" << version 
-          << ", flags=" << flags << ", remote_challenge=" << m_remote_challenge << ')';
+        s << "<- RECV_CHALLENGE (ok) version=" << version 
+          << ", flags=" << m_remote_flags << ", challenge=" << m_remote_challenge;
         this->handler()->report_status(REPORT_INFO, s.str());
     }
 

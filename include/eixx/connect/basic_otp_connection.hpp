@@ -85,7 +85,7 @@ private:
         BOOST_ASSERT(a_node != NULL);
         m_on_connect_status = h;
         m_transport = connection_type::create(
-            m_io_service, this, a_node->nodename(),
+            m_io_service, this, a_node->creation(), a_node->nodename(),
             a_remote_nodename, a_cookie, a_alloc);
     }
 
@@ -110,7 +110,7 @@ private:
         }
 
         m_transport = connection_type::create(
-            m_io_service, this, m_node->nodename(),
+            m_io_service, this, m_node->creation(), m_node->nodename(),
             m_remote_nodename, m_cookie, m_alloc);
     }
 

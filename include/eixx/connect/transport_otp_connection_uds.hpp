@@ -88,9 +88,9 @@ private:
     std::string m_uds_filename;
 
     /// @throws std::runtime_error
-    void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie)
+    void connect(uint32_t a_this_creation, atom a_this_node, atom a_remote_nodename, atom a_cookie)
     {
-        base_t::connect(a_this_node, a_remote_nodename, a_cookie);
+        base_t::connect(a_this_creation, a_this_node, a_remote_nodename, a_cookie);
 
         boost::system::error_code err;
         boost::asio::local::stream_protocol::endpoint endpoint(a_remote_nodename.to_string());

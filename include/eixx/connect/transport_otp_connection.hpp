@@ -74,6 +74,7 @@ protected:
     connection_type             m_type;
     atom                        m_remote_nodename;
     atom                        m_this_node;
+    uint32_t                    m_this_creation;
     atom                        m_cookie;
 
     Alloc                       m_allocator;
@@ -233,10 +234,12 @@ protected:
     /// on_error() callback will be invoked on successful/failed connection
     /// status.
     /// @throws std::runtime_error
-    virtual void connect(atom   a_this_node,
-                         atom   a_remote_nodename,
-                         atom   a_cookie)
+    virtual void connect(uint32_t a_this_creation,
+                         atom     a_this_node,
+                         atom     a_remote_nodename,
+                         atom     a_cookie)
     {
+        m_this_creation     = a_this_creation;
         m_this_node         = a_this_node;
         m_remote_nodename   = a_remote_nodename;
         m_cookie            = a_cookie;
@@ -292,6 +295,7 @@ public:
     static pointer create(
         boost::asio::io_service&    a_svc,
         handler_type*               a_h,
+        uint32_t                    a_this_creation,
         atom                        a_this_node,
         atom                        a_node,
         atom                        a_cookie,
@@ -336,6 +340,7 @@ public:
     virtual std::string         peer_address()      const   { return ""; }
     atom                        remote_nodename()   const   { return m_remote_nodename; }
     atom                        local_nodename()    const   { return m_this_node; }
+    uint32_t                    local_creation()    const   { return m_this_creation; }
     atom                        cookie()            const   { return m_cookie; }
     Handler*                    handler()                   { return m_handler; }
     boost::asio::io_service&    io_service()                { return m_io_service; }

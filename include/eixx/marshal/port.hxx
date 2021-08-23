@@ -38,9 +38,14 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
     const char* s   = buf + idx;
     const char* s0  = s;
     auto        tag = get8(s);
-    if (tag != ERL_PORT_EXT     &&
-        tag != ERL_NEW_PORT_EXT &&
-        tag != ERL_V4_PORT_EXT)
+    if (tag != ERL_PORT_EXT
+#ifdef ERL_NEW_PORT_EXT
+        && tag != ERL_NEW_PORT_EXT
+#endif
+#ifdef ERL_V4_PORT_EXT
+        && tag != ERL_V4_PORT_EXT
+#endif
+        )
         throw err_decode_exception("Error decoding port", idx, tag);
 
     int len = atom::get_len(s);
@@ -54,14 +59,18 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
     uint32_t cre;
 
     switch (tag) {
+#ifdef ERL_V4_PORT_EXT
         case ERL_V4_PORT_EXT:
             id  = get64be(s);
             cre = get32be(s);
             break;
+#endif
+#ifdef ERL_NEW_PORT_EXT
         case ERL_NEW_PORT_EXT:
             id  = uint64_t(get32be(s));
             cre = get32be(s);
             break;
+#endif
         case ERL_PORT_EXT:
             id  = uint64_t(get32be(s)) & 0x0fffffff;  /* 28 bits */
             cre = get8(s) & 0x03;                     /* 2 bits  */
@@ -86,15 +95,27 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     memmove(s, str.c_str(), n);
     s += n;
 
+#if defined(ERL_V4_PORT_EXT) && defined(ERL_NEW_PORT_EXT)
     if (id() > 0x0fffffff /* 28 bits */) {
         *s0 = ERL_V4_PORT_EXT;
         put64be(s, id());
         put32be(s, creation());
-    } else {
-        *s0 = ERL_PORT_EXT;
+    } else if (creation() > 0x03 /* 2 bits */) {
+#elif defined(ERL_NEW_PORT_EXT)
+    if (creation() > 0x03 /* 2 bits */) {
+#endif
+#ifdef ERL_NEW_PORT_EXT
+        *s0 = ERL_NEW_PORT_EXT;
         put32be(s, id());
         put32be(s, creation());
+    } else {
+#endif
+        *s0 = ERL_PORT_EXT;
+        put32be(s, id());
+        put8(s, creation());
+#ifdef ERL_NEW_PORT_EXT
     }
+#endif
 
     idx += s-s0;
     BOOST_ASSERT((size_t)idx <= size);

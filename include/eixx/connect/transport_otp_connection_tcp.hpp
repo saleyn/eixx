@@ -49,17 +49,23 @@ namespace connect {
 
 #ifndef HAVE_EI_EPMD
 // These constants are not exposed by EI headers:
+// See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect_int.h
+typedef EI_ULONGLONG DistFlags;
+
 static const int   ERL_VERSION_MAGIC            = 131;
 static const short EPMD_PORT                    = 4369;
 static const int   EPMDBUF                      = 512;
 static const char  EI_EPMD_PORT2_REQ            = 122;
 static const char  EI_EPMD_PORT2_RESP           = 119;
-static const char  EI_DIST_HIGH                 = 5;
+static const short EI_DIST_5                    = 5; /* OTP R4 - 22 */
+static const short EI_DIST_6                    = 6; /* OTP 23 and later */
+static const short EI_DIST_HIGH                 = EI_DIST_6;
+static const short EI_DIST_LOW                  = EI_DIST_5;
 static const int   DFLAG_PUBLISHED              = 1;
 static const int   DFLAG_ATOM_CACHE             = 2;
 static const int   DFLAG_EXTENDED_REFERENCES    = 4;
 static const int   DFLAG_DIST_MONITOR           = 8;
-static const int   DFLAG_FUN_TAGS               = 16;
+static const int   DFLAG_FUN_TAGS               = 0x10;
 static const int   DFLAG_NEW_FUN_TAGS           = 0x80;
 static const int   DFLAG_EXTENDED_PIDS_PORTS    = 0x100;
 static const int   DFLAG_EXPORT_PTR_TAG         = 0x200;
@@ -148,8 +154,14 @@ private:
     uint32_t     m_remote_challenge;
     uint32_t     m_our_challenge;
 
+#ifdef DistFlags
+    DistFlags    m_remote_flags;
+#else
+    unsigned int m_remote_flags;
+#endif
+
     /// @throws std::runtime_error
-    void connect(atom a_this_node, atom a_remote_nodename, atom a_cookie);
+    void connect(uint32_t a_this_creation, atom a_this_node, atom a_remote_nodename, atom a_cookie);
 
     boost::shared_ptr<tcp_connection<Handler, Alloc> > shared_from_this() {
         boost::shared_ptr<connection<Handler, Alloc> > p = base_t::shared_from_this();
