@@ -85,7 +85,7 @@ public:
      * 2 bits will be used.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      **/
-    port(const char* node, const int id, const int creation, const Alloc& a_alloc = Alloc())
+    port(const char* node, const int id, const uint32_t creation, const Alloc& a_alloc = Alloc())
     {
         size_t n = strlen(node);
         detail::check_node_length(n);
@@ -93,7 +93,7 @@ public:
         init(l_node, id, creation, a_alloc);
     }
 
-    port(const atom& node, const int id, const int creation, const Alloc& a_alloc = Alloc())
+    port(const atom& node, const int id, const uint32_t creation, const Alloc& a_alloc = Alloc())
     {
         detail::check_node_length(node.size());
         init(node, id, creation, a_alloc);
@@ -163,7 +163,7 @@ public:
         return false;
     }
 
-    size_t encode_size() const { return (id() > 0x0fffffff ? 16 : 12) + node().size(); }
+    size_t encode_size() const { return (id() > 0x0fffffff ? 16 : creation() > 0x03 ? 12 : 9) + node().size(); }
 
     void encode(char* buf, int& idx, size_t size) const;
 

@@ -55,6 +55,7 @@ typename connection<Handler, Alloc>::pointer
 connection<Handler, Alloc>::create(
     boost::asio::io_service& a_svc,
     Handler*            a_h,
+    uint32_t            a_this_creation,
     atom                a_this_node,
     atom                a_node,
     atom                a_cookie,
@@ -86,7 +87,7 @@ connection<Handler, Alloc>::create(
         default:   THROW_RUNTIME_ERROR("Not implemented! (proto=" << con_type << ')');
     }
 
-    p->connect(a_this_node, a_node, a_cookie);
+    p->connect(a_this_creation, a_this_node, a_node, a_cookie);
     return p;
 }
 

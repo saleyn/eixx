@@ -47,7 +47,7 @@ namespace detail {
  */
 template <class Alloc>
 class ref {
-    enum { COUNT = 5 };
+    enum { COUNT = 5 /* max of 5 when the DFLAG_V4_NC has been set */ };
 
     struct ref_blob {
         atom     node;
@@ -120,21 +120,21 @@ public:
      * 2 bits will be used.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      */
-    ref(const atom& node, const uint32_t* a_ids, size_t n, unsigned int creation,
+    ref(const atom& node, const uint32_t* a_ids, size_t n, uint32_t creation,
         const Alloc& a_alloc = Alloc())
     {
         init(node, a_ids, n, creation, a_alloc);
     }
 
     template <int N>
-    ref(const atom& node, uint32_t (&ids)[N], unsigned int creation,
+    ref(const atom& node, uint32_t (&ids)[N], uint32_t creation,
         const Alloc& a_alloc = Alloc())
         : ref(node, ids, N, creation, a_alloc)
     {
         BOOST_STATIC_ASSERT(N >= 3 && N <= 5);
     }
 
-    ref(const atom& node, uint32_t id0, uint32_t id1, uint32_t id2, unsigned int creation,
+    ref(const atom& node, uint32_t id0, uint32_t id1, uint32_t id2, uint32_t creation,
         const Alloc& a_alloc = Alloc())
         : ref(node, {id0, id1, id2}, creation, a_alloc)
     {}
@@ -207,7 +207,7 @@ public:
      * Get the creation number from the REF.
      * @return the creation number from the REF.
      */
-    int creation() const { return m_blob ? m_blob->data()->creation : 0; }
+    uint32_t creation() const { return m_blob ? m_blob->data()->creation : 0; }
 
     bool operator==(const ref<Alloc>& t) const {
         return ::memcmp(m_blob->data(), t.m_blob->data(), sizeof(ref_blob)) == 0;
@@ -234,7 +234,7 @@ public:
     }
 
     size_t encode_size() const
-    { return 1+2+(3+node().size()) + len()*4 + 4; }
+    { return 1+2+(3+node().size()) + len()*4 + (creation() > 0x03 ? 4 : 1); }
 
     void encode(char* buf, int& idx, size_t size) const;
 

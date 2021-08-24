@@ -45,6 +45,13 @@ namespace util {
     namespace eid = eixx::detail;
     using eid::lock_guard;
 
+    inline size_t utf8_length(const std::string& str) {
+        size_t count = 0;
+        const char* s = str.c_str();
+        while (*s) count += (*s++ & 0xc0) != 0x80;
+        return count;
+    }
+
     /// Non-garbage collected hash table for atoms. It stores strings
     /// as atoms so that atoms can be quickly compared to with O(1)
     /// complexity.  The instance of this table is statically maintained
@@ -82,7 +89,7 @@ namespace util {
         /// Returns the current number of atoms stored in the atom table.
         size_t allocated() const { return m_atoms.size();     }
 
-        explicit basic_atom_table(int a_max_atoms = default_size())
+        explicit basic_atom_table(size_t a_max_atoms = default_size())
             : m_index(a_max_atoms) {
             m_atoms.reserve(a_max_atoms);
             m_atoms.push_back(""); // The 0-th element is an empty atom ("").
@@ -113,7 +120,7 @@ namespace util {
         {
             if (a_name.size() == 0)
                 return 0;
-            if (a_name.size() > MAXATOMLEN)
+            if (a_name.size() > MAXATOMLEN_UTF8 || utf8_length(a_name) > MAXATOMLEN)
                 return -2;
             size_t bucket = m_index.bucket(a_name.c_str());
             int    n      = find_value(bucket, a_name.c_str());

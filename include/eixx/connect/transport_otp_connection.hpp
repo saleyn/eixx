@@ -40,6 +40,55 @@ limitations under the License.
 #include <eixx/connect/verbose.hpp>
 #include <eixx/marshal/string.hpp>
 
+#ifdef HAVE_EI_EPMD
+extern "C" {
+
+#include <epmd/ei_epmd.h>           // see erl_interface/src
+#include <misc/eiext.h>             // ERL_VERSION_MAGIC
+#include <connect/ei_connect_int.h> // see erl_interface/src
+
+}
+#else
+// These constants are not exposed by EI headers:
+// See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect_int.h
+#define ERL_VERSION_MAGIC            131
+#define EPMD_PORT                    4369
+#define EPMDBUF                      512
+#define EI_EPMD_PORT2_REQ            122
+#define EI_EPMD_PORT2_RESP           119
+#define EI_DIST_5                    5 /* OTP R4 - 22 */
+#define EI_DIST_6                    6 /* OTP 23 and later */
+#define EI_DIST_LOW                  EI_DIST_5
+#define EI_DIST_HIGH                 EI_DIST_6
+#define DFLAG_PUBLISHED              1
+#define DFLAG_ATOM_CACHE             2
+#define DFLAG_EXTENDED_REFERENCES    4
+#define DFLAG_DIST_MONITOR           8
+#define DFLAG_FUN_TAGS               0x10
+#define DFLAG_NEW_FUN_TAGS           0x80
+#define DFLAG_EXTENDED_PIDS_PORTS    0x100
+#define DFLAG_EXPORT_PTR_TAG         0x200
+#define DFLAG_BIT_BINARIES           0x400
+#define DFLAG_NEW_FLOATS             0x800
+#define DFLAG_SMALL_ATOM_TAGS        0x4000
+#define DFLAG_UTF8_ATOMS             0x10000
+#define DFLAG_MAP_TAG                0x20000
+#define DFLAG_BIG_CREATION           0x40000
+#define DFLAG_HANDSHAKE_23           0x1000000
+#define DFLAG_UNLINK_ID              0x2000000
+
+/*
+ * As the old handshake only support 32 flag bits, we reserve the remaining
+ * bits in the lower 32 for changes in the handshake protocol or potentially
+ * new capabilities that we also want to backport to OTP-22 or older.
+ */
+typedef EI_ULONGLONG DistFlags;
+#define DFLAG_RESERVED               0xfc000000
+#define DFLAG_NAME_ME                (((DistFlags)0x2) << 32)
+#define DFLAG_V4_NC                  (((DistFlags)0x4) << 32)
+
+#endif
+
 namespace eixx {
 namespace connect {
 
@@ -50,6 +99,34 @@ enum connection_type { UNDEFINED, TCP, UDS };
 
 /// Convert connection type to string.
 const char* connection_type_to_str(connection_type a_type);
+
+//------------------------------------------------------------------------------
+// capability flags supported by this class
+//------------------------------------------------------------------------------
+// See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect.c#L2272-L2287
+inline constexpr uint64_t LOCAL_FLAGS = (
+                        DFLAG_EXTENDED_REFERENCES
+                        | DFLAG_DIST_MONITOR
+                        | DFLAG_EXTENDED_PIDS_PORTS
+                        | DFLAG_FUN_TAGS
+                        | DFLAG_NEW_FUN_TAGS
+                        | DFLAG_NEW_FLOATS
+                        | DFLAG_SMALL_ATOM_TAGS
+                        | DFLAG_UTF8_ATOMS
+                        | DFLAG_MAP_TAG
+                        | DFLAG_BIG_CREATION
+                        | DFLAG_EXPORT_PTR_TAG
+                        | DFLAG_BIT_BINARIES
+#ifdef DFLAG_HANDSHAKE_23
+                        | DFLAG_HANDSHAKE_23
+#endif
+#ifdef DFLAG_V4_NC
+                        | DFLAG_V4_NC
+#endif
+#ifdef DFLAG_UNLINK_ID
+                        // | DFLAG_UNLINK_ID
+#endif
+                        );
 
 //----------------------------------------------------------------------------
 // Base connection class.
@@ -74,6 +151,7 @@ protected:
     connection_type             m_type;
     atom                        m_remote_nodename;
     atom                        m_this_node;
+    uint32_t                    m_this_creation;
     atom                        m_cookie;
 
     Alloc                       m_allocator;
@@ -233,10 +311,12 @@ protected:
     /// on_error() callback will be invoked on successful/failed connection
     /// status.
     /// @throws std::runtime_error
-    virtual void connect(atom   a_this_node,
-                         atom   a_remote_nodename,
-                         atom   a_cookie)
+    virtual void connect(uint32_t a_this_creation,
+                         atom     a_this_node,
+                         atom     a_remote_nodename,
+                         atom     a_cookie)
     {
+        m_this_creation     = a_this_creation;
         m_this_node         = a_this_node;
         m_remote_nodename   = a_remote_nodename;
         m_cookie            = a_cookie;
@@ -292,6 +372,7 @@ public:
     static pointer create(
         boost::asio::io_service&    a_svc,
         handler_type*               a_h,
+        uint32_t                    a_this_creation,
         atom                        a_this_node,
         atom                        a_node,
         atom                        a_cookie,
@@ -331,11 +412,13 @@ public:
     }
 
     virtual int native_socket() = 0;
+    virtual uint64_t remote_flags() const = 0;
 
     /// Address of connected peer.
     virtual std::string         peer_address()      const   { return ""; }
     atom                        remote_nodename()   const   { return m_remote_nodename; }
     atom                        local_nodename()    const   { return m_this_node; }
+    uint32_t                    local_creation()    const   { return m_this_creation; }
     atom                        cookie()            const   { return m_cookie; }
     Handler*                    handler()                   { return m_handler; }
     boost::asio::io_service&    io_service()                { return m_io_service; }

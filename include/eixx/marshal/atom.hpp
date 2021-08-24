@@ -60,8 +60,8 @@ namespace detail {
 
 /**
  * Provides a representation of Erlang atoms. Atoms can be
- * created from strings whose length is not more than
- * MAXATOMLEN characters.
+ * created from UTF8 strings whose length is not more than
+ * MAXATOMLEN characters / codepoints.
  */
 class atom
 {
@@ -88,7 +88,7 @@ public:
     /// Create an atom from the given string.
     /// @param atom the string to create the atom from.
     /// @throw std::runtime_error if atom table is full.
-    /// @throw err_bad_argument if atom size is longer than MAXATOMLEN
+    /// @throw err_bad_argument if atom length is longer than MAXATOMLEN
     atom(const char* s)
         : m_index(atom_table().lookup(std::string(s))) {}
 
@@ -209,7 +209,10 @@ public:
 
     /// Get the size of a buffer needed to encode this atom in 
     /// the external binary format.
-    size_t encode_size() const { return 3 + length(); }
+    size_t encode_size() const {
+        const size_t len = length();
+        return (len > 255 ? 3 : 2) + len;
+    }
 
     /// Encode the atom in external binary format.
     /// @param buf is the buffer space to encode the atom to.
@@ -218,11 +221,16 @@ public:
     void encode(char* buf, int& idx, size_t size) const {
         char* s  = buf + idx;
         char* s0 = s;
-        const int len = std::min((size_t)MAXATOMLEN, length());
-        /* This function is documented to truncate at MAXATOMLEN (256) */
-        put8(s,ERL_ATOM_UTF8_EXT);
-        put16be(s,len);
-        memmove(s,c_str(),len); /* unterminated string */
+        const size_t len = std::min((size_t)MAXATOMLEN_UTF8, length());
+        /* This function is documented to truncate at MAXATOMLEN_UTF8 (1021) */
+        if (len > 255) {
+            put8(s, ERL_ATOM_UTF8_EXT);
+            put16be(s, len);
+        } else {
+            put8(s, ERL_SMALL_ATOM_UTF8_EXT);
+            put8(s, len);
+        }
+        memmove(s, c_str(), len); /* unterminated string */
         s   += len;
         idx += s-s0;
         BOOST_ASSERT((size_t)idx <= size);
