@@ -90,7 +90,7 @@ class epid {
 
     /// @throw err_decode_exception
     /// @throw err_bad_argument
-    void decode(const char* buf, int& idx, size_t size, const Alloc& a_alloc);
+    void decode(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc);
 
 public:
 
@@ -125,7 +125,7 @@ public:
     }
 
     /// Decode the pid from a binary buffer.
-    epid(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc()) {
+    epid(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc()) {
         decode(buf, idx, size, a_alloc);
     }
 
@@ -207,9 +207,9 @@ public:
     }
     size_t encode_size() const { return (creation() > 0x03 ? 16 : 13) + node().size(); }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         out << "#Pid<" << node() 
             << '.' << id() << '.' << serial();
         if (creation() > 0)

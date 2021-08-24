@@ -35,7 +35,7 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
+ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
     const char *s = buf + idx;
     const char *s0 = s;
@@ -47,8 +47,8 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
 #endif
 #ifdef ERL_NEW_REFERENCE_EXT
         case ERL_NEW_REFERENCE_EXT: {
-            int count = get16be(s);  // First goes the count
-            if (count < 0 || count > COUNT)
+            uint16_t count = get16be(s);  // First goes the count
+            if (count > COUNT)
                 throw err_decode_exception("Error decoding ref's count", idx+1, count);
 
             int len = atom::get_len(s);
@@ -97,7 +97,7 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
 }
 
 template <class Alloc>
-void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
+void ref<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
@@ -112,10 +112,10 @@ void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
 #else
     put8(s, ERL_ATOM_EXT);
 #endif
-    const std::string& str = node().to_string();
-    unsigned short n = str.size();
+    atom nd = node();
+    uint16_t n = nd.size();
     put16be(s, n);
-    memmove(s, str.c_str(), n);
+    memmove(s, nd.c_str(), n);
     s += n;
 
     /* the integers */

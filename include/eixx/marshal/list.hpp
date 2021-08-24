@@ -178,7 +178,7 @@ public:
     /**
      * Decode the list from a binary buffer.
      */
-    explicit list(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    explicit list(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ~list() { release(); }
 
@@ -262,7 +262,7 @@ public:
         return result;
     }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
     bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const;
 

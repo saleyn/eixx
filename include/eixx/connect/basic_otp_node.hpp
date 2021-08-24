@@ -226,7 +226,7 @@ public:
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_node,
-                 const atom& a_cookie = atom(), size_t a_reconnect_secs = 0);
+                 const atom& a_cookie = atom(), int a_reconnect_secs = 0);
 
     /**
      * Set up a connection to an Erlang node, using default cookie
@@ -239,7 +239,7 @@ public:
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_nodename,
-                 size_t a_reconnect_secs = 0);
+                 int a_reconnect_secs = 0);
 
     /// Get connection identified by the \a a_node name.
     /// @throws err_connection if not connected to \a a_node._

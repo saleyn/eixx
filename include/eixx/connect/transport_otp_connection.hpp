@@ -261,7 +261,7 @@ protected:
     /// and \a a_msg are invalid.
     /// @return Control Message
     /// @throws err_decode_exception
-    int transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm);
+    int transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm);
 
     void process_message(const char* a_buf, size_t a_size);
 

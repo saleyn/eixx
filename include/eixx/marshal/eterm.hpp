@@ -197,7 +197,7 @@ public:
      * Decode a term from the Erlang external binary format.
      * @throw err_decode_exception
      */
-    void decode(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc);
+    void decode(const char* a_buf, uintptr_t& idx, size_t a_size, const Alloc& a_alloc);
 
     long&           get(long*)                  { check(LONG);   return vt.i; }
     double&         get(double*)                { check(DOUBLE); return vt.d; }
@@ -317,7 +317,7 @@ public:
      * @param a_size is the total size of the term stored in \a a_buf buffer.
      * @param a_alloc is the custom allocator.
      */
-    eterm(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc = Alloc()) {
+    eterm(const char* a_buf, uintptr_t& idx, size_t a_size, const Alloc& a_alloc = Alloc()) {
         decode(a_buf, idx, a_size, a_alloc);
     }
 

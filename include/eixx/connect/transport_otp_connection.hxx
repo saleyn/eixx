@@ -351,11 +351,11 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 /// @throws err_decode_exception
 template <class Handler, class Alloc>
 int connection<Handler, Alloc>::
-transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
+transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm)
 {
     const char* s = mbuf;
     int version;
-    int index = 0;
+    uintptr_t index = 0;
 
     if (unlikely(len == 0)) // This is TICK message
         return ERL_TICK;
@@ -363,18 +363,20 @@ transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
     /* now decode header */
     /* pass-through, version, control tuple header, control message type */
     if (unlikely(get8(s) != ERL_PASS_THROUGH)) {
-        int n = len < 65 ? len : 64;
-        std::string s = std::string("Missing pass-throgh flag in message")
+        size_t n = len < 65 ? len : 64;
+        std::string s = std::string("Missing pass-through flag in message")
                       + to_binary_string(mbuf, n);
         throw err_decode_exception(s, len);
     }
 
-    if (unlikely(ei_decode_version(s,&index,&version) || version != ERL_VERSION_MAGIC))
+    if (unlikely(ei_decode_version(s, (int*)&index, &version) || version != ERL_VERSION_MAGIC))
         throw err_decode_exception("Invalid control message magic number", version);
 
     tuple<Alloc> cntrl(s, index, len, m_allocator);
 
-    int msgtype = cntrl[0].to_long();
+    long t = cntrl[0].to_long();
+    BOOST_ASSERT(t <= INT_MAX);
+    int msgtype = (int)t;
 
     if (unlikely(msgtype <= ERL_TICK) || unlikely(msgtype > ERL_MONITOR_P_EXIT))
         throw err_decode_exception("Invalid message type", msgtype);
@@ -384,7 +386,8 @@ transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm)
                                              | 1 << ERL_SEND_TT
                                              | 1 << ERL_REG_SEND_TT;
     if (likely((1 << msgtype) & types_with_payload)) {
-        if (unlikely(ei_decode_version(s,&index,&version)) || unlikely((version != ERL_VERSION_MAGIC)))
+        BOOST_ASSERT(index <= INT_MAX);
+        if (unlikely(ei_decode_version(s, (int*)&index, &version)) || unlikely((version != ERL_VERSION_MAGIC)))
             throw err_decode_exception("Invalid message magic number", version);
 
         eterm<Alloc> msg(s, index, len, m_allocator);
@@ -455,10 +458,12 @@ send(const transport_msg<Alloc>& a_msg)
     bool   l_has_msg= a_msg.has_msg();
     size_t cntrl_sz = l_cntrl.encode_size(0, true);
     size_t msg_sz   = l_has_msg ? a_msg.msg().encode_size(0, true) : 0;
-    size_t len      = cntrl_sz + msg_sz + 1 /*passthrough*/ + 4 /*len*/;
-    char*  data     = allocate(len);
+    size_t sz       = cntrl_sz + msg_sz + 1 /*passthrough*/ + 4 /*len*/;
+    char*  data     = allocate(sz);
     char*  s        = data;
-    put32be(s, len-4);
+    BOOST_ASSERT(sz-4 <= UINT32_MAX);
+    uint32_t len = (uint32_t)sz - 4;
+    put32be(s, len);
     *s++ = ERL_PASS_THROUGH;
     l_cntrl.encode(s, cntrl_sz, 0, true);
     if (l_has_msg)
@@ -472,9 +477,9 @@ send(const transport_msg<Alloc>& a_msg)
         m_handler->report_status(REPORT_INFO, s.str());
     }
     //if (unlikely(verbose() >= VERBOSE_WIRE))
-    //    std::cout << "SEND " << len << " bytes " << to_binary_string(data, len) << std::endl;
+    //    std::cout << "SEND " << sz << " bytes " << to_binary_string(data, sz) << std::endl;
 
-    boost::asio::const_buffer b(data, len);
+    boost::asio::const_buffer b(data, sz);
     m_io_service.post(
         std::bind(&connection<Handler, Alloc>::do_write, this->shared_from_this(), b));
 }

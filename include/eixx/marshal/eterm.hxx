@@ -42,7 +42,7 @@ inline eterm_type type_string_to_type(const char* s, size_t n) {
 
      if (n < 3) return r;
 
-     int m = n - 1;
+     size_t m = n - 1;
      const char* p = s+1;
 
      switch (s[0]) {
@@ -219,23 +219,24 @@ std::string eterm<Alloc>::to_string(size_t a_size_limit, const varbind<Alloc>* b
 template <class Alloc>
 eterm<Alloc>::eterm(const char* a_buf, size_t a_size, const Alloc& a_alloc)
 {
-    int idx = 0;
+    uintptr_t idx = 0;
     int vsn;
-    if (ei_decode_version(a_buf, &idx, &vsn) < 0)
+    if (ei_decode_version(a_buf, (int*)&idx, &vsn) < 0)
         throw err_decode_exception("Wrong eterm version byte!", vsn);
     decode(a_buf, idx, a_size, a_alloc);
 }
 
 template <class Alloc>
-void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Alloc& a_alloc)
+void eterm<Alloc>::decode(const char* a_buf, uintptr_t& idx, size_t a_size, const Alloc& a_alloc)
 {
+    BOOST_ASSERT(idx <= INT_MAX);
     if ((size_t)idx == a_size)
         throw err_decode_exception("Empty term", idx);
 
     // check the type of next term:
     int type, sz;
 
-    if (ei_get_type(a_buf, &idx, &type, &sz) < 0)
+    if (ei_get_type(a_buf, (int*)&idx, &type, &sz) < 0)
         throw err_decode_exception("Cannot determine term type", idx);
 
     switch (type) {
@@ -250,7 +251,7 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
 #endif
     case ERL_ATOM_EXT: {
         int b;
-        int i = idx; // TODO: Eliminate this variable when there's is a fix for the bug in ei_decode_boolean
+        int i = (int)idx; // TODO: Eliminate this variable when there's is a fix for the bug in ei_decode_boolean
         if (ei_decode_boolean(a_buf, &i, &b) < 0)
             new (this) eterm<Alloc>(atom(a_buf, idx, a_size));
         else {
@@ -278,7 +279,7 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
     case ERL_LARGE_BIG_EXT:
     case ERL_INTEGER_EXT: {
         long long l;
-        if (ei_decode_longlong(a_buf, &idx, &l) < 0)
+        if (ei_decode_longlong(a_buf, (int*)&idx, &l) < 0)
             throw err_decode_exception("Failed decoding long value", idx);
         new (this) eterm<Alloc>((long)l);
         break;
@@ -286,7 +287,7 @@ void eterm<Alloc>::decode(const char* a_buf, int& idx, size_t a_size, const Allo
     case NEW_FLOAT_EXT:
     case ERL_FLOAT_EXT: {
         double d;
-        if (ei_decode_double(a_buf, &idx, &d) < 0)
+        if (ei_decode_double(a_buf, (int*)&idx, &d) < 0)
             throw err_decode_exception("Failed decoding double value", idx);
         new (this) eterm<Alloc>(d);
         break;
@@ -374,9 +375,11 @@ void eterm<Alloc>::encode(char* a_buf, size_t size,
             throw err_encode_exception(s.str());
         }
     }
-    int offset = a_header_size;
-    if (a_with_version)
-        ei_encode_version(a_buf, &offset);
+    uintptr_t offset = a_header_size;
+    if (a_with_version) {
+        BOOST_ASSERT(offset <= INT_MAX);
+        ei_encode_version(a_buf, (int*)&offset);
+    }
     visit_eterm_encoder visitor(a_buf, offset, size);
     visitor.apply_visitor(*this);
     BOOST_ASSERT((size_t)offset == size);

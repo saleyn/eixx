@@ -39,7 +39,7 @@ struct visit_eterm_encode_size_calc
     : public static_visitor<visit_eterm_encode_size_calc<Alloc>, size_t> {
 
     size_t operator()(bool   a) const { return 2 + (a ? 4 : 5); }
-    size_t operator()(double a) const { return 9; }
+    size_t operator()(double  ) const { return 9; }
     size_t operator()(long   a) const { int n = 0; ei_encode_longlong(NULL, &n, a); return n; }
 
     template <typename T>

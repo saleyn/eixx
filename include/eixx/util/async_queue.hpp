@@ -69,7 +69,7 @@ private:
     // Dequeue up to m_batch_size of items and for each one call
     // m_wait_handler
     template <typename Handler>
-    void process_queue(const Handler& h, const boost::system::error_code& ec,
+    void process_queue(const Handler& h, [[maybe_unused]] const boost::system::error_code& ec,
                        std::chrono::milliseconds repeat, int repeat_count) {
         // Process up to m_batch_size items waiting on the queue.
         // For each dequeued item call m_wait_handler

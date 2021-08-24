@@ -38,6 +38,7 @@ namespace marshal {
 
 template <class Alloc>
 void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) {
+    BOOST_ASSERT(N <= UINT_MAX);
     size_t n = N > 0 ? N : 1;
     m_blob = new blob_t(sizeof(header_t) + n*sizeof(cons_t), alloc);
 
@@ -45,8 +46,8 @@ void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) 
     cons_t*   hd            = l_header->head;
 
     l_header->initialized   = true;
-    l_header->alloc_size    = n;
-    l_header->size          = N;
+    l_header->alloc_size    = (unsigned int)n;
+    l_header->size          = (unsigned int)N;
 
     for(auto p = items, end = items+N; p != end; ++p, ++hd) {
         BOOST_ASSERT(p->initialized());
@@ -103,11 +104,12 @@ list<Alloc>::list(const cons_t* a_head, int a_len, const Alloc& alloc)
 }
 
 template <class Alloc>
-list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
+list<Alloc>::list(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_alloc)
     : base_t(a_alloc)
 {
+    BOOST_ASSERT(idx <= INT_MAX);
     int arity;
-    if (ei_decode_list_header(buf, &idx, &arity) < 0)
+    if (ei_decode_list_header(buf, (int*)&idx, &arity) < 0)
         err_decode_exception("Error decoding list header", idx);
 
     // If this is an empty list - no allocation is needed
@@ -141,7 +143,7 @@ list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 }
 
 template <class Alloc>
-void list<Alloc>::encode(char* buf, int& idx, size_t size) const
+void list<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
 {
     BOOST_ASSERT(initialized());
     char* s = buf + idx;
@@ -150,7 +152,11 @@ void list<Alloc>::encode(char* buf, int& idx, size_t size) const
     } else {
         put8(s,ERL_LIST_EXT);
         const header_t* l_header = header();
-        put32be(s,l_header->size);
+        auto sz = l_header->size;
+        if (sz > UINT32_MAX)
+            throw err_encode_exception("LIST_EXT length exceeds maximum");
+        uint32_t len = (uint32_t)sz;
+        put32be(s, len);
         idx += 5;
         for(const cons_t* p = l_header->head; p; p = p->next) {
             visit_eterm_encoder visitor(buf, idx, size);

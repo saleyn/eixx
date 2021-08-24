@@ -127,7 +127,7 @@ public:
     int   reconnect_timeout()                       const { return m_reconnect_secs;  }
 
     /// Set new reconnect timeout in seconds
-    void reconnect_timeout(size_t a_reconnect_secs) { m_reconnect_secs = a_reconnect_secs; }
+    void reconnect_timeout(int a_reconnect_secs) { m_reconnect_secs = a_reconnect_secs; }
 
     static pointer
     connect(connect_completion_handler      h,
@@ -218,7 +218,7 @@ public:
         report_status(REPORT_ERROR, str.str());
     }
 
-    void on_message(connection_type* a_con, const transport_msg<Alloc>& a_tm) {
+    void on_message(connection_type*, const transport_msg<Alloc>& a_tm) {
         try {
             m_node->deliver(a_tm);
         } catch (std::exception& e) {

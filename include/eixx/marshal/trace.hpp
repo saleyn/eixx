@@ -55,7 +55,7 @@ class trace : protected tuple<Alloc> {
     /// Increment the serial number. This method is not atomic.
     void inc_serial() { long n = serial(); (*this)[4] = n; (*this)[2] = n+1; }
     
-    void check_clock(uint32_t& clock) {
+    void check_clock(long& clock) {
         long n = serial(); if (n > clock) (*this)[4] = clock = n;
     }
 
@@ -77,7 +77,7 @@ public:
     }
 
     /// Decode the pid from a binary buffer.
-    trace(const char* buf, int& idx, size_t a_size, const Alloc& a_alloc = Alloc())
+    trace(const char* buf, uintptr_t& idx, size_t a_size, const Alloc& a_alloc = Alloc())
         : tuple<Alloc>(buf, idx, a_size, a_alloc)
     {
         if (size() != 5 || (*this)[0].type() != LONG
@@ -124,11 +124,11 @@ public:
 
     size_t encode_size() const { return tuple<Alloc>::encode_size(); }
 
-    void encode(char* buf, int& idx, size_t size) const {
+    void encode(char* buf, uintptr_t& idx, size_t size) const {
         tuple<Alloc>::encode(buf, idx, size);
     }
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         return out << *static_cast<const tuple<Alloc>*>(this);
     }
 
@@ -136,7 +136,7 @@ public:
     static trace<Alloc>* tracer(trace_op op, const trace<Alloc>* token = NULL) {
         static trace<Alloc> save_token;
         static bool     tracing = false;
-        static uint32_t clock   = 0;
+        static long clock   = 0;
 
         switch (op) {
             case TRACE_OFF: tracing = false; break;

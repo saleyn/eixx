@@ -51,11 +51,11 @@ class ref {
 
     struct ref_blob {
         atom     node;
-        uint32_t len;
+        uint16_t len;
         uint32_t ids[COUNT];
         uint32_t creation;
 
-        ref_blob(const atom& a_node, const uint32_t* a_ids, size_t n, uint32_t a_cre)
+        ref_blob(const atom& a_node, const uint32_t* a_ids, uint16_t n, uint32_t a_cre)
             : node(a_node)
             , len(n)
             , creation(a_cre)
@@ -82,7 +82,7 @@ class ref {
     blob<ref_blob, Alloc>* m_blob;
 
     // Must only be called from constructor!
-    void init(const atom& a_node, const uint32_t* a_ids, size_t n, uint32_t a_cre,
+    void init(const atom& a_node, const uint32_t* a_ids, uint16_t n, uint32_t a_cre,
               const Alloc& alloc)
     {
         detail::check_node_length(a_node.size());
@@ -153,7 +153,7 @@ public:
      * @param size is the size of the \a buf buffer.
      * @param a_alloc is the allocator to use.
      */
-    ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    ref(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ref(const ref& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
     ref(ref&& rhs) : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
@@ -201,7 +201,7 @@ public:
      * Get the id array from the REF.
      * @return the id array number from the REF.
      */
-    const size_t len() const { return m_blob ? m_blob->data()->len : 0; }
+    uint16_t len() const { return m_blob ? m_blob->data()->len : 0; }
 
     /**
      * Get the creation number from the REF.
@@ -220,7 +220,7 @@ public:
         int n = node().compare(rhs.node());
         if (n != 0)             return n < 0;
         auto e = std::min(len(), rhs.len());
-        for (size_t i=0; i < e; ++i) {
+        for (uint32_t i=0; i < e; ++i) {
             auto i1 = id(i);
             auto i2 = rhs.id(i);
             if (i1 > i2) return false;
@@ -236,9 +236,9 @@ public:
     size_t encode_size() const
     { return 1+2+(3+node().size()) + len()*4 + (creation() > 0x03 ? 4 : 1); }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=nullptr) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =nullptr) const {
         return out << *this;
     }
 };

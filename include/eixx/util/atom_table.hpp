@@ -136,7 +136,7 @@ namespace util {
         int lookup(const char* a_name)           { return lookup(String(a_name)); }
         int lookup(const String& a_name)
         {
-            auto n = try_lookup(a_name);
+            int n = try_lookup(a_name);
             if  (n >=  0) return n;
             if  (n == -2) throw  err_bad_argument("Atom size is too long!");
 
@@ -148,9 +148,10 @@ namespace util {
                     return n;
             }
 
-            n = m_atoms.size();
-            if ((size_t)(n+1) == m_atoms.capacity())
+            size_t sz = m_atoms.size();
+            if (sz > INT_MAX || sz == m_atoms.capacity())
                 throw std::runtime_error("Atom hash table is full!");
+            n = (int)sz;
             m_atoms.push_back(a_name);
             m_index[m_atoms.back().c_str()] = n;
             return n;

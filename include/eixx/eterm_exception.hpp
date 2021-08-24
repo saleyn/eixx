@@ -168,20 +168,31 @@ public:
 
     const char* what()  const throw() { return m_what.c_str(); }
     int         code()  const         { return m_code;  }
-    int         value() const         { return m_value; }
+    long        value() const         { return m_value; }
 };
 
 /**
  * Exception while decoding
  */
-class err_decode_exception: public err_encode_exception {
+class err_decode_exception: public eterm_exception {
+    uintptr_t   m_pos;
+    long        m_value;
+    std::string m_what;
 public:
-    err_decode_exception(const std::string &msg, int pos=0)
-        : err_encode_exception(msg, pos)
-    {}
-    err_decode_exception(const std::string &msg, int pos, long value)
-        : err_encode_exception(msg, pos, value)
-    {}
+    err_decode_exception(const std::string &msg, uintptr_t pos=0, long value=0)
+        : eterm_exception(msg)
+        , m_pos(pos)
+        , m_value(value)
+    {
+        std::stringstream s; s << m_msg;
+        if (value != 0) s << " ("    << m_value << ")";
+        s << " at (" << m_pos  << ")";
+        m_what = s.str();
+    }
+
+    const char* what()  const throw() { return m_what.c_str(); }
+    uintptr_t   pos()   const         { return m_pos;  }
+    long        value() const         { return m_value; }
 };
 
 class err_empty_list: public eterm_exception {

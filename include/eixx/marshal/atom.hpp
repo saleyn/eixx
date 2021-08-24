@@ -170,7 +170,7 @@ public:
 
     /// Decode an atom from a binary buffer encoded in 
     /// Erlang external binary format.
-    atom(const char* a_buf, int& idx, size_t a_size)
+    atom(const char* a_buf, uintptr_t& idx, size_t a_size)
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
@@ -182,11 +182,11 @@ public:
         BOOST_ASSERT((size_t)idx <= a_size);
     }
 
-    const char*         c_str()     const { return atom_table()[m_index].c_str();  }
-    const std::string&  to_string() const { return atom_table()[m_index];          }
-    size_t              size()      const { return atom_table()[m_index].size();   }
-    size_t              length()    const { return size();                         }
-    bool                empty()     const { return m_index == 0;                   }
+    const char*         c_str()     const { return atom_table()[m_index].c_str();          }
+    const std::string&  to_string() const { return atom_table()[m_index];                  }
+    uint16_t            size()      const { return (uint16_t)atom_table()[m_index].size(); }
+    uint16_t            length()    const { return size();                                 }
+    bool                empty()     const { return m_index == 0;                           }
 
     /// Get atom's index in the atom table.
     int             index()     const { return m_index; }
@@ -210,30 +210,30 @@ public:
     /// Get the size of a buffer needed to encode this atom in 
     /// the external binary format.
     size_t encode_size() const {
-        const size_t len = length();
-        return (len > 255 ? 3 : 2) + len;
+        const size_t sz = size();
+        return (sz > 255 ? 3 : 2) + sz;
     }
 
     /// Encode the atom in external binary format.
     /// @param buf is the buffer space to encode the atom to.
     /// @param idx is the offset in the \a buf where to begin writing.
     /// @param size is the size of \a buf.
-    void encode(char* buf, int& idx, size_t size) const {
+    void encode(char* buf, uintptr_t& idx, size_t a_size) const {
         char* s  = buf + idx;
         char* s0 = s;
-        const size_t len = std::min((size_t)MAXATOMLEN_UTF8, length());
+        const uint16_t len = std::min((uint16_t)MAXATOMLEN_UTF8, size());
         /* This function is documented to truncate at MAXATOMLEN_UTF8 (1021) */
-        if (len > 255) {
+        if (len > UINT8_MAX) {
             put8(s, ERL_ATOM_UTF8_EXT);
             put16be(s, len);
         } else {
             put8(s, ERL_SMALL_ATOM_UTF8_EXT);
-            put8(s, len);
+            put8(s, (uint8_t)len);
         }
         memmove(s, c_str(), len); /* unterminated string */
         s   += len;
         idx += s-s0;
-        BOOST_ASSERT((size_t)idx <= size);
+        BOOST_ASSERT((size_t)idx <= a_size);
     }
 
     /// Write the atom to the \a out stream.

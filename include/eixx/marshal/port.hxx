@@ -33,7 +33,7 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
+port<Alloc>::port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_alloc)
 {
     const char* s   = buf + idx;
     const char* s0  = s;
@@ -83,7 +83,7 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 }
 
 template <class Alloc>
-void port<Alloc>::encode(char* buf, int& idx, size_t size) const
+void port<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
@@ -95,10 +95,10 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
 #else
     put8(s, ERL_ATOM_EXT);
 #endif
-    const std::string& str = node().to_string();
-    unsigned short n = str.size();
+    atom nd = node();
+    uint16_t n = nd.size();
     put16be(s, n);
-    memmove(s, str.c_str(), n);
+    memmove(s, nd.c_str(), n);
     s += n;
 
     /* the integers */
@@ -126,7 +126,7 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
 #endif
         *s0 = ERL_PORT_EXT;
         put32be(s, id() & 0x0fffffff /* 28 bits */);
-        put8(s, l_cre);
+        put8(s, l_cre & 0x03 /* 2 bits */);
 #if defined(ERL_V4_PORT_EXT) || defined(ERL_NEW_PORT_EXT)
     }
 #endif

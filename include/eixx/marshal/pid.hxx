@@ -33,7 +33,7 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& alloc)
+void epid<Alloc>::decode(const char *buf, uintptr_t& idx, size_t size, const Alloc& alloc)
 {
     const char* s  = buf + idx;
     const char* s0 = s;
@@ -68,7 +68,7 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
 }
 
 template <class Alloc>
-void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
+void epid<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
@@ -80,8 +80,8 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
 #else
     put8(s, ERL_ATOM_EXT);
 #endif
-    const std::string& nd = node().to_string();
-    unsigned short n = nd.size();
+    atom nd = node();
+    uint16_t n = nd.size();
     put16be(s, n);
     memmove(s, nd.c_str(), n);
     s += n;

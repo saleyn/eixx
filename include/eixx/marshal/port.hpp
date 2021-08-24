@@ -107,7 +107,7 @@ public:
      * @param size is the size of the \a buf buffer.
      * @param a_alloc is the allocator to use.
      */
-    port(const char *buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     port(const port& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
     port(port&& rhs)      : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
@@ -165,9 +165,9 @@ public:
 
     size_t encode_size() const { return (id() > 0x0fffffff ? 16 : creation() > 0x03 ? 12 : 9) + node().size(); }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         return out << *this;
     }
 };

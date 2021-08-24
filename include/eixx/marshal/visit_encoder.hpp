@@ -35,16 +35,25 @@ namespace marshal {
 
 class visit_eterm_encoder: public static_visitor<visit_eterm_encoder, void> {
     mutable char* buf;
-    int&  idx;
+    uintptr_t&    idx;
     const size_t  size;
 public: 
-    visit_eterm_encoder(char* a_buf, int& a_idx, size_t a_size)
+    visit_eterm_encoder(char* a_buf, uintptr_t& a_idx, size_t a_size)
         : buf(a_buf), idx(a_idx), size(a_size)
     {}
 
-    void operator() (bool   a) const { ei_encode_boolean (buf, &idx, a); }
-    void operator() (long   a) const { ei_encode_longlong(buf, &idx, a); }
-    void operator() (double a) const { ei_encode_double  (buf, &idx, a); }
+    void operator() (bool a) const {
+        BOOST_ASSERT(idx <= INT_MAX);
+        ei_encode_boolean(buf, (int*)&idx, a);
+    }
+    void operator() (long a) const {
+        BOOST_ASSERT(idx <= INT_MAX);
+        ei_encode_longlong(buf, (int*)&idx, a);
+    }
+    void operator() (double a) const {
+        BOOST_ASSERT(idx <= INT_MAX);
+        ei_encode_double(buf, (int*)&idx, a);
+    }
 
     template <typename T>
     void operator()(const T& a) const { a.encode(buf, idx, size); }

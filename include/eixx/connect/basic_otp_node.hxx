@@ -188,7 +188,7 @@ close()
 template <typename Alloc, typename Mutex>
 template <typename CompletionHandler>
 inline void basic_otp_node<Alloc, Mutex>::
-connect(CompletionHandler h, const atom& a_remote_nodename, size_t a_reconnect_secs)
+connect(CompletionHandler h, const atom& a_remote_nodename, int a_reconnect_secs)
 {
     connect(h, a_remote_nodename, atom(), a_reconnect_secs);
 }
@@ -208,7 +208,7 @@ template <typename Alloc, typename Mutex>
 template <typename CompletionHandler>
 void basic_otp_node<Alloc, Mutex>::
 connect(CompletionHandler h, const atom& a_remote_node, const atom& a_cookie,
-        size_t a_reconnect_secs)
+        int a_reconnect_secs)
 {
     lock_guard<Mutex> guard(m_lock);
     typename conn_hash_map::iterator it = m_connections.find(a_remote_node);

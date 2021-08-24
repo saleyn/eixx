@@ -96,7 +96,7 @@ public:
 
     size_t encode_size() const { throw err_encode_exception("Cannot encode vars!"); }
 
-    void encode(char* buf, int& idx, size_t size) const {
+    void encode(char*, uintptr_t&, size_t) const {
         throw err_encode_exception("Cannot encode vars!");
     }
 

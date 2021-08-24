@@ -113,7 +113,7 @@ namespace marshal {
     {
         const char* start = *fmt, *p = start;
         char c;
-        int len;
+        uintptr_t len;
 
         skip_ws_and_comments(fmt);
 
@@ -175,7 +175,7 @@ namespace marshal {
             throw err_format_exception("Error parsing quotted atom", start);
 
         *fmt = p+1; /* skip last quote */
-        int len = p - start;
+        uintptr_t len = p - start;
 
         return atom(start, len);
 
@@ -200,7 +200,9 @@ namespace marshal {
             else if (c == '.' && !dotp)
                 dotp = true;
             else if (c == '#') {
-                base = strtol(start, NULL, 10);
+                long b = strtol(start, NULL, 10);
+                BOOST_ASSERT(b <= INT_MAX);
+                base  = (int)b;
                 start = p+1;
             } else
                 break;
@@ -229,7 +231,7 @@ namespace marshal {
             throw err_format_exception("Error parsing string", start);
 
         *fmt = p+1; /* skip last quote */
-        int len = p - start;
+        uintptr_t len = p - start;
 
         return eterm<Alloc>(string<Alloc>(start, len, alloc));
     } /* pstring */

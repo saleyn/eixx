@@ -105,7 +105,7 @@ public:
         s.m_blob = nullptr;
     }
 
-    string(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    string(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ~string() {
         release();
@@ -182,8 +182,12 @@ public:
         return n == 0 ? 1 : n + (n <= 0xffff ? 3 : 5+n+1);
     }
 
-    void encode(char* buf, int& idx, size_t size) const {
-        ei_encode_string_len(buf, &idx, c_str(), length());
+    void encode(char* buf, uintptr_t& idx, size_t) const {
+        BOOST_ASSERT(idx <= INT_MAX);
+        size_t len = size();
+        if (len > INT_MAX)
+            throw err_encode_exception("STRING_EXT length exceeds maximum");
+        ei_encode_string_len(buf, (int*)&idx, c_str(), (int)len);
     }
 
     template <typename Stream>
@@ -193,7 +197,7 @@ public:
 
     std::string to_binary_string() const { return eixx::to_binary_string(c_str(), size()); }
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         return out << *this;
     }
 };
@@ -204,7 +208,7 @@ static std::string to_binary_string(const string<Alloc>& a) {
 }
 
 template <class Alloc>
-string<Alloc>::string(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
+string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
     const char *s = buf + idx;
     const char *s0 = s;
