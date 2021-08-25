@@ -209,7 +209,15 @@ public:
         if (creation()    < t2.creation())      return true;
         return false;
     }
-    size_t encode_size() const { return (creation() > 0x03 ? 16 : 13) + node().size(); }
+    size_t encode_size() const {
+      return
+          #ifndef ERL_NEW_PID_EXT
+              13
+          #elif defined(ERL_PID_EXT)
+              16
+          #endif
+          + node().size();
+    }
 
     void encode(char* buf, int& idx, size_t size) const;
 

@@ -167,7 +167,15 @@ public:
         return false;
     }
 
-    size_t encode_size() const { return (id() > 0x0fffffff ? 16 : creation() > 0x03 ? 12 : 9) + node().size(); }
+    size_t encode_size() const {
+        return id() > 0x0fffffff ? 16 :
+            #if defined(ERL_V4_PORT_EXT) || defined(ERL_NEW_PORT_EXT)
+                12
+            #else
+                9
+            #endif
+            + node().size();
+    }
 
     void encode(char* buf, int& idx, size_t size) const;
 

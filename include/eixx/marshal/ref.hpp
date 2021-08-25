@@ -237,8 +237,14 @@ public:
         return false;
     }
 
-    size_t encode_size() const
-    { return 1+2+(3+node().size()) + len()*4 + (creation() > 0x03 ? 4 : 1); }
+    size_t encode_size() const {
+        return 1+2+(3+node().size()) + len()*4 +
+            #ifdef ERL_NEWER_REFERENCE_EXT
+                4;
+            #else
+                1;
+            #endif
+    }
 
     void encode(char* buf, int& idx, size_t size) const;
 

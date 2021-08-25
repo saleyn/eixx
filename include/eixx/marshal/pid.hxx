@@ -91,13 +91,8 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
     put32be(s, serial()); /* 13 bits if distribution flag DFLAG_V4_NC is not set */
     const uint32_t l_cre = creation();
 #ifdef ERL_NEW_PID_EXT
-    if (l_cre > 0x03 /* 2 bits */) {
-        *s0 = ERL_NEW_PID_EXT;
-        put32be(s, l_cre);
-    } else {
-        *s0 = ERL_PID_EXT;
-        put8(s, l_cre & 0x03 /* 2 bits */);
-    }
+    *s0 = ERL_NEW_PID_EXT;
+    put32be(s, l_cre);
 #else
     *s0 = ERL_PID_EXT;
     put8(s, l_cre & 0x03 /* 2 bits */);
