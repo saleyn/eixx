@@ -35,26 +35,40 @@ static const atom N1 = atom("N1");
 static const atom N2 = atom("N2");
 static const atom N3 = atom("N3");
 
-bool on_io_request(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
+void on_connect(otp_connection* a_con, const std::string& a_error) {
+    if (!a_error.empty()) {
+        std::cout << a_error << std::endl;
+        return;
+    }
 
-    static const eterm s_put_chars = eterm::format("{io_request,_,_,{put_chars,S}}");
+    if (g_rem_node != a_con->remote_nodename())
+        throw eixx::err_connection("Connection from the wrong node: " + 
+                                   a_con->remote_nodename().to_string());
 
-    if (!a_msg)
-        return true;
+    // Make sure that remote node has a process registered as "test".
+    // Try sending a message to it.
+    g_main->send_rpc(a_con->remote_nodename(), "erlang", "now", list::make());
 
-    varbind l_binding;
-    if (s_put_chars.match(a_msg->msg(), &l_binding)) {
-        auto s = l_binding[S]->to_string();
-        std::cerr << "I/O request from server: " << s << std::endl;
-        if (s == "<<\"DONE\">>")
-          a_mbox.node().stop();
-    } else
-        std::cerr << "I/O server got a message: " << a_msg->msg() << std::endl;
+    // Send an rpc request to print a string. The remote 
+    g_io_server->send_rpc_cast(a_con->remote_nodename(), atom("io"), atom("put_chars"),
+        list::make("This is a test string"), &g_io_server->self());
 
-    return true;
+    g_io_server->send_rpc_cast(a_con->remote_nodename(), atom("io"), atom("put_chars"),
+        list::make("DONE"), &g_io_server->self());
 }
 
-bool on_main_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
+void on_disconnect(
+    otp_node& a_node, const otp_connection& a_con,
+    atom a_remote_node, const boost::system::error_code& err)
+{
+    std::cout << "Disconnected from remote node " << a_remote_node << std::endl;
+    if (a_con.reconnect_timeout() == 0)
+        a_node.stop();
+}
+
+// Messages to the 'main' mailbox
+bool on_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg)
+{
     static const eterm s_now_pattern  = eterm::format("{rex, {N1, N2, N3}}");
     static const eterm s_stop         = atom("stop");
 
@@ -92,32 +106,25 @@ bool on_main_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
     return true;
 }
 
-void on_connect(otp_connection* a_con, const std::string& a_error) {
-    if (!a_error.empty()) {
-        std::cout << a_error << std::endl;
-        return;
-    }
-
-    if (g_rem_node != a_con->remote_nodename())
-        throw eixx::err_connection("Connection from the wrong node: " + 
-                                   a_con->remote_nodename().to_string());
-
-    // Make sure that remote node has a process registered as "test".
-    // Try sending a message to it.
-    g_main->send_rpc(g_rem_node, "erlang", "now", list::make());
-
-    // Send an rpc request to print a string. The remote 
-    g_io_server->send_rpc_cast(a_con->remote_nodename(), atom("io"), atom("put_chars"),
-        list::make("This is a test string"), &g_io_server->self());
-}
-
-void on_disconnect(
-    otp_node& a_node, const otp_connection& a_con,
-    atom a_remote_node, const boost::system::error_code& err)
+bool on_io(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg)
 {
-    std::cout << "Disconnected from remote node " << a_remote_node << std::endl;
-    if (a_con.reconnect_timeout() == 0)
-        a_node.stop();
+    static const eterm s_put_chars = eterm::format("{io_request,_,_,{put_chars,S}}");
+
+    if (!a_msg)
+        return true;
+
+    varbind l_binding;
+    if (s_put_chars.match(a_msg->msg(), &l_binding)) {
+        std::cerr << "I/O request from server: "
+                    << l_binding[S]->to_string() << std::endl;
+        auto s = l_binding[S]->to_string();
+        if (s == "<<\"DONE\">>")
+            a_mbox.node().stop();
+    }
+    else
+        std::cerr << "I/O server got a message: " << a_msg->msg() << std::endl;
+
+    return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -159,11 +166,13 @@ int main(int argc, char* argv[]) {
     node.connect(on_connect, g_rem_node, reconnect_secs);
 
     //otp_connection::connection_type* transport = a_con->transport();
-    g_io_server->async_receive(on_io_request, std::chrono::milliseconds(-1), -1);
+    g_io_server->async_receive(on_io, 
+        // IO Request
+        std::chrono::milliseconds(-1), -1);
 
     //node.send_rpc(self, g_rem_node, atom("shell_default"), atom("ls"),
     //              list::make(), &g_io_server);
-    g_main->async_receive(on_main_msg, std::chrono::seconds(5), -1);
+    g_main->async_receive(on_msg, std::chrono::seconds(5), -1);
 
     node.run();
 
