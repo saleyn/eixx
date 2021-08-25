@@ -233,7 +233,7 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
 
     m_epmd_wr = m_buf_epmd + bytes_transferred;
 
-    size_t need_bytes = 8 - (bytes_transferred - 2);
+    int need_bytes = 8 - (bytes_transferred - 2);
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_epmd_wr, sizeof(m_buf_epmd)-bytes_transferred),
@@ -440,8 +440,8 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
 
     m_node_wr = m_buf_node + bytes_transferred;
 
-    size_t need_bytes = m_expect_size - (m_node_wr - m_node_rd);
-    // size_t need_bytes = 5 - (bytes_transferred - 2);
+    int need_bytes = m_expect_size - (m_node_wr - m_node_rd);
+    // int need_bytes = 5 - (bytes_transferred - 2);
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
