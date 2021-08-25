@@ -621,8 +621,8 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         return;
     }
 
-    size_t nodename_len;
-    uint16_t l_dist_version = m_dist_version;
+    size_t   nodename_len;
+    uint16_t dist_version = m_dist_version;
 
     // See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect.c#L2478
     if (tag == 'n') { /* OLD */
@@ -652,8 +652,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         m_node_rd          += 4; /* ignore peer 'creation' */
         nodename_len       = get16be(m_node_rd);
 
-        size_t got_bytes = m_node_wr - m_node_rd;
-        if (nodename_len > got_bytes) {
+        if (nodename_len > (size_t)(m_node_wr - m_node_rd)) {
             std::stringstream ss;
             ss << "<- RECV_CHALLENGE 'N' (error) nodename too long from node '" 
                << this->remote_nodename() << "': " << nodename_len;
@@ -716,7 +715,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     int siz = 0;
 
     // send complement (if dist_version upgraded in-flight)
-    if (m_dist_version > l_dist_version) {
+    if (m_dist_version > dist_version) {
         siz += 2 + 1 + 4 + 4;
         put16be(w, 9);
         put8(w, 'c');

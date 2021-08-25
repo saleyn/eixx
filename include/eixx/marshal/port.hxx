@@ -67,7 +67,7 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_a
 #endif
 #ifdef ERL_NEW_PORT_EXT
         case ERL_NEW_PORT_EXT:
-            id  = uint64_t(get32be(s) & 0x0fffffff);  /* 28 bits */
+            id  = uint64_t(get32be(s));
             cre = get32be(s);
             break;
 #endif
@@ -108,26 +108,17 @@ void port<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
         *s0 = ERL_V4_PORT_EXT;
         put64be(s, id());
         put32be(s, l_cre);
-
-    #ifdef ERL_NEW_PORT_EXT
-    } else if (l_cre > 0x03 /* 2 bits */) {
-        *s0 = ERL_NEW_PORT_EXT;
-        put32be(s, id() & 0x0fffffff /* 28 bits */);  
-        put32be(s, l_cre);
-    #else
     } else {
-    #endif
 #elif defined(ERL_NEW_PORT_EXT)
-    if (l_cre > 0x03 /* 2 bits */) {
         *s0 = ERL_NEW_PORT_EXT;
         put32be(s, id() & 0x0fffffff /* 28 bits */);  
         put32be(s, l_cre);
-    } else {
-#endif
+#else
         *s0 = ERL_PORT_EXT;
         put32be(s, id() & 0x0fffffff /* 28 bits */);
         put8(s, l_cre & 0x03 /* 2 bits */);
-#if defined(ERL_V4_PORT_EXT) || defined(ERL_NEW_PORT_EXT)
+#endif
+#if defined(ERL_V4_PORT_EXT)
     }
 #endif
 

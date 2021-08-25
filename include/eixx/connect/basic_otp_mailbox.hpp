@@ -239,7 +239,7 @@ public:
     );
 
     /// Deliver a message to this mailbox. The call is thread-safe.
-	void deliver(const transport_msg<Alloc>& a_msg) {
+    void deliver(const transport_msg<Alloc>& a_msg) {
         std::unique_ptr<transport_msg<Alloc>> p(new transport_msg<Alloc>(a_msg));
         m_queue->enqueue(p.get());
         p.release();
@@ -269,29 +269,47 @@ public:
      * Block until response for a RPC call arrives.
      * @return a pointer to ErlTerm containing the response
      * @exception EpiConnectionException if there was an connection error
-	 * @throws EpiBadRPC if the corresponding RPC was incorrect
+     * @throws EpiBadRPC if the corresponding RPC was incorrect
      */
     //bool receive_rpc_reply(const eterm<Alloc>& a_reply);
 
     /**
-	 * Send an RPC request to a remote Erlang node.
+     * Send an RPC request to a remote Erlang node.
      * @param node remote node where execute the funcion.
-	 * @param mod the name of the Erlang module containing the
-	 * function to be called.
-	 * @param fun the name of the function to call.
-	 * @param args a list of Erlang terms, to be used as arguments
-	 * to the function.
+     * @param mod the name of the Erlang module containing the
+     * function to be called.
+     * @param fun the name of the function to call.
+     * @param args a list of Erlang terms, to be used as arguments
+     * to the function.
      * @throws EpiBadArgument if function, module or nodename are too big
      * @throws EpiInvalidTerm if any of the args is invalid
-	 * @throws EpiEncodeException if encoding fails
+     * @throws EpiEncodeException if encoding fails
      * @throws EpiConnectionException if send fails
-	 */
+     */
     void send_rpc(const atom& a_node,
                   const atom& a_mod,
                   const atom& a_fun,
                   const list<Alloc>& args,
-                  const epid<Alloc>* gleader = NULL) {
+                  const epid<Alloc>* /*gleader*/ = NULL) {
         m_node.send_rpc(self(), a_node, a_mod, a_fun, args);
+    }
+
+    /// Send an RPC request to a remote Erlang node.
+    void send_rpc(const atom&        a_node,
+                  const std::string& a_mod,
+                  const std::string& a_fun,
+                  const list<Alloc>& args,
+                  const epid<Alloc>* /*gleader*/ = NULL) {
+        m_node.send_rpc(self(), a_node, atom(a_mod), atom(a_fun), args);
+    }
+
+    /// Send an RPC request to a remote Erlang node.
+    void send_rpc(const atom&        a_node,
+                  const char*        a_mod,
+                  const char*        a_fun,
+                  const list<Alloc>& args,
+                  const epid<Alloc>* /*gleader*/ = NULL) {
+        m_node.send_rpc(self(), a_node, atom(a_mod), atom(a_fun), args);
     }
 
     /**
@@ -305,6 +323,32 @@ public:
             const epid<Alloc>* gleader = NULL)
     {
         m_node.send_rpc_cast(self(), a_node, a_mod, a_fun, args, gleader);
+    }
+
+    /**
+     * Execute an equivalent of rpc:cast(...). Doesn't return any value.
+     * @throws err_bad_argument
+     * @throws err_no_process
+     * @throws err_connection
+     */
+    void send_rpc_cast(const atom& a_node, const std::string& a_mod,
+            const std::string& a_fun, const list<Alloc>& args,
+            const epid<Alloc>* gleader = NULL)
+    {
+        m_node.send_rpc_cast(self(), a_node, atom(a_mod), atom(a_fun), args, gleader);
+    }
+
+    /**
+     * Execute an equivalent of rpc:cast(...). Doesn't return any value.
+     * @throws err_bad_argument
+     * @throws err_no_process
+     * @throws err_connection
+     */
+    void send_rpc_cast(const atom& a_node, const char* a_mod,
+            const char* a_fun, const list<Alloc>& args,
+            const epid<Alloc>* gleader = NULL)
+    {
+        m_node.send_rpc_cast(self(), a_node, atom(a_mod), atom(a_fun), args, gleader);
     }
 
     /// Send exit message to all linked pids and monitoring pids

@@ -33,6 +33,7 @@ limitations under the License.
 #include <boost/static_assert.hpp>
 #include <eixx/eterm_exception.hpp>
 #include <eixx/marshal/atom.hpp>
+#include <eixx/marshal/config.hpp>
 
 namespace eixx {
 namespace marshal {
@@ -71,6 +72,9 @@ class port {
 
 public:
     static const port<Alloc> null;
+
+    /// When true - include 'Creation' in printing to string/stream
+    static bool display_creation() { return config::display_creation(); }
 
     port() : m_blob(nullptr) {}
 
@@ -163,7 +167,15 @@ public:
         return false;
     }
 
-    size_t encode_size() const { return (id() > 0x0fffffff ? 16 : creation() > 0x03 ? 12 : 9) + node().size(); }
+    size_t encode_size() const {
+        return id() > 0x0fffffff ? 16 :
+            #if defined(ERL_V4_PORT_EXT) || defined(ERL_NEW_PORT_EXT)
+                12
+            #else
+                9
+            #endif
+            + node().size();
+    }
 
     void encode(char* buf, uintptr_t& idx, size_t size) const;
 
@@ -179,7 +191,7 @@ namespace std {
     template <typename Alloc>
     ostream& operator<< (ostream& out, const eixx::marshal::port<Alloc>& a) {
         out << "#Port<" << a.node() << "." << a.id();
-        if (a.creation() > 0)
+        if (a.creation() > 0 && a.display_creation())
             out << ',' << a.creation();
         return out << '>';
     }

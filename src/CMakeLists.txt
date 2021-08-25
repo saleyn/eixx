@@ -2,6 +2,7 @@
 
 list(APPEND EIXX_SRCS
   am.cpp
+  config.cpp
 )
 
 if (NOT EIXX_MARSHAL_ONLY)

@@ -30,7 +30,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/test-node",
-            "args": ["-n", "a@localhost", "-r", "iex-demo1@127.0.0.1", "-v", "trace"],
+            "args": ["-n", "test-node@127.0.0.1", "-r", "iex-demo1@127.0.0.1", "-v", "trace"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

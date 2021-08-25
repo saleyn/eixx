@@ -50,6 +50,8 @@ limitations under the License.
 #include <eixx/marshal/eterm_match.hpp>
 
 namespace eixx {
+    using marshal::config;
+
 namespace marshal {
 
 namespace {

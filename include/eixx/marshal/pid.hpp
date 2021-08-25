@@ -34,6 +34,7 @@ limitations under the License.
 #include <boost/concept_check.hpp>
 #include <eixx/eterm_exception.hpp>
 #include <eixx/marshal/atom.hpp>
+#include <eixx/marshal/config.hpp>
 
 namespace eixx {
 namespace marshal {
@@ -95,6 +96,9 @@ class epid {
 public:
 
     static const epid null;
+
+    /// When true - include 'Creation' in printing to string/stream
+    static bool display_creation() { return config::display_creation(); }
 
     epid() : m_blob(nullptr) {}
 
@@ -205,14 +209,22 @@ public:
         if (creation()    < t2.creation())      return true;
         return false;
     }
-    size_t encode_size() const { return (creation() > 0x03 ? 16 : 13) + node().size(); }
+    size_t encode_size() const {
+      return
+          #ifndef ERL_NEW_PID_EXT
+              13
+          #elif defined(ERL_PID_EXT)
+              16
+          #endif
+          + node().size();
+    }
 
     void encode(char* buf, uintptr_t& idx, size_t size) const;
 
     std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         out << "#Pid<" << node() 
             << '.' << id() << '.' << serial();
-        if (creation() > 0)
+        if (creation() > 0 && display_creation())
             out << ',' << creation();
         return out << '>';
     }
