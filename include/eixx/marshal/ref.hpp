@@ -34,6 +34,7 @@ limitations under the License.
 #include <boost/assert.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <eixx/marshal/atom.hpp>
+#include <eixx/marshal/config.hpp>
 #include <eixx/eterm_exception.hpp>
 
 namespace eixx {
@@ -106,6 +107,9 @@ public:
     }
 
     static const ref<Alloc> null;
+
+    /// When true - include 'Creation' in printing to string/stream
+    static bool display_creation() { return config::display_creation(); }
 
     ref() : m_blob(nullptr) {}
 
@@ -256,7 +260,7 @@ namespace std {
         out << "#Ref<" << a.node();
         for (int i=0, e=a.len(); i != e; ++i)
             out << '.' << a.id(i);
-        if (a.creation() > 0)
+        if (a.creation() > 0 && a.display_creation())
             out << ',' << a.creation();
         return out << '>';
     }

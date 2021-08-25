@@ -82,7 +82,7 @@ class basic_otp_node: public basic_otp_node_local {
     class rpc_server;
 
     Mutex                                       m_lock;
-    uint8_t                                     m_creation;
+    uint32_t                                    m_creation;
     std::atomic_int                             m_pid_count;
     std::atomic_int                             m_port_count;
     std::atomic_uint_fast64_t                   m_refid0;
@@ -212,7 +212,7 @@ public:
     ref<Alloc> create_ref();
 
     /// Get creation number
-    uint8_t creation() const { return m_creation; }
+    uint32_t creation() const { return m_creation; }
 
     /**
      * Set up a connection to an Erlang node, using given cookie

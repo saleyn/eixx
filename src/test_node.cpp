@@ -43,10 +43,12 @@ bool on_io_request(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
         return true;
 
     varbind l_binding;
-    if (s_put_chars.match(a_msg->msg(), &l_binding))
-        std::cerr << "I/O request from server: "
-                    << l_binding[S]->to_string() << std::endl;
-    else
+    if (s_put_chars.match(a_msg->msg(), &l_binding)) {
+        auto s = l_binding[S]->to_string();
+        std::cerr << "I/O request from server: " << s << std::endl;
+        if (s == "<<\"DONE\">>")
+          a_mbox.node().stop();
+    } else
         std::cerr << "I/O server got a message: " << a_msg->msg() << std::endl;
 
     return true;
@@ -77,6 +79,10 @@ bool on_main_msg(otp_mailbox& a_mbox, eixx::transport_msg*& a_msg) {
             "Server time: %02d:%02d:%02d.%06ld\n",
 #endif
             tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec);
+
+        std::cout << "Sending DONE message" << std::endl;
+        g_io_server->send_rpc_cast(g_rem_node, "io", "put_chars",
+            list::make("DONE"), &g_io_server->self());
     } else if (l_msg.match(s_stop)) {
         a_mbox.node().stop();
         return false;
@@ -92,9 +98,13 @@ void on_connect(otp_connection* a_con, const std::string& a_error) {
         return;
     }
 
+    if (g_rem_node != a_con->remote_nodename())
+        throw eixx::err_connection("Connection from the wrong node: " + 
+                                   a_con->remote_nodename().to_string());
+
     // Make sure that remote node has a process registered as "test".
     // Try sending a message to it.
-    g_main->send_rpc(a_con->remote_nodename(), "erlang", "now", list::make());
+    g_main->send_rpc(g_rem_node, "erlang", "now", list::make());
 
     // Send an rpc request to print a string. The remote 
     g_io_server->send_rpc_cast(a_con->remote_nodename(), atom("io"), atom("put_chars"),

@@ -447,6 +447,9 @@ BOOST_AUTO_TEST_CASE( test_pid )
         BOOST_CHECK(t.initialized());
         BOOST_CHECK_EQUAL(PID, t.type());
         BOOST_CHECK_EQUAL("#Pid<abc@fc12.1.2,4>", t.to_string());
+        config::display_creation(false);
+        BOOST_CHECK_EQUAL("#Pid<abc@fc12.1.2>", t.to_string());
+        config::display_creation(true);
 
         BOOST_CHECK_EQUAL("#Pid<abc@fc12.1.2>", eterm(epid("abc@fc12", 1, 2, 0, alloc)).to_string());
     }
@@ -538,6 +541,9 @@ BOOST_AUTO_TEST_CASE( test_port )
         BOOST_CHECK(t.initialized());
         BOOST_CHECK_EQUAL(PORT, t.type());
         BOOST_CHECK_EQUAL("#Port<abc@fc12.1,2>", t.to_string());
+        config::display_creation(false);
+        BOOST_CHECK_EQUAL("#Port<abc@fc12.1>", t.to_string());
+        config::display_creation(true);
         BOOST_CHECK_EQUAL("#Port<abc@fc12.1>", eterm(port("abc@fc12",1,0)).to_string());
         port et1("abc@fc12", 1, 2, alloc);
         port et2("abc@fc12", 1, 0, alloc);
@@ -580,6 +586,9 @@ BOOST_AUTO_TEST_CASE( test_ref )
         BOOST_CHECK(t.initialized());
         BOOST_CHECK_EQUAL(REF, t.type());
         BOOST_CHECK_EQUAL("#Ref<abc@fc12.5.6.7,4>", t.to_string());
+        config::display_creation(false);
+        BOOST_CHECK_EQUAL("#Ref<abc@fc12.5.6.7>", t.to_string());
+        config::display_creation(true);
         ref et1("abc@fc12", ids, 0, alloc);
         BOOST_CHECK_EQUAL("#Ref<abc@fc12.5.6.7>", eterm(et1).to_string());
         BOOST_CHECK_NE(et,  et1);
