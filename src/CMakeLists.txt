@@ -8,7 +8,6 @@ list(APPEND EIXX_SRCS
 if (NOT EIXX_MARSHAL_ONLY)
   list(APPEND EIXX_SRCS
     basic_otp_node_local.cpp
-    test_node.cpp
   )
 endif()
 
