@@ -210,11 +210,11 @@ static std::string to_binary_string(const string<Alloc>& a) {
 template <class Alloc>
 string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
-    const char *s = buf + idx;
+    const char *s  = buf + idx;
     const char *s0 = s;
-    int etype = get8(s);
+    uint8_t    tag = get8(s);
 
-    switch (etype) {
+    switch (tag) {
         case ERL_STRING_EXT: {
             int len = get16be(s);
             if (len == 0)
@@ -239,7 +239,7 @@ string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t s
             else {
                 m_blob = new blob<char, Alloc>(len+1, a_alloc);
                 for (int i=0; i<len; i++) {
-                    if ((etype = get8(s)) != ERL_SMALL_INTEGER_EXT)
+                    if ((tag = get8(s)) != ERL_SMALL_INTEGER_EXT)
                         throw err_decode_exception("Error decoding string", s+i-s0);
                     m_blob->data()[i] = get8(s);
                 }
@@ -252,7 +252,7 @@ string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t s
             break;
 
         default:
-            throw err_decode_exception("Error decoding string type", etype);
+            throw err_decode_exception("Error decoding string's type", idx, tag);
     }
     idx += s-s0;
 }

@@ -366,11 +366,11 @@ transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm)
         size_t n = len < 65 ? len : 64;
         std::string s = std::string("Missing pass-through flag in message")
                       + to_binary_string(mbuf, n);
-        throw err_decode_exception(s, len);
+        throw err_decode_exception(s, index, len);
     }
 
     if (unlikely(ei_decode_version(s, (int*)&index, &version) || version != ERL_VERSION_MAGIC))
-        throw err_decode_exception("Invalid control message magic number", version);
+        throw err_decode_exception("Invalid control message magic number", index, version);
 
     tuple<Alloc> cntrl(s, index, len, m_allocator);
 
@@ -388,7 +388,7 @@ transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm)
     if (likely((1 << msgtype) & types_with_payload)) {
         BOOST_ASSERT(index <= INT_MAX);
         if (unlikely(ei_decode_version(s, (int*)&index, &version)) || unlikely((version != ERL_VERSION_MAGIC)))
-            throw err_decode_exception("Invalid message magic number", version);
+            throw err_decode_exception("Invalid message magic number", index, version);
 
         eterm<Alloc> msg(s, index, len, m_allocator);
         a_tm.set(msgtype, cntrl, &msg);

@@ -33,11 +33,11 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-port<Alloc>::port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_alloc)
+port<Alloc>::port(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
     const char* s   = buf + idx;
     const char* s0  = s;
-    auto        tag = get8(s);
+    uint8_t     tag = get8(s);
     if (tag != ERL_PORT_EXT
 #ifdef ERL_NEW_PORT_EXT
         && tag != ERL_NEW_PORT_EXT
@@ -46,11 +46,11 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_a
         && tag != ERL_V4_PORT_EXT
 #endif
         )
-        throw err_decode_exception("Error decoding port", idx, tag);
+        throw err_decode_exception("Error decoding port's type", idx, tag);
 
     int len = atom::get_len(s);
     if (len < 0)
-        throw err_decode_exception("Error decoding port node", idx, len);
+        throw err_decode_exception("Error decoding port's node", idx, len);
     detail::check_node_length(len);
     atom l_node(s, len);
     s += len;
@@ -75,6 +75,9 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_a
             id  = uint64_t(get32be(s) & 0x0fffffff);  /* 28 bits */
             cre = get8(s) & 0x03;                     /* 2 bits  */
             break;
+        
+        default:
+            throw err_decode_exception("Error decoding port's type", idx, tag);
     }
     init(l_node, id, cre, a_alloc);
 
@@ -83,7 +86,7 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_a
 }
 
 template <class Alloc>
-void port<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
+void port<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;

@@ -85,7 +85,7 @@ public:
                         || (*this)[2].type() != LONG
                         || (*this)[3].type() != PID
                         || (*this)[4].type() != LONG)
-            throw err_decode_exception("Invalid trace token type!");
+            throw err_decode_exception("Invalid trace token type!", idx);
     }
 
     trace(const trace& rhs) : tuple<Alloc>(rhs) {}

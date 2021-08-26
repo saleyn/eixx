@@ -33,21 +33,21 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-void epid<Alloc>::decode(const char *buf, uintptr_t& idx, size_t size, const Alloc& alloc)
+void epid<Alloc>::decode(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& alloc)
 {
-    const char* s  = buf + idx;
-    const char* s0 = s;
-    auto n = get8(s);
-    if (n != ERL_PID_EXT
+    const char* s   = buf + idx;
+    const char* s0  = s;
+    uint8_t     tag = get8(s);
+    if (tag != ERL_PID_EXT
 #ifdef ERL_NEW_PID_EXT
-        && n != ERL_NEW_PID_EXT
+        && tag != ERL_NEW_PID_EXT
 #endif
         )
-        throw err_decode_exception("Error decoding pid", n);
+        throw err_decode_exception("Error decoding pid's type", idx, tag);
 
     int len = atom::get_len(s);
     if (len < 0)
-        throw err_decode_exception("Error decoding pid node", -1);
+        throw err_decode_exception("Error decoding pid node", idx, len);
     detail::check_node_length(len);
 
     atom l_node(s, len);
@@ -56,7 +56,7 @@ void epid<Alloc>::decode(const char *buf, uintptr_t& idx, size_t size, const All
     uint32_t l_id  = get32be(s); /* 15 bits if distribution flag DFLAG_V4_NC is not set */
     uint32_t l_ser = get32be(s); /* 13 bits if distribution flag DFLAG_V4_NC is not set */
 #ifdef ERL_NEW_PID_EXT
-    uint32_t l_cre = n == ERL_NEW_PID_EXT ? get32be(s) : (get8(s) & 0x03);
+    uint32_t l_cre = tag == ERL_NEW_PID_EXT ? get32be(s) : (get8(s) & 0x03);
 #else
     uint32_t l_cre = get8(s) & 0x03; /* 2 bits */
 #endif
@@ -68,7 +68,7 @@ void epid<Alloc>::decode(const char *buf, uintptr_t& idx, size_t size, const All
 }
 
 template <class Alloc>
-void epid<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
+void epid<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;

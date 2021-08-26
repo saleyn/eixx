@@ -143,14 +143,14 @@ namespace marshal {
 
         /// This method overrides the new() operator for this class
         /// so that the blob memory is taken from the Alloc allocator.
-        static void* operator new(size_t sz) {
+        static void* operator new([[maybe_unused]] size_t sz) {
             BOOST_ASSERT(sz == sizeof(blob<T,Alloc>));
             return get_blob_alloc().allocate(1);
         }
 
         /// This method overrides the new() operator for this class
         /// so that the blob memory is released to the Alloc allocator.
-        static void operator delete(void* p, size_t sz) {
+        static void operator delete(void* p, [[maybe_unused]] size_t sz) {
             BOOST_ASSERT(sz == sizeof(blob<T,Alloc>));
             get_blob_alloc().deallocate(static_cast<blob<T,Alloc>*>(p), 1);
         }

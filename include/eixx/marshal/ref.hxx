@@ -37,11 +37,11 @@ namespace marshal {
 template <class Alloc>
 ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
-    const char *s = buf + idx;
+    const char *s  = buf + idx;
     const char *s0 = s;
-    int type = get8(s);
+    uint8_t    tag = get8(s);
 
-    switch (type) {
+    switch (tag) {
 #ifdef ERL_NEWER_REFERENCE_EXT
         case ERL_NEWER_REFERENCE_EXT:
 #endif
@@ -59,7 +59,7 @@ ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, c
             s += len;
 
             uint32_t cre, mask;
-            std::tie(cre, mask) = type == ERL_NEW_REFERENCE_EXT
+            std::tie(cre, mask) = tag == ERL_NEW_REFERENCE_EXT
                                 ? std::make_pair((get8(s) & 0x03u),    0x0003ffffu)  /* 18 bits */
                                 : std::make_pair(uint32_t(get32be(s)), 0xFFFFffff);
 
@@ -82,7 +82,7 @@ ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, c
             s += len;
 
             uint32_t id  = get32be(s) & 0x0003ffff;  /* 18 bits */
-            uint32_t cre = get8(s)    & 0x03;
+            uint32_t cre = get8(s)    & 0x03;        /*  2 bits */
 
             init(nd, &id, 1u, cre, a_alloc);
 
@@ -90,12 +90,12 @@ ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, c
             break;
         }
         default:
-            throw err_decode_exception("Error decoding ref's type", type);
+            throw err_decode_exception("Error decoding ref's type", idx, tag);
     }
 }
 
 template <class Alloc>
-void ref<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
+void ref<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;

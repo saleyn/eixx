@@ -170,7 +170,7 @@ public:
 
     /// Decode an atom from a binary buffer encoded in 
     /// Erlang external binary format.
-    atom(const char* a_buf, uintptr_t& idx, size_t a_size)
+    atom(const char* a_buf, uintptr_t& idx, [[maybe_unused]] size_t a_size)
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
@@ -218,7 +218,7 @@ public:
     /// @param buf is the buffer space to encode the atom to.
     /// @param idx is the offset in the \a buf where to begin writing.
     /// @param size is the size of \a buf.
-    void encode(char* buf, uintptr_t& idx, size_t a_size) const {
+    void encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t a_size) const {
         char* s  = buf + idx;
         char* s0 = s;
         const uint16_t len = std::min((uint16_t)MAXATOMLEN_UTF8, size());

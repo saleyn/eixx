@@ -222,7 +222,7 @@ eterm<Alloc>::eterm(const char* a_buf, size_t a_size, const Alloc& a_alloc)
     uintptr_t idx = 0;
     int vsn;
     if (ei_decode_version(a_buf, (int*)&idx, &vsn) < 0)
-        throw err_decode_exception("Wrong eterm version byte!", vsn);
+        throw err_decode_exception("Wrong eterm version byte!", idx, vsn);
     decode(a_buf, idx, a_size, a_alloc);
 }
 
@@ -328,7 +328,7 @@ void eterm<Alloc>::decode(const char* a_buf, uintptr_t& idx, size_t a_size, cons
     default:
         std::ostringstream oss;
         oss << "Unknown message content type " << type;
-        throw err_decode_exception(oss.str());
+        throw err_decode_exception(oss.str(), idx, type);
         break;
     }
 }
