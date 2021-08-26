@@ -106,8 +106,8 @@ void tcp_connection<Handler, Alloc>::handle_resolve(
     m_state     = CS_WAIT_EPMD_CONNECT;
     auto pthis  = this->shared_from_this();
     auto epnext = ++ep_iterator;
-    m_socket.async_connect(m_peer_endpoint, [pthis, epnext](auto& err) {
-        pthis->handle_epmd_connect(err, epnext);
+    m_socket.async_connect(m_peer_endpoint, [pthis, epnext](auto& a_err) {
+        pthis->handle_epmd_connect(a_err, epnext);
     });
 }
 
@@ -151,8 +151,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
         auto pthis      = this->shared_from_this();
         auto epnext     = ++ep_iterator;
         m_socket.async_connect(m_peer_endpoint,
-                               [pthis, epnext](auto& err) {
-                                   pthis->handle_epmd_connect(err, epnext);
+                               [pthis, epnext](auto& a_err) {
+                                   pthis->handle_epmd_connect(a_err, epnext);
                                });
     } else {
         std::stringstream ss;

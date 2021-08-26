@@ -110,8 +110,8 @@ private:
             m_timer.expires_from_now(repeat);
             m_timer.async_wait(
                 [pthis, h, repeat, n]
-                (const boost::system::error_code& ec) {
-                    (*pthis)(h, ec, repeat, n);
+                (const boost::system::error_code& a_ec) {
+                    (*pthis)(h, a_ec, repeat, n);
                 });
         }
     }

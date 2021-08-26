@@ -58,8 +58,8 @@ class epid {
             : id(a_id), serial(0), creation(a_cre), node(a_node)
         {}
 
-        pid_blob(const atom& a_node, int a_id, int serial, int a_cre)
-            : id(a_id), serial(serial), creation(a_cre), node(a_node)
+        pid_blob(const atom& a_node, int a_id, int a_serial, int a_cre)
+            : id(a_id), serial(a_serial), creation(a_cre), node(a_node)
         {}
     };
 

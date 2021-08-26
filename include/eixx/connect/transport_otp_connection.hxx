@@ -364,9 +364,9 @@ transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm)
     /* pass-through, version, control tuple header, control message type */
     if (unlikely(get8(s) != ERL_PASS_THROUGH)) {
         size_t n = len < 65 ? len : 64;
-        std::string s = std::string("Missing pass-through flag in message")
+        std::string str = std::string("Missing pass-through flag in message")
                       + to_binary_string(mbuf, n);
-        throw err_decode_exception(s, index, len);
+        throw err_decode_exception(str, index, len);
     }
 
     if (unlikely(ei_decode_version(s, (int*)&index, &version) || version != ERL_VERSION_MAGIC))
@@ -470,11 +470,11 @@ send(const transport_msg<Alloc>& a_msg)
         a_msg.msg().encode(s + cntrl_sz, msg_sz, 0, true);
 
     if (unlikely(verbose() >= VERBOSE_MESSAGE)) {
-        std::stringstream s;
-        s << "SEND cntrl="
-          << l_cntrl.to_string() << (l_has_msg ? ", msg=" : "")
-          << (l_has_msg ? a_msg.msg().to_string() : std::string(""));
-        m_handler->report_status(REPORT_INFO, s.str());
+        std::stringstream ss;
+        ss << "SEND cntrl="
+           << l_cntrl.to_string() << (l_has_msg ? ", msg=" : "")
+           << (l_has_msg ? a_msg.msg().to_string() : std::string(""));
+        m_handler->report_status(REPORT_INFO, ss.str());
     }
     //if (unlikely(verbose() >= VERBOSE_WIRE))
     //    std::cout << "SEND " << sz << " bytes " << to_binary_string(data, sz) << std::endl;

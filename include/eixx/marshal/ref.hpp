@@ -71,12 +71,12 @@ class ref {
                 ids[i++] = 0;
         }
         template <int N>
-        ref_blob(const atom& node, uint32_t (&ids)[N], uint32_t creation)
-            : ref_blob(node, ids, N, creation)
+        ref_blob(const atom& a_node, uint32_t (&a_ids)[N], uint32_t a_cre)
+            : ref_blob(a_node, a_ids, N, a_cre)
         {}
 
         ref_blob(const atom& a_node, std::initializer_list<uint32_t> a_ids, uint32_t a_cre)
-            : ref_blob(node, &*a_ids.begin(), a_ids.size(), creation)
+            : ref_blob(a_node, &*a_ids.begin(), a_ids.size(), a_cre)
         {}
     };
 
