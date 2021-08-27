@@ -40,11 +40,13 @@ template <class Alloc>
 tuple<Alloc>::tuple(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc)
 {
     BOOST_ASSERT(idx <= INT_MAX);
-    int arity;
-    if (ei_decode_tuple_header(buf, (int*)&idx, &arity) < 0)
+    int n;
+    if (ei_decode_tuple_header(buf, (int*)&idx, &n) < 0)
         err_decode_exception("Error decoding tuple header", idx);
+
+    size_t arity = static_cast<size_t>(n);
     m_blob = new blob<eterm<Alloc>, Alloc>(arity+1, a_alloc);
-    for (int i=0; i < arity; i++) {
+    for (size_t i=0; i < arity; i++) {
         new (&m_blob->data()[i]) eterm<Alloc>(buf, idx, size, a_alloc);
     }
     set_init_size(arity);

@@ -230,7 +230,7 @@ template <class Alloc>
 void eterm<Alloc>::decode(const char* a_buf, uintptr_t& idx, size_t a_size, const Alloc& a_alloc)
 {
     BOOST_ASSERT(idx <= INT_MAX);
-    if ((size_t)idx == a_size)
+    if (static_cast<size_t>(idx) == a_size)
         throw err_decode_exception("Empty term", idx);
 
     // check the type of next term:
@@ -251,8 +251,8 @@ void eterm<Alloc>::decode(const char* a_buf, uintptr_t& idx, size_t a_size, cons
 #endif
     case ERL_ATOM_EXT: {
         int b;
-        int i = (int)idx; // TODO: Eliminate this variable when there's is a fix for the bug in ei_decode_boolean
-        if (ei_decode_boolean(a_buf, &i, &b) < 0)
+        uintptr_t i = idx; // TODO: Eliminate this variable when there's is a fix for the bug in ei_decode_boolean
+        if (ei_decode_boolean(a_buf, (int*)&i, &b) < 0)
             new (this) eterm<Alloc>(atom(a_buf, idx, a_size));
         else {
             idx = i;

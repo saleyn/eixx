@@ -207,7 +207,7 @@ protected:
     size_t available_queue()    const { return m_available_queue; }
 
     char*  rd_ptr()                 { return m_rd_ptr; }
-    size_t rd_length()              { return m_rd_end - m_rd_ptr; }
+    size_t rd_length()              { return static_cast<uintptr_t>(m_rd_end - m_rd_ptr); }
     size_t rd_capacity()            { return m_rd_buf.capacity() - rd_length(); }
     /// Verboseness
     verbose_type verbose()    const { return m_handler->verbose(); }

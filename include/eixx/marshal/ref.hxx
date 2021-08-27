@@ -51,9 +51,11 @@ ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, c
             if (count > COUNT)
                 throw err_decode_exception("Error decoding ref's count", idx+1, count);
 
-            int len = atom::get_len(s);
-            if (len < 0)
-                throw err_decode_exception("Error decoding ref's atom", idx+3, len);
+            const uint8_t atom_tag = get8(s);
+            long l = atom::get_len(s, atom_tag);
+            if (l < 0)
+                throw err_decode_exception("Error decoding ref's node", idx, l);
+            size_t len = static_cast<size_t>(l);
             detail::check_node_length(len);
             atom nd(s, len);
             s += len;
@@ -69,14 +71,16 @@ ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, c
 
             init(nd, vals, count, cre, a_alloc);
 
-            idx += s-s0;
+            idx += static_cast<uintptr_t>(s - s0);
             break;
         }
 #endif
         case ERL_REFERENCE_EXT: {
-            int len = atom::get_len(s);
-            if (len < 0)
-                throw err_decode_exception("Error decoding ref's atom", idx+3, len);
+            const uint8_t atom_tag = get8(s);
+            long l = atom::get_len(s, atom_tag);
+            if (l < 0)
+                throw err_decode_exception("Error decoding ref's node", idx, l);
+            size_t len = static_cast<size_t>(l);
             detail::check_node_length(len);
             atom nd(s, len);
             s += len;
@@ -86,7 +90,7 @@ ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, c
 
             init(nd, &id, 1u, cre, a_alloc);
 
-            idx += s-s0;
+            idx += static_cast<uintptr_t>(s - s0);
             break;
         }
         default:
@@ -130,7 +134,7 @@ void ref<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size)
         put32be(s, *p & 0x0003ffff /* 18 bits */);
 #endif
 
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

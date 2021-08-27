@@ -59,8 +59,8 @@ private:
             , tail       (nullptr)
         {}
         bool            initialized;
-        unsigned int    alloc_size;
-        unsigned int    size;
+        size_t    alloc_size;
+        size_t          size;
         cons_t*         tail;
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wpedantic"
@@ -139,7 +139,7 @@ public:
     ///
     /// When a_estimated_size is 0, an empty initialized list is created. Otherwise,
     /// the list is not initialized.
-    explicit list(int a_estimated_size, const Alloc& alloc = Alloc())
+    explicit list(size_t a_estimated_size, const Alloc& alloc = Alloc())
         : base_t(alloc)
     {
         if (a_estimated_size == 0)
@@ -165,7 +165,7 @@ public:
 
     explicit list(const cons_t* a_head, int a_len = -1, const Alloc& alloc = Alloc());
 
-    template <int N>
+    template <size_t N>
     list(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc())
         : list(items, N, alloc) {}
 

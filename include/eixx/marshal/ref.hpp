@@ -70,7 +70,7 @@ class ref {
             while(i < COUNT)
                 ids[i++] = 0;
         }
-        template <int N>
+        template <uint16_t N>
         ref_blob(const atom& a_node, uint32_t (&a_ids)[N], uint32_t a_cre)
             : ref_blob(a_node, a_ids, N, a_cre)
         {}
@@ -130,7 +130,7 @@ public:
         init(node, a_ids, n, creation, a_alloc);
     }
 
-    template <int N>
+    template <uint16_t N>
     ref(const atom& node, uint32_t (&ids)[N], uint32_t creation,
         const Alloc& a_alloc = Alloc())
         : ref(node, ids, N, creation, a_alloc)
@@ -238,7 +238,7 @@ public:
     }
 
     size_t encode_size() const {
-        return 1+2+(3+node().size()) + len()*4 +
+        return (size_t)1+2+(3+node().size()) + len()*4 +
             #ifdef ERL_NEWER_REFERENCE_EXT
                 4;
             #else
@@ -264,7 +264,7 @@ namespace std {
     template <class Alloc>
     ostream& operator<< (ostream& out, const eixx::marshal::ref<Alloc>& a) {
         out << "#Ref<" << a.node();
-        for (int i=0, e=a.len(); i != e; ++i)
+        for (uint32_t i=0, e=a.len(); i != e; ++i)
             out << '.' << a.id(i);
         if (a.creation() > 0 && a.display_creation())
             out << ',' << a.creation();

@@ -363,7 +363,7 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
 
     char* w = m_buf_node;
     put16be(w, siz - 2);
-    put8(w, tag);
+    put8(w, static_cast<uint8_t>(tag));
     if (tag == 'n') {
 #ifdef EI_DIST_5
         m_dist_version = EI_DIST_5;
@@ -433,7 +433,7 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
     m_node_rd = m_buf_node;
     m_expect_size = get16be(m_node_rd);
 
-    if (m_expect_size > (size_t)MAXNODELEN + 8 || m_expect_size > (size_t)((m_buf_node+1) - m_node_rd)) {
+    if (m_expect_size > static_cast<size_t>(MAXNODELEN + 8) || m_expect_size > static_cast<size_t>((m_buf_node+1) - m_node_rd)) {
         std::stringstream ss;
         ss << "<- RECV_STATUS (error) in status length from node '" 
            << this->remote_nodename() << "': " << m_expect_size;
@@ -445,11 +445,11 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
 
     m_node_wr = m_buf_node + bytes_transferred;
 
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
-            boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
+            boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1) - m_node_wr)),
             boost::asio::transfer_at_least(need_bytes),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_status_body, shared_from_this(),
                 std::placeholders::_1,
@@ -475,7 +475,7 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
     }
 
     m_node_wr += bytes_transferred;
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     BOOST_ASSERT(got_bytes >= 3);
 
     if (!this->local_nodename().empty()) {
@@ -533,7 +533,7 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
     if (got_bytes >= 2)
         handle_read_challenge_header(boost::system::error_code(), 0);
     else
-        boost::asio::async_read(m_socket, boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
+        boost::asio::async_read(m_socket, boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1) - m_node_wr)),
             boost::asio::transfer_at_least(2),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_header, shared_from_this(),
                 std::placeholders::_1,
@@ -564,7 +564,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
     unsigned short l_size = 11;
 #endif
 
-    if (m_expect_size > (size_t)MAXNODELEN + l_size || m_expect_size > (size_t)((m_buf_node+1) - m_node_rd)) {
+    if (m_expect_size > static_cast<size_t>(MAXNODELEN + l_size) || m_expect_size > static_cast<size_t>((m_buf_node+1) - m_node_rd)) {
         std::stringstream ss;
         ss << "<- RECV_CHALLENGE (error) in challenge length from node '" 
            << this->remote_nodename() << "': " << m_expect_size;
@@ -574,11 +574,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
         return;
     }
 
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
-            boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
+            boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1) - m_node_wr)),
             boost::asio::transfer_at_least(need_bytes),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_body, shared_from_this(),
                 std::placeholders::_1,
@@ -605,11 +605,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
 
     m_node_wr += bytes_transferred;
     #ifndef NDEBUG
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     #endif
     BOOST_ASSERT(got_bytes >= m_expect_size);
 
-    char tag = get8(m_node_rd);
+    const char tag = static_cast<char>(get8(m_node_rd));
     if (tag != 'n' && tag != 'N') {
         std::stringstream ss;
         ss << "<- RECV_CHALLENGE (error) incorrect tag, "
@@ -641,7 +641,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     
         m_remote_flags     = get32be(m_node_rd);
         m_remote_challenge = get32be(m_node_rd);
-        nodename_len       = m_node_wr - m_node_rd;
+        nodename_len       = static_cast<uintptr_t>(m_node_wr - m_node_rd);
 #ifndef EI_DIST_6
     }
 #else
@@ -652,7 +652,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         m_node_rd          += 4; /* ignore peer 'creation' */
         nodename_len       = get16be(m_node_rd);
 
-        if (nodename_len > (size_t)(m_node_wr - m_node_rd)) {
+        if (nodename_len > static_cast<uintptr_t>(m_node_wr - m_node_rd)) {
             std::stringstream ss;
             ss << "<- RECV_CHALLENGE 'N' (error) nodename too long from node '" 
                << this->remote_nodename() << "': " << nodename_len;
@@ -712,7 +712,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     gen_digest(m_remote_challenge, this->m_cookie.c_str(), our_digest);
 
     char* w = m_buf_node;
-    int siz = 0;
+    size_t siz = 0;
 
     // send complement (if dist_version upgraded in-flight)
     if (m_dist_version > dist_version) {
@@ -795,11 +795,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header(
 
     m_node_wr = m_buf_node + bytes_transferred;
 
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
-            boost::asio::buffer(m_node_wr, (m_buf_node+1)-m_node_wr),
+            boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1)-m_node_wr)),
             boost::asio::transfer_at_least(need_bytes),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body,
                 shared_from_this(),
@@ -827,11 +827,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
 
     m_node_wr += bytes_transferred;
     #ifndef NDEBUG
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     #endif
     BOOST_ASSERT(got_bytes >= m_expect_size);
 
-    char tag = get8(m_node_rd);
+    const char tag = static_cast<char>(get8(m_node_rd));
     if (this->handler()->verbose() >= VERBOSE_TRACE) {
         std::stringstream ss;
         ss << "<- RECV_CHALLENGE_ACK received (tag=" << tag << "): " 
@@ -888,7 +888,7 @@ uint32_t tcp_connection<Handler, Alloc>::gen_challenge(void)
         struct timeval tv; 
         clock_t cpu; 
         pid_t pid; 
-        u_long hid; 
+        long hid; 
         uid_t uid; 
         gid_t gid; 
         struct utsname name; 
@@ -907,7 +907,7 @@ uint32_t tcp_connection<Handler, Alloc>::gen_challenge(void)
 
 template <class Handler, class Alloc>
 uint32_t tcp_connection<Handler, Alloc>::
-md_32(char* string, int length)
+md_32(char* string, size_t length)
 {
     BOOST_STATIC_ASSERT(MD5_DIGEST_LENGTH == 16);
     union {

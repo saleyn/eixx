@@ -95,7 +95,7 @@ inline const char* fast_atoi(const char* a_str, const char* a_end, T& res) {
 
 namespace std {
 
-    template <int N>
+    template <size_t N>
     std::string to_string(const uint8_t (&s)[N]) { return std::string((const char*)s, N); }
 
 }

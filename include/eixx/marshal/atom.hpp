@@ -93,7 +93,7 @@ public:
         : m_index(atom_table().lookup(std::string(s))) {}
 
     /// @copydoc atom::atom
-    template <int N>
+    template <size_t N>
     atom(const char (&s)[N])
         : m_index(atom_table().lookup(std::string(s, N))) {}
 
@@ -115,8 +115,8 @@ public:
 
     /// Get atom length from a binary buffer encoded in 
     /// Erlang external binary format.
-    static int get_len(const char*& s) {
-        switch (get8(s)) {
+    static long get_len(const char*& s, const uint8_t tag) {
+        switch (tag) {
 #ifdef ERL_SMALL_ATOM_UTF8_EXT
             case ERL_SMALL_ATOM_UTF8_EXT: return get8(s);
 #endif
@@ -127,8 +127,7 @@ public:
             case ERL_SMALL_ATOM_EXT:      return get8(s);
 #endif
             case ERL_ATOM_EXT:            return get16be(s);
-            default:
-                return -1;
+            default:                      return -1;
         }
     }
 
@@ -156,9 +155,9 @@ public:
     {}
 
     /// @copydoc atom::atom
-    atom(const char* s, int    n) : atom(s, size_t(n)) {}
+    atom(const char* s, int    n) : atom(s, static_cast<size_t>(n)) {}
     /// @copydoc atom::atom
-    atom(const char* s, long   n) : atom(s, size_t(n)) {}
+    atom(const char* s, long   n) : atom(s, static_cast<size_t>(n)) {}
     /// @copydoc atom::atom
     atom(const char* s, size_t n)
         : m_index(atom_table().lookup(std::string(s, n)))
@@ -174,11 +173,12 @@ public:
     {
         const char *s = a_buf + idx;
         const char *s0 = s;
-        int len = get_len(s);
+        const uint8_t tag = get8(s);
+        long len = get_len(s, tag);
         if (len < 0)
             throw err_decode_exception("Error decoding atom", idx);
-        m_index = atom_table().lookup(std::string(s, len));
-        idx += s + len - s0;
+        m_index = atom_table().lookup(std::string(s, static_cast<size_t>(len)));
+        idx += static_cast<uintptr_t>(s - s0) + static_cast<size_t>(len);
         BOOST_ASSERT((size_t)idx <= a_size);
     }
 
@@ -232,7 +232,7 @@ public:
         }
         memmove(s, c_str(), len); /* unterminated string */
         s   += len;
-        idx += s-s0;
+        idx += static_cast<uintptr_t>(s - s0);
         BOOST_ASSERT((size_t)idx <= a_size);
     }
 

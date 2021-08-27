@@ -83,8 +83,8 @@ class basic_otp_node: public basic_otp_node_local {
 
     Mutex                                       m_lock;
     uint32_t                                    m_creation;
-    std::atomic_int                             m_pid_count;
-    std::atomic_int                             m_port_count;
+    std::atomic_uint_fast32_t                   m_pid_count;
+    std::atomic_uint_fast64_t                   m_port_count;
     std::atomic_uint_fast64_t                   m_refid0;
     std::atomic_int                             m_refid1;
 

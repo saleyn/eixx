@@ -133,7 +133,7 @@ namespace marshal {
             for (c = *p; c && isalnum((int)c); c = *(++p));
 
             if (c == '(' && *(p+1) == ')') {
-                type = type_string_to_type(tps, p - tps);
+                type = type_string_to_type(tps, static_cast<uintptr_t>(p - tps));
                 if (type == UNDEFINED)
                     throw err_format_exception("Error parsing variable type", start);
                 p += 2;
@@ -143,7 +143,7 @@ namespace marshal {
             type = UNDEFINED;
 
         *fmt = p;
-        len = end - start;
+        len = static_cast<uintptr_t>(end - start);
 
         return var(start, len, type);
 
@@ -175,7 +175,7 @@ namespace marshal {
             throw err_format_exception("Error parsing quotted atom", start);
 
         *fmt = p+1; /* skip last quote */
-        uintptr_t len = p - start;
+        uintptr_t len = static_cast<uintptr_t>(p - start);
 
         return atom(start, len);
 
@@ -231,7 +231,7 @@ namespace marshal {
             throw err_format_exception("Error parsing string", start);
 
         *fmt = p+1; /* skip last quote */
-        uintptr_t len = p - start;
+        uintptr_t len = static_cast<uintptr_t>(p - start);
 
         return eterm<Alloc>(string<Alloc>(start, len, alloc));
     } /* pstring */
@@ -383,7 +383,7 @@ namespace marshal {
                     const char* end = strstr(*fmt, "\">>");
                     if (!end)
                         throw err_format_exception("Cannot find end of binary", *fmt);
-                    ret = eterm<Alloc>(binary<Alloc>(*fmt, end - *fmt, alloc));
+                    ret = eterm<Alloc>(binary<Alloc>(*fmt, static_cast<uintptr_t>(end - *fmt), alloc));
                     *fmt = end + 3;
                 } else {
                     const char* end = strstr(++(*fmt), ">>");

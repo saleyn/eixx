@@ -247,7 +247,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
             // next message.
             m_packet_size = cast_be<uint32_t>(m_rd_ptr);
             if (m_packet_size > m_rd_buf.capacity()-s_header_size) {
-                size_t begin_offset = m_rd_ptr - &m_rd_buf[0];
+                size_t begin_offset = static_cast<uintptr_t>(m_rd_ptr - &m_rd_buf[0]);
                 m_rd_buf.reserve(begin_offset + m_packet_size + s_header_size);
                 m_rd_ptr = &m_rd_buf[0] + begin_offset;
                 m_rd_end = m_rd_ptr + len;
@@ -312,9 +312,9 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         need_bytes    = m_packet_size;
     } else if ((m_rd_ptr - (&m_rd_buf[0] + s_header_size)) > 0) {
         // Crunch the buffer by copying leftover bytes to the beginning of the buffer.
-        const size_t len = m_rd_end - m_rd_ptr;
+        const size_t len = static_cast<uintptr_t>(m_rd_end - m_rd_ptr);
         char* begin = &m_rd_buf[0];
-        if (likely((size_t)(m_rd_ptr - begin) < len))
+        if (likely(static_cast<uintptr_t>(m_rd_ptr - begin) < len))
             memcpy(begin, m_rd_ptr, len);
         else
             memmove(begin, m_rd_ptr, len);
@@ -366,7 +366,7 @@ transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm)
         size_t n = len < 65 ? len : 64;
         std::string str = std::string("Missing pass-through flag in message")
                       + to_binary_string(mbuf, n);
-        throw err_decode_exception(str, index, len);
+        throw err_decode_exception(str, index, (long)len);
     }
 
     if (unlikely(ei_decode_version(s, (int*)&index, &version) || version != ERL_VERSION_MAGIC))
@@ -379,7 +379,7 @@ transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm)
     int msgtype = (int)t;
 
     if (unlikely(msgtype <= ERL_TICK) || unlikely(msgtype > ERL_MONITOR_P_EXIT))
-        throw err_decode_exception("Invalid message type", msgtype);
+        throw err_decode_exception("Invalid message type", index, msgtype);
 
     static const uint32_t types_with_payload = 1 << ERL_SEND
                                              | 1 << ERL_REG_SEND

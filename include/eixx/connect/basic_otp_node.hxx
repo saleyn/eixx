@@ -51,7 +51,7 @@ class basic_otp_node<Alloc, Mutex>::atom_con_hash_fun {
         const char* p = getenv("EI_MAX_NODE_CONNECTIONS");
         int n = (p && p[0]) ? atoi(p) : 1024;
         if (n < 0 || n >= 64*1024) n = 1024;
-        return n;
+        return static_cast<size_t>(n);
     }
 public:
     static size_t get_default_hash_size() {
@@ -92,7 +92,7 @@ template <typename Alloc, typename Mutex>
 epid<Alloc> basic_otp_node<Alloc, Mutex>::
 create_pid()
 {
-    int n;
+    uint32_t n;
     while (true) {
         n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
         if (n < 0x0fffffff /* 28 bits */) break;

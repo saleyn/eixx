@@ -38,7 +38,6 @@ namespace marshal {
 
 template <class Alloc>
 void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) {
-    BOOST_ASSERT(N <= UINT_MAX);
     size_t n = N > 0 ? N : 1;
     m_blob = new blob_t(sizeof(header_t) + n*sizeof(cons_t), alloc);
 
@@ -46,8 +45,8 @@ void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) 
     cons_t*   hd            = l_header->head;
 
     l_header->initialized   = true;
-    l_header->alloc_size    = (unsigned int)n;
-    l_header->size          = (unsigned int)N;
+    l_header->alloc_size    = n;
+    l_header->size          = N;
 
     for(auto p = items, end = items+N; p != end; ++p, ++hd) {
         BOOST_ASSERT(p->initialized());
@@ -108,10 +107,11 @@ list<Alloc>::list(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_a
     : base_t(a_alloc)
 {
     BOOST_ASSERT(idx <= INT_MAX);
-    int arity;
-    if (ei_decode_list_header(buf, (int*)&idx, &arity) < 0)
+    int n;
+    if (ei_decode_list_header(buf, (int*)&idx, &n) < 0)
         err_decode_exception("Error decoding list header", idx);
 
+    size_t arity = static_cast<size_t>(n);
     // If this is an empty list - no allocation is needed
     if (arity == 0) {
         m_blob = empty_list();
@@ -174,7 +174,7 @@ list<Alloc> list<Alloc>::tail(size_t idx) const
 {
     const header_t* l_header = header();
     const cons_t* p = l_header->head;
-    int len = (int)l_header->size - (int)idx - 1;
+    size_t len = l_header->size - idx - 1;
     if (len < 0)
         throw err_bad_argument("List too short");
     for (size_t i=0; i <= idx; i++)

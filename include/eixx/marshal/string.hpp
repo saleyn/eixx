@@ -163,14 +163,14 @@ public:
     }
 
     /// Tests if this string is equal to the content of the binary buffer \a rhs.
-    template <int N>
+    template <size_t N>
     bool equal(const char (&rhs)[N]) const {
         int i = N > 0 && rhs[N-1] == '\0' ? -1 : 0;
         return strncmp(c_str(), rhs, size()+i) == 0;
     }
 
     /// Tests if this string is equal to the content of the binary buffer \a rhs.
-    template <int N>
+    template <size_t N>
     bool equal(const uint8_t (&rhs)[N]) const {
         int i = N > 0 && rhs[N-1] == '\0' ? -1 : 0;
         return strncmp(c_str(), (const char*)rhs, size()+i) == 0;
@@ -216,7 +216,7 @@ string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t s
 
     switch (tag) {
         case ERL_STRING_EXT: {
-            int len = get16be(s);
+            uint16_t len = get16be(s);
             if (len == 0)
                 m_blob = NULL;
             else {
@@ -233,15 +233,15 @@ string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t s
              * but we decode as much as we can, exiting early if we run into a
              * non-character in the list.
              */
-            int len = get32be(s);
+            uint32_t len = get32be(s);
             if (len == 0)
                 m_blob = NULL;
             else {
                 m_blob = new blob<char, Alloc>(len+1, a_alloc);
-                for (int i=0; i<len; i++) {
+                for (uint32_t i=0; i<len; i++) {
                     if ((tag = get8(s)) != ERL_SMALL_INTEGER_EXT)
-                        throw err_decode_exception("Error decoding string", s+i-s0);
-                    m_blob->data()[i] = get8(s);
+                        throw err_decode_exception("Error decoding string", static_cast<uintptr_t>(s - s0)+i);
+                    m_blob->data()[i] = static_cast<char>(get8(s));
                 }
                 m_blob->data()[len] = '\0';
             }
@@ -254,7 +254,7 @@ string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t s
         default:
             throw err_decode_exception("Error decoding string's type", idx, tag);
     }
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
 }
 
 } // namespace marshal
@@ -274,7 +274,7 @@ namespace std {
 
     template <typename Alloc>
     bool operator== (const eixx::marshal::string<Alloc>& lhs, const std::string& rhs) {
-        return rhs == rhs.c_str();
+        return lhs == rhs.c_str();
     }
 
     template <typename Alloc>

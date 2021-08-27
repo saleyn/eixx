@@ -80,9 +80,9 @@ namespace marshal {
         using base_t       = typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
         using blob_alloc_t = typename std::allocator_traits<Alloc>::template rebind_alloc<blob<T,Alloc>>;
 
-        atomic<int>  m_rc;
-        const size_t m_size;
-        T*           m_data;
+        atomic<uint32_t>  m_rc;
+        const size_t      m_size;
+        T*                m_data;
 
         ~blob() {
             if (m_data)
@@ -130,7 +130,7 @@ namespace marshal {
         /// Increment internal reference count.
         void   inc_rc()             { ++m_rc; }
         /// Return internal reference count. Use for debugging only.
-        int    use_count()  const   { return m_rc; }
+        uint32_t    use_count()  const   { return m_rc; }
 
         const Alloc& get_allocator() const {
             return *reinterpret_cast<const Alloc*>(this);

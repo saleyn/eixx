@@ -99,7 +99,7 @@ struct hsieh_hash_fun {
         hash ^= hash << 25;
         hash += hash >> 6;
 
-        return hash;
+        return static_cast<size_t>(hash);
     }
 };
 

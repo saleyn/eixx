@@ -54,11 +54,11 @@ class epid {
         uint32_t creation;
         atom     node;
 
-        pid_blob(const atom& a_node, int a_id, int a_cre)
+        pid_blob(const atom& a_node, uint32_t a_id, uint32_t a_cre)
             : id(a_id), serial(0), creation(a_cre), node(a_node)
         {}
 
-        pid_blob(const atom& a_node, int a_id, int a_serial, int a_cre)
+        pid_blob(const atom& a_node, uint32_t a_id, uint32_t a_serial, uint32_t a_cre)
             : id(a_id), serial(a_serial), creation(a_cre), node(a_node)
         {}
     };
@@ -79,7 +79,7 @@ class epid {
     }
 
     // Must only be called from constructor!
-    void init(const atom& node, int id, int serial, uint32_t creation, const Alloc& alloc)
+    void init(const atom& node, uint32_t id, uint32_t serial, uint32_t creation, const Alloc& alloc)
     {
         m_blob = new blob<pid_blob, Alloc>(1, alloc);
         new (m_blob->data()) pid_blob(node, id, serial, creation);
@@ -114,15 +114,15 @@ public:
      * @param a_alloc is the allocator to use.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      **/
-    epid(const char* node, int id, int serial, uint32_t creation, const Alloc& a_alloc = Alloc()) 
+    epid(const char* node, uint32_t id, uint32_t serial, uint32_t creation, const Alloc& a_alloc = Alloc()) 
         : epid(atom(node), id, serial, creation, a_alloc)
     {}
 
-    epid(const atom& node, int id, uint32_t creation, const Alloc& a_alloc = Alloc())
+    epid(const atom& node, uint32_t id, uint32_t creation, const Alloc& a_alloc = Alloc())
         : epid(node, id, 0, creation, a_alloc)
     {}
 
-    epid(const atom& node, int id, int serial, uint32_t creation, const Alloc& a_alloc = Alloc())
+    epid(const atom& node, uint32_t id, uint32_t serial, uint32_t creation, const Alloc& a_alloc = Alloc())
     {
         detail::check_node_length(node.size());
         init(node, id, serial, creation, a_alloc);
@@ -176,13 +176,13 @@ public:
      * Get the id number from the PID.
      * @return the id number from the PID.
      **/
-    int id() const { return m_blob ? m_blob->data()->id : 0; }
+    uint32_t id() const { return m_blob ? m_blob->data()->id : 0; }
 
     /**
      * Get the serial number from the PID.
      * @return the serial number from the PID.
      **/
-    int serial() const { return m_blob ? m_blob->data()->serial : 0; }
+    uint32_t serial() const { return m_blob ? m_blob->data()->serial : 0; }
 
     /**
      * Get the creation number from the PID.

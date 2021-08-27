@@ -48,9 +48,11 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size,
         )
         throw err_decode_exception("Error decoding port's type", idx, tag);
 
-    int len = atom::get_len(s);
-    if (len < 0)
-        throw err_decode_exception("Error decoding port's node", idx, len);
+    const uint8_t atom_tag = get8(s);
+    long l = atom::get_len(s, atom_tag);
+    if (l < 0)
+        throw err_decode_exception("Error decoding port's node", idx, l);
+    size_t len = static_cast<size_t>(l);
     detail::check_node_length(len);
     atom l_node(s, len);
     s += len;
@@ -67,13 +69,13 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size,
 #endif
 #ifdef ERL_NEW_PORT_EXT
         case ERL_NEW_PORT_EXT:
-            id  = uint64_t(get32be(s));
+            id  = static_cast<uint64_t>(get32be(s));
             cre = get32be(s);
             break;
 #endif
         case ERL_PORT_EXT:
-            id  = uint64_t(get32be(s) & 0x0fffffff);  /* 28 bits */
-            cre = get8(s) & 0x03;                     /* 2 bits  */
+            id  = static_cast<uint64_t>(get32be(s) & 0x0fffffff);  /* 28 bits */
+            cre = static_cast<uint32_t>(get8(s) & 0x03);           /*  2 bits */
             break;
         
         default:
@@ -81,7 +83,7 @@ port<Alloc>::port(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size,
     }
     init(l_node, id, cre, a_alloc);
 
-    idx += s - s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 
@@ -125,7 +127,7 @@ void port<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size
     }
 #endif
 
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

@@ -45,9 +45,9 @@ binary<Alloc>::binary(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t s
 
     uint32_t sz = get32be(s);
     m_blob = new blob<char, Alloc>(sz, a_alloc);
-    ::memcpy(m_blob->data(),s,sz);
+    memcpy(m_blob->data(),s,sz);
 
-    idx += s + sz - s0;
+    idx += static_cast<uintptr_t>(s - s0) + sz;
     BOOST_ASSERT((size_t)idx <= size);
 }
 
@@ -64,7 +64,7 @@ void binary<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t si
     put32be(s, len);
     memmove(s, this->data(), len);
     s += len;
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

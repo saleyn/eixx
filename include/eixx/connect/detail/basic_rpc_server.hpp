@@ -94,7 +94,7 @@ public:
     }
 
     /// Encode a tuple containing RPC cast details
-    static tuple<Alloc> encode_rpc_cast(const epid<Alloc>& a_from,
+    static tuple<Alloc> encode_rpc_cast(const epid<Alloc>& /*a_from*/,
                             const atom& a_mod, const atom& a_fun,
                             const list<Alloc>& a_args,
                             const eterm<Alloc>& a_gleader)
@@ -113,9 +113,9 @@ public:
         return a_msg.match(s_pattern, &binding) ? binding[T] : eterm<Alloc>();
     }
 
-    bool operator() (const eterm<Alloc>& a_pat,
-                     const varbind<Alloc>& a_binding,
-                     long  a_opaque)
+    bool operator() (const eterm<Alloc>& /*a_pat*/,
+                     const varbind<Alloc>& /*a_binding*/,
+                     long  /*a_opaque*/)
     {
         // TODO: What do we do on the incoming RPC call? Need to define
         // afacility to add RPC callable functions

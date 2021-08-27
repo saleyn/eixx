@@ -105,7 +105,7 @@ private:
 
 /// Return the index of a_string in the a_list using a_default index if 
 /// a_string is not found in the list.
-template <int N>
+template <size_t N>
 int find_index(const char* (&a_list)[N], const char* a_string, int a_default=-1) {
     for (int i=0; i < N; i++)
         if (strcmp(a_string, a_list[i]) == 0)

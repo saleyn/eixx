@@ -55,7 +55,7 @@ class tuple {
     }
     size_t get_init_size() const {
         BOOST_ASSERT(m_blob);
-        return m_blob->data()[m_blob->size()-1].to_long()-1;
+        return static_cast<size_t>(m_blob->data()[m_blob->size()-1].to_long()-1);
     }
 
     void release() { release(m_blob); m_blob = nullptr; }
@@ -106,7 +106,7 @@ public:
         a.m_blob = nullptr;
     }
 
-    template <int N>
+    template <size_t N>
     tuple(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc())
         : tuple(items, N, alloc) {}
 
