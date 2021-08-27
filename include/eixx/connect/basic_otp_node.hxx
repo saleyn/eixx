@@ -45,13 +45,20 @@ namespace {
 //-----------------------------------------------------------------------------
 template <typename Alloc, typename Mutex>
 class basic_otp_node<Alloc, Mutex>::atom_con_hash_fun {
+    static constexpr size_t s_default_max_ports = 16*1024;
+
     conn_hash_map& map;
 
     static size_t init_default_hash_size() {
+        // See: https://erlang.org/doc/efficiency_guide/advanced.html#ports
         const char* p = getenv("EI_MAX_NODE_CONNECTIONS");
-        int n = (p && p[0]) ? atoi(p) : 1024;
-        if (n < 0 || n >= 64*1024) n = 1024;
-        return static_cast<size_t>(n);
+        size_t n = 0;
+        if (p) {
+            std::stringstream ss(p);
+            ss >> n;
+        }
+        // if (n > 64*1024) n = 64*1024;
+        return n > 0 ? n : s_default_max_ports;
     }
 public:
     static size_t get_default_hash_size() {

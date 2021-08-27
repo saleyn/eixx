@@ -65,9 +65,9 @@ namespace detail {
  */
 class atom
 {
-    int m_index;
+    uint32_t m_index;
 
-    atom(int idx) : m_index(idx) { assert(idx >= 0); }
+    atom(uint32_t idx) : m_index(idx) { assert(idx >= 0); }
 public:
     inline static util::atom_table& atom_table() {
        static util::atom_table s_atom_table;
@@ -106,7 +106,7 @@ public:
     ///       is true, then an empty atom is returned.
     static atom create(const std::string& s, bool existing) {
         auto   idx = atom_table().try_lookup(s);
-        return idx > 0 && existing ? atom(idx) : atom();
+        return idx <= UINT32_MAX && existing ? atom((uint32_t)idx) : atom();
     }
     /// @copydoc atom::create
     static atom create(const char* s, bool existing) {
@@ -143,8 +143,10 @@ public:
             m_index = atom_table().lookup(s);
             return;
         }
-        m_index = atom_table().try_lookup(s);
-        if (m_index <= 0)
+        auto idx = atom_table().try_lookup(s);
+        if (idx <= UINT32_MAX)
+            m_index = (uint32_t)idx;
+        else
             throw err_atom_not_found(s);
     }
 
@@ -189,7 +191,7 @@ public:
     bool                empty()     const { return m_index == 0;                           }
 
     /// Get atom's index in the atom table.
-    int             index()     const { return m_index; }
+    uint32_t            index()     const { return m_index; }
 
     void operator=  (const atom& s)               { m_index = s.m_index; }
     void operator=  (const std::string& s)        { m_index = atom_table().lookup(s); }
