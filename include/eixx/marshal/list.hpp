@@ -163,7 +163,7 @@ public:
         a.m_blob = nullptr;
     }
 
-    explicit list(const cons_t* a_head, int a_len = -1, const Alloc& alloc = Alloc());
+    explicit list(const cons_t* a_head, size_t a_len = 0, const Alloc& alloc = Alloc());
 
     template <size_t N>
     list(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc())

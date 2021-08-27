@@ -63,20 +63,18 @@ void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) 
 }
 
 template <class Alloc>
-list<Alloc>::list(const cons_t* a_head, int a_len, const Alloc& alloc)
+list<Alloc>::list(const cons_t* a_head, size_t a_len, const Alloc& alloc)
     : base_t(alloc)
 {
-    unsigned int alloc_size;
+    size_t alloc_size;
 
-    if (a_len >= 0) {
+    if (a_len > 0) {
         alloc_size = a_len;
-    } else if (a_len == -1) {
-        a_len = 0;
+    } else if (a_len == 0) {
         for (const cons_t* p = a_head; p; p = p->next)
             a_len++;
         alloc_size = a_len;
-    } else
-        throw err_bad_argument("List of negative length!");
+    }
 
     // If this is an empty list - no allocation is needed
     if (alloc_size == 0) {

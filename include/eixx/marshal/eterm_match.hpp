@@ -228,7 +228,7 @@ public:
     explicit eterm_pattern_action(const eterm<Alloc>& a_pattern)
         : m_pattern(a_pattern), m_opaque(0)
     {
-      auto fun = [](auto& pattern, auto& vars, long opaque) { return true; };
+      auto fun = [](auto& /*pattern*/, auto& /*vars*/, long /*opaque*/) { return true; };
       m_fun = fun;
     }
 
