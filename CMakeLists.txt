@@ -179,10 +179,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pc.in"
 #-------------------------------------------------------------------------------
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
-if(CMAKE_SYSTEM_NAME STREQUAL Linux OR
-   CMAKE_SYSTEM_NAME STREQUAL Android)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/test)
-endif()
+add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 
 #===============================================================================
 # Installation
