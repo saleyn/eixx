@@ -173,7 +173,7 @@ list<Alloc> list<Alloc>::tail(size_t idx) const
     const header_t* l_header = header();
     const cons_t* p = l_header->head;
     size_t len = l_header->size - idx - 1;
-    if (len < 0)
+    if (idx >= l_header->size)
         throw err_bad_argument("List too short");
     for (size_t i=0; i <= idx; i++)
         p = p->next;

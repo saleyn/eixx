@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( test_atomable )
 	util::atom_table t(10);
 	BOOST_CHECK_EQUAL(0, t.lookup(std::string()));
 	BOOST_CHECK_EQUAL(0, t.lookup(""));
-	int n = t.lookup("abc");
+	uint32_t n = t.lookup("abc");
 	BOOST_CHECK(0 < n);
 	BOOST_CHECK(0 < t.lookup("aaaaa"));
 	BOOST_CHECK_EQUAL(n, t.lookup("abc"));
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE( test_atom )
 
     {
         const uint8_t buf[] = {ERL_ATOM_UTF8_EXT,0,3,97,98,99};
-        int i = 0;
+        uintptr_t i = 0;
         atom atom((const char*)buf, i, sizeof(buf));
         BOOST_CHECK_EQUAL(6, i);
         BOOST_CHECK_EQUAL("abc", atom);
@@ -149,14 +149,14 @@ BOOST_AUTO_TEST_CASE( test_bool )
 
     {
         const uint8_t buf[] = {ERL_ATOM_UTF8_EXT,0,4,116,114,117,101};
-        int i = 0;
+        uintptr_t i = 0;
         eterm t((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(true, t.to_bool());
         BOOST_CHECK_EQUAL(std::string("true"), t.to_string());
     }
     {
         const uint8_t buf[] = {ERL_ATOM_UTF8_EXT,0,5,102,97,108,115,101};
-        int i = 0;
+        uintptr_t i = 0;
         eterm t((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(sizeof(buf), (size_t)i);
         BOOST_CHECK_EQUAL(false, t.to_bool());
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE( test_binary )
 
     {
         const uint8_t buf[] = {ERL_BINARY_EXT,0,0,0,3,97,98,99};
-        int i = 0;
+        uintptr_t i = 0;
         binary term1((const char*)buf, i, sizeof(buf), alloc);
         i = 0;
         binary term2((const char*)buf, i, sizeof(buf), alloc);
@@ -344,14 +344,14 @@ BOOST_AUTO_TEST_CASE( test_double )
         const uint8_t buf[] = {ERL_FLOAT_EXT,49,46,48,48,48,48,48,48,48,
                                48,48,48,48,48,48,48,48,48,48,48,48,48,101,
                                43,48,48,0,0,0,0,0};
-        int i = 0;
+        uintptr_t i = 0;
         eterm term((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(32, i);
         BOOST_CHECK_EQUAL(1.0, term.to_double());
     }
     {
         const uint8_t buf[] = {NEW_FLOAT_EXT,63,240,0,0,0,0,0,0};
-        int i = 0;
+        uintptr_t i = 0;
         eterm term((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(9, i);
         BOOST_CHECK_EQUAL(1.0, term.to_double());
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE( test_long )
     }
     {
         const uint8_t buf[] = {ERL_INTEGER_EXT,7,91,205,21};
-        int i = 0;
+        uintptr_t i = 0;
         eterm term((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(5, i);
         BOOST_CHECK_EQUAL (123456789,  term.to_long());
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE( test_long )
     }
     {
         const uint8_t buf[] = {ERL_SMALL_BIG_EXT,4,1,210,2,150,73};
-        int i = 0;
+        uintptr_t i = 0;
         eterm term((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(7, i);
         BOOST_CHECK_EQUAL (-1234567890,  term.to_long());
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE( test_string )
 
     {
         const uint8_t buf[] = {ERL_STRING_EXT,0,3,97,98,99};
-        int i = 0;
+        uintptr_t i = 0;
         eterm term((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(6, i);
         BOOST_CHECK_EQUAL("abc", term.to_str());
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE( test_map )
     {
         // #{1=>2, a => 3}
         const uint8_t buf[] = {ERL_MAP_EXT,0,0,0,2,97,1,97,2,100,0,1,97,97,3};
-        int i = 0;
+        uintptr_t i = 0;
         eterm term((const char*)buf, i, sizeof(buf), alloc);
         BOOST_CHECK_EQUAL(15, i);
         BOOST_CHECK(term.is_map());

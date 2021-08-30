@@ -124,7 +124,7 @@ public:
      * 2 bits will be used.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      */
-    ref(const atom& node, const uint32_t* a_ids, size_t n, uint32_t creation,
+    ref(const atom& node, const uint32_t* a_ids, uint16_t n, uint32_t creation,
         const Alloc& a_alloc = Alloc())
     {
         init(node, a_ids, n, creation, a_alloc);
@@ -144,10 +144,13 @@ public:
     {}
 
     // For internal use
-    ref(const atom& node, std::initializer_list<uint32_t> a_ids, uint8_t creation,
+    ref(const atom& node, std::initializer_list<uint32_t> a_ids, uint32_t creation,
         const Alloc& a_alloc = Alloc())
-        : ref(node, &*a_ids.begin(), a_ids.size(), creation, a_alloc)
-    {}
+        : ref(node, &*a_ids.begin(), (uint16_t)a_ids.size(), creation, a_alloc)
+    {
+        if (a_ids.size() > UINT16_MAX)
+            throw err_bad_argument("Ref too long");
+    }
 
     /**
      * Construct the object by decoding it from a binary

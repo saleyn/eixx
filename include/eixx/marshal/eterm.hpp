@@ -448,6 +448,7 @@ public:
                             std::is_same<T, short>::value    ||
                             std::is_same<T, int>::value      ||
                             std::is_same<T, long>::value     ||
+                            std::is_same<T, size_t>::value   ||
                             std::is_same<T, uint8_t>::value  ||
                             std::is_same<T, uint16_t>::value ||
                             std::is_same<T, uint32_t>::value ||

@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( test_async_queue )
     std::shared_ptr<async_queue<int>> q(new async_queue<int>(io));
 
     bool res = q->async_dequeue(
-        [](int& a, const boost::system::error_code& ec) {
+        [](int& /*a*/, const boost::system::error_code& /*ec*/) {
             throw std::exception(); // This handler is never called
             return false;
         },
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( test_async_queue )
 
     for (int j = 10; j < 13; j++) {
         BOOST_REQUIRE(q->async_dequeue(
-            [j](int& a, const boost::system::error_code& ec) {
+            [j](int& a, const boost::system::error_code& /*ec*/) {
                 BOOST_REQUIRE_EQUAL(j, a);
                 return true;
             },
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE( test_async_queue )
 
     b = 15;
     bool r = q->async_dequeue(
-        [](int& a, const boost::system::error_code& ec) {
+        [](int& a, const boost::system::error_code& /*ec*/) {
             BOOST_REQUIRE_EQUAL(b++, a);
             n++;
             return true;
@@ -102,15 +102,15 @@ namespace {
     std::atomic<bool> done (false);
 }
 
-void producer(async_queue<int>& q, int i)
+void producer(async_queue<int>& q, int id)
 {
-    for (int i = 0; i != iterations; ++i) {
+    for (int idx = 0; idx != iterations; ++idx) {
         int value = ++producer_count;
         while (!q.enqueue(value));
     }
 
     if (eixx::verboseness::level() >= eixx::connect::VERBOSE_DEBUG)
-        std::cout << "Producer thread " << i << " done" << std::endl;
+        std::cout << "Producer thread " << id << " done" << std::endl;
 
     done = ++done_producer_count == producer_thread_count;
 }
@@ -123,13 +123,13 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
 
     boost::thread_group producer_threads;
 
-    for (int i = 0; i < producer_thread_count; ++i)
+    for (int idx = 0; idx < producer_thread_count; ++idx)
         producer_threads.create_thread(
-            [&q, i] () { producer(*q, i+1); }
+            [&q, idx] () { producer(*q, idx+1); }
         );
 
     while(q->async_dequeue(
-        [] (int& v, const boost::system::error_code& ec) {
+        [] (int& /*v*/, const boost::system::error_code& ec) {
             if (!ec)
                 ++consumer_count;
             return !(done && consumer_count >= producer_count);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
     bool abort = false;
 
     auto r = q->async_dequeue(
-        [&abort] (int& v, const boost::system::error_code& ec) { return !abort; },
+        [&abort] (int& /*v*/, const boost::system::error_code& /*ec*/) { return !abort; },
         std::chrono::milliseconds(8000),
         -1);
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( test_async_queue_concurrent )
 
     boost::asio::system_timer t(io);
     t.expires_from_now(std::chrono::milliseconds(1));
-    t.async_wait([&q, &abort](const boost::system::error_code& e) {
+    t.async_wait([&q, &abort](const boost::system::error_code& /*e*/) {
         q->cancel();
         abort = true;
         if (eixx::verboseness::level() >= eixx::connect::VERBOSE_DEBUG)

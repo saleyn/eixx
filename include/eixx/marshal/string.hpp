@@ -172,8 +172,10 @@ public:
     /// Tests if this string is equal to the content of the binary buffer \a rhs.
     template <size_t N>
     bool equal(const uint8_t (&rhs)[N]) const {
-        int i = N > 0 && rhs[N-1] == '\0' ? -1 : 0;
-        return strncmp(c_str(), (const char*)rhs, size()+i) == 0;
+        size_t sz = size();
+        if (sz > 0 && N > 0 && rhs[N-1] == '\0')
+            sz -= 1;
+        return strncmp(c_str(), (const char*)rhs, sz) == 0;
     }
 
     /** Size of binary buffer needed to hold the encoded string. */
