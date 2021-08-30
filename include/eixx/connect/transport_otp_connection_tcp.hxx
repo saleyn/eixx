@@ -273,7 +273,11 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
     BOOST_ASSERT(got_bytes >= 10);
 
     const char* l_epmd_rd = m_buf_epmd + 2;
-    port_t port           = get16be(l_epmd_rd);
+#if BOOST_VERSION >= 107600
+    boost::asio::ip::port_type port = get16be(l_epmd_rd);
+#else
+    uint16_t port   = get16be(l_epmd_rd);
+#endif
     int ntype             = get8(l_epmd_rd);
     int proto             = get8(l_epmd_rd);
     uint16_t dist_high    = get16be(l_epmd_rd);

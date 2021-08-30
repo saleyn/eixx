@@ -67,7 +67,7 @@ class atom
 {
     uint32_t m_index;
 
-    atom(uint32_t idx) : m_index(idx) { assert(idx >= 0); }
+    atom(uint32_t idx) : m_index(idx) {}
 public:
     inline static util::atom_table& atom_table() {
        static util::atom_table s_atom_table;
