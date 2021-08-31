@@ -83,10 +83,14 @@ class basic_otp_node: public basic_otp_node_local {
 
     Mutex                                       m_lock;
     uint32_t                                    m_creation;
-    std::atomic_int                             m_pid_count;
-    std::atomic_int                             m_port_count;
+    std::atomic_uint                            m_pid_count;
+    std::atomic_uint                            m_port_count;
     std::atomic_uint_fast64_t                   m_refid0;
-    std::atomic_int                             m_refid1;
+    #ifdef NEWER_REFERENCE_EXT
+    std::atomic_uint_fast64_t                   m_refid1;
+    #else
+    std::atomic_uint                            m_refid1;
+    #endif
 
     boost::asio::io_service&                    m_io_service;
     basic_otp_mailbox_registry<Alloc, Mutex>    m_mailboxes;
