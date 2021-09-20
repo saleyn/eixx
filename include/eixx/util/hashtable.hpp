@@ -79,14 +79,14 @@ struct hsieh_hash_fun {
         switch (rem) {
             case 3: hash += get16bits (data);
                     hash ^= hash << 16;
-                    hash ^= data[sizeof (uint16_t)] << 18;
+                    hash ^= uint32_t(data[sizeof (uint16_t)]) << 18;
                     hash += hash >> 11;
                     break;
             case 2: hash += get16bits (data);
                     hash ^= hash << 11;
                     hash += hash >> 17;
                     break;
-            case 1: hash += *data;
+            case 1: hash += uint32_t(*data);
                     hash ^= hash << 10;
                     hash += hash >> 1;
         }

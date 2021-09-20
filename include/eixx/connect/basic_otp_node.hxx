@@ -99,7 +99,10 @@ template <typename Alloc, typename Mutex>
 epid<Alloc> basic_otp_node<Alloc, Mutex>::
 create_pid()
 {
-    uint32_t n;
+    #ifdef NEW_PID_EXT
+    auto n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
+    #else
+    int n;
     while (true) {
         n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
         if (n < 0x0fffffff /* 28 bits */) break;
@@ -109,6 +112,7 @@ create_pid()
             break;
         }
     }
+    #endif
 
     return epid<Alloc>(m_nodename, n, m_creation, m_allocator);
 }
@@ -117,7 +121,10 @@ template <typename Alloc, typename Mutex>
 port<Alloc> basic_otp_node<Alloc, Mutex>::
 create_port()
 {
-    int n;
+    #ifdef NEW_PID_EXT
+    auto n = m_port_count.fetch_add(1, std::memory_order_relaxed);
+    #else
+    int  n;
     while (true) {
         n = m_port_count.fetch_add(1, std::memory_order_relaxed);
         if (n < 0x0fffffff /* 28 bits */) break;
@@ -127,6 +134,7 @@ create_port()
             break;
         }
     }
+    #endif
 
     return port<Alloc>(m_nodename, n, m_creation, m_allocator);
 }
@@ -135,23 +143,30 @@ template <typename Alloc, typename Mutex>
 ref<Alloc> basic_otp_node<Alloc, Mutex>::
 create_ref()
 {
-    uint_fast64_t n;
-    int mn;
+    uint_fast64_t      n;
+    decltype(m_refid1) mo;
 
     while (true) {
+        auto mo = m_refid1.load(std::memory_order_consume);
+
         n = m_refid0.fetch_add(1, std::memory_order_relaxed);
         if (n) break;
 
-        int mo = m_refid1.load(std::memory_order_consume);
-        mn = mo+1;
+        auto mn = mo+1;
 
+        #ifndef NEWER_REFERENCE_EXT
         if (mn > 0x3ffff) mn = 0;
+        #endif
 
         if (m_refid1.compare_exchange_weak(mo, mn, std::memory_order_acquire))
             break;
     }
-
-    return ref<Alloc>(m_nodename, mn, n, m_creation, m_allocator);
+    #ifndef NEWER_REFERENCE_EXT
+    return ref<Alloc>(m_nodename, {mo >> 32, mo & 0xFFFFffff, n >> 32, n & 0xFFFFffff},
+                      m_creation, m_allocator);
+    #else
+    return ref<Alloc>(m_nodename, mo, n, m_creation, m_allocator);
+    #endif
 }
 
 template <typename Alloc, typename Mutex>
