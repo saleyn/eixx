@@ -100,9 +100,9 @@ epid<Alloc> basic_otp_node<Alloc, Mutex>::
 create_pid()
 {
     #ifdef NEW_PID_EXT
-    auto n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
+    uint32_t n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
     #else
-    int n;
+    uint32_t n;
     while (true) {
         n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
         if (n < 0x0fffffff /* 28 bits */) break;
@@ -122,9 +122,9 @@ port<Alloc> basic_otp_node<Alloc, Mutex>::
 create_port()
 {
     #ifdef NEW_PID_EXT
-    auto n = m_port_count.fetch_add(1, std::memory_order_relaxed);
+    uint64_t n = m_port_count.fetch_add(1, std::memory_order_relaxed);
     #else
-    int  n;
+    uint64_t n;
     while (true) {
         n = m_port_count.fetch_add(1, std::memory_order_relaxed);
         if (n < 0x0fffffff /* 28 bits */) break;
