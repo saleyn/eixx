@@ -139,10 +139,11 @@ public:
     ///
     /// When a_estimated_size is 0, an empty initialized list is created. Otherwise,
     /// the list is not initialized.
-    explicit list(int a_estimated_size, const Alloc& alloc = Alloc()) {
+    explicit list(int a_estimated_size, const Alloc& alloc = Alloc())
+        : list((size_t)a_estimated_size, alloc)
+    {
         if (a_estimated_size < 0)
             throw err_bad_argument("List too short");
-        list((size_t)a_estimated_size, alloc);
     }
 
     /// Construct a list with a given estimated size.
