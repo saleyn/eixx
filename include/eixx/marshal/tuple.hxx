@@ -37,13 +37,16 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-tuple<Alloc>::tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
+tuple<Alloc>::tuple(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc)
 {
-    int arity;
-    if (ei_decode_tuple_header(buf, &idx, &arity) < 0)
+    BOOST_ASSERT(idx <= INT_MAX);
+    int n;
+    if (ei_decode_tuple_header(buf, (int*)&idx, &n) < 0)
         err_decode_exception("Error decoding tuple header", idx);
+
+    size_t arity = static_cast<size_t>(n);
     m_blob = new blob<eterm<Alloc>, Alloc>(arity+1, a_alloc);
-    for (int i=0; i < arity; i++) {
+    for (size_t i=0; i < arity; i++) {
         new (&m_blob->data()[i]) eterm<Alloc>(buf, idx, size, a_alloc);
     }
     set_init_size(arity);
@@ -51,10 +54,14 @@ tuple<Alloc>::tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc
 }
 
 template <class Alloc>
-void tuple<Alloc>::encode(char* buf, int& idx, size_t size) const
+void tuple<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
 {
     BOOST_ASSERT(initialized());
-    ei_encode_tuple_header(buf, &idx, this->size());
+    BOOST_ASSERT(idx <= INT_MAX);
+    size_t arity = this->size();
+    if (arity > INT_MAX)
+        throw err_encode_exception("LARGE_TUPLE_EXT arity exceeds maximum supported");
+    ei_encode_tuple_header(buf, (int*)&idx, (int)arity);
     for(const_iterator it = begin(), iend=end(); it != iend; ++it) {
         visit_eterm_encoder visitor(buf, idx, size);
         visitor.apply_visitor(*it);

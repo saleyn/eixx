@@ -28,13 +28,16 @@ target_link_libraries(
   ${Boost_LIBRARIES}
 )
 
-add_executable(test-perf test_perf.cpp)
-target_link_libraries(
-  test-perf
-  eixx
-  ${Erlang_EI_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+if(CMAKE_SYSTEM_NAME STREQUAL Linux OR
+   CMAKE_SYSTEM_NAME STREQUAL Android)
+  add_executable(test-perf test_perf.cpp)
+  target_link_libraries(
+    test-perf
+    eixx
+    ${Erlang_EI_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+endif()
 
 if (NOT EIXX_MARSHAL_ONLY)
   add_executable(test-connect test_async_queue.cpp)
@@ -48,13 +51,31 @@ if (NOT EIXX_MARSHAL_ONLY)
 
   install(
     TARGETS
-      test-eterm test-perf
+      test-eterm
     RUNTIME DESTINATION test
   )
+
+  if(CMAKE_SYSTEM_NAME STREQUAL Linux OR
+     CMAKE_SYSTEM_NAME STREQUAL Android)
+    install(
+      TARGETS
+        test-perf
+      RUNTIME DESTINATION test
+    )
+  endif()
 endif()
 
 install(
   TARGETS
-    test-eterm test-perf
+    test-eterm
   RUNTIME DESTINATION test
 )
+
+if(CMAKE_SYSTEM_NAME STREQUAL Linux OR
+   CMAKE_SYSTEM_NAME STREQUAL Android)
+  install(
+    TARGETS
+      test-perf
+    RUNTIME DESTINATION test
+  )
+endif()

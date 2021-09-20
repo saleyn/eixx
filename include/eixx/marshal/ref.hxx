@@ -35,31 +35,33 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
+ref<Alloc>::ref(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
-    const char *s = buf + idx;
+    const char *s  = buf + idx;
     const char *s0 = s;
-    int type = get8(s);
+    uint8_t    tag = get8(s);
 
-    switch (type) {
+    switch (tag) {
 #ifdef ERL_NEWER_REFERENCE_EXT
         case ERL_NEWER_REFERENCE_EXT:
 #endif
 #ifdef ERL_NEW_REFERENCE_EXT
         case ERL_NEW_REFERENCE_EXT: {
-            int count = get16be(s);  // First goes the count
-            if (count < 0 || count > COUNT)
+            uint16_t count = get16be(s);  // First goes the count
+            if (count > COUNT)
                 throw err_decode_exception("Error decoding ref's count", idx+1, count);
 
-            int len = atom::get_len(s);
-            if (len < 0)
-                throw err_decode_exception("Error decoding ref's atom", idx+3, len);
+            const uint8_t atom_tag = get8(s);
+            long l = atom::get_len(s, atom_tag);
+            if (l < 0)
+                throw err_decode_exception("Error decoding ref's node", idx, l);
+            size_t len = static_cast<size_t>(l);
             detail::check_node_length(len);
             atom nd(s, len);
             s += len;
 
             uint32_t cre, mask;
-            std::tie(cre, mask) = type == ERL_NEW_REFERENCE_EXT
+            std::tie(cre, mask) = tag == ERL_NEW_REFERENCE_EXT
                                 ? std::make_pair((get8(s) & 0x03u),    0x0003ffffu)  /* 18 bits */
                                 : std::make_pair(uint32_t(get32be(s)), 0xFFFFffff);
 
@@ -69,33 +71,35 @@ ref<Alloc>::ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
 
             init(nd, vals, count, cre, a_alloc);
 
-            idx += s-s0;
+            idx += static_cast<uintptr_t>(s - s0);
             break;
         }
 #endif
         case ERL_REFERENCE_EXT: {
-            int len = atom::get_len(s);
-            if (len < 0)
-                throw err_decode_exception("Error decoding ref's atom", idx+3, len);
+            const uint8_t atom_tag = get8(s);
+            long l = atom::get_len(s, atom_tag);
+            if (l < 0)
+                throw err_decode_exception("Error decoding ref's node", idx, l);
+            size_t len = static_cast<size_t>(l);
             detail::check_node_length(len);
             atom nd(s, len);
             s += len;
 
             uint32_t id  = get32be(s) & 0x0003ffff;  /* 18 bits */
-            uint32_t cre = get8(s)    & 0x03;
+            uint32_t cre = get8(s)    & 0x03;        /*  2 bits */
 
             init(nd, &id, 1u, cre, a_alloc);
 
-            idx += s-s0;
+            idx += static_cast<uintptr_t>(s - s0);
             break;
         }
         default:
-            throw err_decode_exception("Error decoding ref's type", type);
+            throw err_decode_exception("Error decoding ref's type", idx, tag);
     }
 }
 
 template <class Alloc>
-void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
+void ref<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
@@ -110,10 +114,10 @@ void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
 #else
     put8(s, ERL_ATOM_EXT);
 #endif
-    const std::string& str = node().to_string();
-    unsigned short n = str.size();
+    atom nd = node();
+    uint16_t n = nd.size();
     put16be(s, n);
-    memmove(s, str.c_str(), n);
+    memmove(s, nd.c_str(), n);
     s += n;
 
     /* the integers */
@@ -130,7 +134,7 @@ void ref<Alloc>::encode(char* buf, int& idx, size_t size) const
         put32be(s, *p & 0x0003ffff /* 18 bits */);
 #endif
 
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

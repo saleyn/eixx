@@ -105,7 +105,7 @@ public:
         s.m_blob = nullptr;
     }
 
-    string(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    string(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ~string() {
         release();
@@ -163,17 +163,19 @@ public:
     }
 
     /// Tests if this string is equal to the content of the binary buffer \a rhs.
-    template <int N>
+    template <size_t N>
     bool equal(const char (&rhs)[N]) const {
         int i = N > 0 && rhs[N-1] == '\0' ? -1 : 0;
         return strncmp(c_str(), rhs, size()+i) == 0;
     }
 
     /// Tests if this string is equal to the content of the binary buffer \a rhs.
-    template <int N>
+    template <size_t N>
     bool equal(const uint8_t (&rhs)[N]) const {
-        int i = N > 0 && rhs[N-1] == '\0' ? -1 : 0;
-        return strncmp(c_str(), (const char*)rhs, size()+i) == 0;
+        size_t sz = size();
+        if (sz > 0 && N > 0 && rhs[N-1] == '\0')
+            sz -= 1;
+        return strncmp(c_str(), (const char*)rhs, sz) == 0;
     }
 
     /** Size of binary buffer needed to hold the encoded string. */
@@ -182,8 +184,12 @@ public:
         return n == 0 ? 1 : n + (n <= 0xffff ? 3 : 5+n+1);
     }
 
-    void encode(char* buf, int& idx, size_t size) const {
-        ei_encode_string_len(buf, &idx, c_str(), length());
+    void encode(char* buf, uintptr_t& idx, size_t) const {
+        BOOST_ASSERT(idx <= INT_MAX);
+        size_t len = size();
+        if (len > INT_MAX)
+            throw err_encode_exception("STRING_EXT length exceeds maximum");
+        ei_encode_string_len(buf, (int*)&idx, c_str(), (int)len);
     }
 
     template <typename Stream>
@@ -193,7 +199,7 @@ public:
 
     std::string to_binary_string() const { return eixx::to_binary_string(c_str(), size()); }
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         return out << *this;
     }
 };
@@ -204,15 +210,15 @@ static std::string to_binary_string(const string<Alloc>& a) {
 }
 
 template <class Alloc>
-string<Alloc>::string(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
+string<Alloc>::string(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
-    const char *s = buf + idx;
+    const char *s  = buf + idx;
     const char *s0 = s;
-    int etype = get8(s);
+    uint8_t    tag = get8(s);
 
-    switch (etype) {
+    switch (tag) {
         case ERL_STRING_EXT: {
-            int len = get16be(s);
+            uint16_t len = get16be(s);
             if (len == 0)
                 m_blob = NULL;
             else {
@@ -229,15 +235,15 @@ string<Alloc>::string(const char* buf, int& idx, size_t size, const Alloc& a_all
              * but we decode as much as we can, exiting early if we run into a
              * non-character in the list.
              */
-            int len = get32be(s);
+            uint32_t len = get32be(s);
             if (len == 0)
                 m_blob = NULL;
             else {
                 m_blob = new blob<char, Alloc>(len+1, a_alloc);
-                for (int i=0; i<len; i++) {
-                    if ((etype = get8(s)) != ERL_SMALL_INTEGER_EXT)
-                        throw err_decode_exception("Error decoding string", s+i-s0);
-                    m_blob->data()[i] = get8(s);
+                for (uint32_t i=0; i<len; i++) {
+                    if ((tag = get8(s)) != ERL_SMALL_INTEGER_EXT)
+                        throw err_decode_exception("Error decoding string", static_cast<uintptr_t>(s - s0)+i);
+                    m_blob->data()[i] = static_cast<char>(get8(s));
                 }
                 m_blob->data()[len] = '\0';
             }
@@ -248,9 +254,9 @@ string<Alloc>::string(const char* buf, int& idx, size_t size, const Alloc& a_all
             break;
 
         default:
-            throw err_decode_exception("Error decoding string type", etype);
+            throw err_decode_exception("Error decoding string's type", idx, tag);
     }
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
 }
 
 } // namespace marshal
@@ -270,7 +276,7 @@ namespace std {
 
     template <typename Alloc>
     bool operator== (const eixx::marshal::string<Alloc>& lhs, const std::string& rhs) {
-        return rhs == rhs.c_str();
+        return lhs == rhs.c_str();
     }
 
     template <typename Alloc>

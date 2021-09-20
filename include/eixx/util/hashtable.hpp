@@ -56,8 +56,9 @@ struct hsieh_hash_fun {
     static uint16_t get16bits(const char* d) { return *(const uint16_t *)d; }
 
     size_t operator()(const char* data) const {
-        int len = strlen(data);
-        uint32_t hash = len, tmp;
+        size_t len = strlen(data);
+        BOOST_ASSERT(len <= UINT32_MAX);
+        uint32_t hash = (uint32_t)len, tmp;
         int rem;
 
         if (len <= 0 || data == NULL) return 0;
@@ -98,7 +99,7 @@ struct hsieh_hash_fun {
         hash ^= hash << 25;
         hash += hash >> 6;
 
-        return hash;
+        return static_cast<size_t>(hash);
     }
 };
 

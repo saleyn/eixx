@@ -34,33 +34,37 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-binary<Alloc>::binary(const char* buf, int& idx, size_t size, const Alloc& a_alloc)
+binary<Alloc>::binary(const char* buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
-    const char* s  = buf + idx;
-    const char* s0 = s;
+    const char* s   = buf + idx;
+    const char* s0  = s;
+    uint8_t     tag = get8(s);
 
-    if (get8(s) != ERL_BINARY_EXT)
-        throw err_decode_exception("Error decoding binary", idx);
+    if (tag != ERL_BINARY_EXT)
+        throw err_decode_exception("Error decoding binary's type", idx, tag);
 
-    size_t sz = get32be(s);
+    uint32_t sz = get32be(s);
     m_blob = new blob<char, Alloc>(sz, a_alloc);
-    ::memcpy(m_blob->data(),s,sz);
+    memcpy(m_blob->data(),s,sz);
 
-    idx += s + sz - s0;
+    idx += static_cast<uintptr_t>(s - s0) + sz;
     BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>
-void binary<Alloc>::encode(char* buf, int& idx, size_t size) const
+void binary<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
     put8(s,ERL_BINARY_EXT);
-    size_t n = this->size();
-    put32be(s, n);
-    memmove(s, this->data(), n);
-    s += n;
-    idx += s-s0;
+    size_t sz = this->size();
+    if (sz > UINT32_MAX)
+        throw err_encode_exception("BINARY_EXT length exceeds maximum");
+    uint32_t len = (uint32_t)sz;
+    put32be(s, len);
+    memmove(s, this->data(), len);
+    s += len;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

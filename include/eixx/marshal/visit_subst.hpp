@@ -52,7 +52,7 @@ public:
     bool operator()(const var&          a) const { return a.subst(m_out, m_binding); }
 
     template <typename T>
-    bool operator()(const T& a) const { return false; }
+    bool operator()(const T&) const { return false; }
 };
 
 } // namespace eixx

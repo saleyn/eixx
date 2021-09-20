@@ -76,13 +76,13 @@ namespace {
         int match[10];
         cb_t() { bzero(match, sizeof(match)); }
 
-        bool operator() (const eterm& a_pattern,
+        bool operator() (const eterm& /*a_pattern*/,
                          const varbind& a_varbind,
                          long a_opaque)
         {
             const eterm* n_var = a_varbind.find("N");
             if (n_var && n_var->type() == LONG) {
-                int n = n_var->to_long();
+                long n = n_var->to_long();
                 switch (a_opaque) {
                     case 1:
                         match[0]++;

@@ -89,7 +89,7 @@ public:
      * 2 bits will be used.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      **/
-    port(const char* node, const int id, const uint32_t creation, const Alloc& a_alloc = Alloc())
+    port(const char* node, const uint64_t id, const uint32_t creation, const Alloc& a_alloc = Alloc())
     {
         size_t n = strlen(node);
         detail::check_node_length(n);
@@ -97,7 +97,7 @@ public:
         init(l_node, id, creation, a_alloc);
     }
 
-    port(const atom& node, const int id, const uint32_t creation, const Alloc& a_alloc = Alloc())
+    port(const atom& node, const uint64_t id, const uint32_t creation, const Alloc& a_alloc = Alloc())
     {
         detail::check_node_length(node.size());
         init(node, id, creation, a_alloc);
@@ -111,7 +111,7 @@ public:
      * @param size is the size of the \a buf buffer.
      * @param a_alloc is the allocator to use.
      */
-    port(const char *buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    port(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     port(const port& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
     port(port&& rhs)      : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
@@ -177,9 +177,9 @@ public:
             + node().size();
     }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         return out << *this;
     }
 };

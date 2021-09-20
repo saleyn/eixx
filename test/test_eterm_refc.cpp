@@ -31,7 +31,7 @@ static int g_alloc_count;
 template <class T>
 struct counted_alloc : public std::allocator<char> {
     counted_alloc() {}
-    counted_alloc(const counted_alloc<T>& a) {}
+    counted_alloc(const counted_alloc<T>& /*a*/) {}
 
     template <typename _T>
     counted_alloc(const _T&) {}
@@ -55,7 +55,7 @@ struct counted_alloc : public std::allocator<char> {
         return static_cast<pointer>(::operator new(n * sizeof(T)));
     }
 
-    void deallocate(pointer p, size_t sz) {
+    void deallocate(pointer p, size_t /*sz*/) {
         --g_alloc_count;
         ::operator delete(p);
     }
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE( test_refc_format )
             BOOST_CHECK_EQUAL(2+(6*2), g_alloc_count);
 
             for (int j=0; j <= 10; j++)
-                eterm<my_alloc> term = eterm<my_alloc>::format(alloc, 
+                eterm<my_alloc> term2 = eterm<my_alloc>::format(alloc, 
                     "{~i, [{~s, ~i}, {~a, ~i}], {~f, ~i}, ~a}", 
                       1,   "ab", 2,  "xx", 3,   2.1, 10, "abc");
         }
@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE( test_refc_pool_format )
             BOOST_CHECK_EQUAL(LIST, term.type());
 
             for (int j=0; j <= 10; j++) {
-                eterm<my_alloc> term = eterm<my_alloc>::format(alloc, 
+                eterm<my_alloc> term2 = eterm<my_alloc>::format(alloc, 
                     "{~i, [{~s, ~i}, {~a, ~i}], {~f, ~i}, ~a}", 
                       1,   "ab", 2,  "xx", 3,   2.1, 10, "abc");
-                BOOST_CHECK_EQUAL(TUPLE, term.type());
+                BOOST_CHECK_EQUAL(TUPLE, term2.type());
             }
         }
     }

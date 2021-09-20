@@ -33,21 +33,23 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& alloc)
+void epid<Alloc>::decode(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& alloc)
 {
-    const char* s  = buf + idx;
-    const char* s0 = s;
-    auto n = get8(s);
-    if (n != ERL_PID_EXT
+    const char* s   = buf + idx;
+    const char* s0  = s;
+    uint8_t     tag = get8(s);
+    if (tag != ERL_PID_EXT
 #ifdef ERL_NEW_PID_EXT
-        && n != ERL_NEW_PID_EXT
+        && tag != ERL_NEW_PID_EXT
 #endif
         )
-        throw err_decode_exception("Error decoding pid", n);
+        throw err_decode_exception("Error decoding pid's type", idx, tag);
 
-    int len = atom::get_len(s);
-    if (len < 0)
-        throw err_decode_exception("Error decoding pid node", -1);
+    const uint8_t atom_tag = get8(s);
+    long l = atom::get_len(s, atom_tag);
+    if (l < 0)
+        throw err_decode_exception("Error decoding pid's node", idx, l);
+    size_t len = static_cast<size_t>(l);
     detail::check_node_length(len);
 
     atom l_node(s, len);
@@ -56,19 +58,19 @@ void epid<Alloc>::decode(const char *buf, int& idx, size_t size, const Alloc& al
     uint32_t l_id  = get32be(s); /* 15 bits if distribution flag DFLAG_V4_NC is not set */
     uint32_t l_ser = get32be(s); /* 13 bits if distribution flag DFLAG_V4_NC is not set */
 #ifdef ERL_NEW_PID_EXT
-    uint32_t l_cre = n == ERL_NEW_PID_EXT ? get32be(s) : (get8(s) & 0x03);
+    uint32_t l_cre = tag == ERL_NEW_PID_EXT ? get32be(s) : (get8(s) & 0x03);
 #else
     uint32_t l_cre = get8(s) & 0x03; /* 2 bits */
 #endif
 
     init(l_node, l_id, l_ser, l_cre, alloc);
 
-    idx += s - s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>
-void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
+void epid<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
@@ -80,8 +82,8 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
 #else
     put8(s, ERL_ATOM_EXT);
 #endif
-    const std::string& nd = node().to_string();
-    unsigned short n = nd.size();
+    atom nd = node();
+    uint16_t n = nd.size();
     put16be(s, n);
     memmove(s, nd.c_str(), n);
     s += n;
@@ -98,7 +100,7 @@ void epid<Alloc>::encode(char* buf, int& idx, size_t size) const
     put8(s, l_cre & 0x03 /* 2 bits */);
 #endif
 
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

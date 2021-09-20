@@ -83,8 +83,8 @@ class basic_otp_node: public basic_otp_node_local {
 
     Mutex                                       m_lock;
     uint32_t                                    m_creation;
-    std::atomic_uint                            m_pid_count;
-    std::atomic_uint                            m_port_count;
+    std::atomic_uint_fast32_t                   m_pid_count;
+    std::atomic_uint_fast64_t                   m_port_count;
     std::atomic_uint_fast64_t                   m_refid0;
     #ifdef NEWER_REFERENCE_EXT
     std::atomic_uint_fast64_t                   m_refid1;
@@ -230,7 +230,7 @@ public:
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_node,
-                 const atom& a_cookie = atom(), size_t a_reconnect_secs = 0);
+                 const atom& a_cookie = atom(), int a_reconnect_secs = 0);
 
     /**
      * Set up a connection to an Erlang node, using default cookie
@@ -243,7 +243,7 @@ public:
      */
     template <typename CompletionHandler>
     void connect(CompletionHandler h, const atom& a_remote_nodename,
-                 size_t a_reconnect_secs = 0);
+                 int a_reconnect_secs = 0);
 
     /// Get connection identified by the \a a_node name.
     /// @throws err_connection if not connected to \a a_node._

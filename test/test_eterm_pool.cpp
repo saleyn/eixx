@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( test_encode_double_t )
     string s(t.encode(0));
     const uint8_t expect[] = {131,70,64,200,28,214,230,49,248,161};
     BOOST_REQUIRE(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     eterm t1((const char*)expect, idx, sizeof(expect));
     BOOST_REQUIRE_EQUAL(d, t1.to_double());
 }
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE( test_encode_long_t )
     string s(t.encode(0));
     const uint8_t expect[] = {131,97,123};
     BOOST_REQUIRE(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     eterm t1((const char*)expect, idx, sizeof(expect));
     BOOST_REQUIRE_EQUAL(d, t1.to_long());
 }

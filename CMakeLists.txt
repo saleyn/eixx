@@ -36,7 +36,7 @@ if("${toolchain}" STREQUAL "gcc")
   if(NOT CMAKE_CXX_COMPILER)
     set(CMAKE_CXX_COMPILER "g++")
   endif()
-  add_definitions(-fopenmp -Wall -Wno-strict-aliasing)
+  add_definitions(-fopenmp -Wall -Wextra -Wpedantic -Wshadow -Wno-strict-aliasing -Wconversion -Wsign-conversion)
 
   if("${CMAKE_BUILD_TYPE}" STREQUAL "release")
     add_definitions(-flto -funroll-loops -fomit-frame-pointer)
@@ -53,7 +53,7 @@ elseif("${toolchain}" STREQUAL "intel")
 elseif("${toolchain}" STREQUAL "clang")
   set(CMAKE_C_COMPILER   "clang")
   set(CMAKE_CXX_COMPILER "clang++")
-  add_definitions(-Wall -Wno-strict-aliasing)
+  add_definitions(-Wall -Wextra -Wpedantic -Wshadow -Wno-strict-aliasing -Wconversion -Wsign-conversion)
 else()
   message(FATAL_ERROR "Invalid toolchain: ${TOOLCHAIN}")
 endif()
@@ -179,10 +179,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pc.in"
 #-------------------------------------------------------------------------------
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
-if(CMAKE_SYSTEM_NAME STREQUAL Linux OR
-   CMAKE_SYSTEM_NAME STREQUAL Android)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/test)
-endif()
+add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 
 #===============================================================================
 # Installation

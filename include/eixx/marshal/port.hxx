@@ -33,11 +33,11 @@ namespace eixx {
 namespace marshal {
 
 template <class Alloc>
-port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
+port<Alloc>::port(const char *buf, uintptr_t& idx, [[maybe_unused]] size_t size, const Alloc& a_alloc)
 {
     const char* s   = buf + idx;
     const char* s0  = s;
-    auto        tag = get8(s);
+    uint8_t     tag = get8(s);
     if (tag != ERL_PORT_EXT
 #ifdef ERL_NEW_PORT_EXT
         && tag != ERL_NEW_PORT_EXT
@@ -46,11 +46,13 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
         && tag != ERL_V4_PORT_EXT
 #endif
         )
-        throw err_decode_exception("Error decoding port", idx, tag);
+        throw err_decode_exception("Error decoding port's type", idx, tag);
 
-    int len = atom::get_len(s);
-    if (len < 0)
-        throw err_decode_exception("Error decoding port node", idx, len);
+    const uint8_t atom_tag = get8(s);
+    long l = atom::get_len(s, atom_tag);
+    if (l < 0)
+        throw err_decode_exception("Error decoding port's node", idx, l);
+    size_t len = static_cast<size_t>(l);
     detail::check_node_length(len);
     atom l_node(s, len);
     s += len;
@@ -67,23 +69,26 @@ port<Alloc>::port(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 #endif
 #ifdef ERL_NEW_PORT_EXT
         case ERL_NEW_PORT_EXT:
-            id  = uint64_t(get32be(s));
+            id  = static_cast<uint64_t>(get32be(s));
             cre = get32be(s);
             break;
 #endif
         case ERL_PORT_EXT:
-            id  = uint64_t(get32be(s) & 0x0fffffff);  /* 28 bits */
-            cre = get8(s) & 0x03;                     /* 2 bits  */
+            id  = static_cast<uint64_t>(get32be(s) & 0x0fffffff);  /* 28 bits */
+            cre = static_cast<uint32_t>(get8(s) & 0x03);           /*  2 bits */
             break;
+        
+        default:
+            throw err_decode_exception("Error decoding port's type", idx, tag);
     }
     init(l_node, id, cre, a_alloc);
 
-    idx += s - s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 
 template <class Alloc>
-void port<Alloc>::encode(char* buf, int& idx, size_t size) const
+void port<Alloc>::encode(char* buf, uintptr_t& idx, [[maybe_unused]] size_t size) const
 {
     char* s  = buf + idx;
     char* s0 = s;
@@ -95,10 +100,10 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
 #else
     put8(s, ERL_ATOM_EXT);
 #endif
-    const std::string& str = node().to_string();
-    unsigned short n = str.size();
+    atom nd = node();
+    uint16_t n = nd.size();
     put16be(s, n);
-    memmove(s, str.c_str(), n);
+    memmove(s, nd.c_str(), n);
     s += n;
 
     /* the integers */
@@ -111,7 +116,7 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     } else {
 #elif defined(ERL_NEW_PORT_EXT)
         *s0 = ERL_NEW_PORT_EXT;
-        put32be(s, id());  
+        put32be(s, id() & 0x0fffffff /* 28 bits */);  
         put32be(s, l_cre);
 #else
         *s0 = ERL_PORT_EXT;
@@ -122,7 +127,7 @@ void port<Alloc>::encode(char* buf, int& idx, size_t size) const
     }
 #endif
 
-    idx += s-s0;
+    idx += static_cast<uintptr_t>(s - s0);
     BOOST_ASSERT((size_t)idx <= size);
 }
 

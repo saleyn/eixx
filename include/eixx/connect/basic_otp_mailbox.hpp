@@ -290,7 +290,7 @@ public:
                   const atom& a_mod,
                   const atom& a_fun,
                   const list<Alloc>& args,
-                  const epid<Alloc>* gleader = NULL) {
+                  const epid<Alloc>* /*gleader*/ = NULL) {
         m_node.send_rpc(self(), a_node, a_mod, a_fun, args);
     }
 
@@ -299,7 +299,7 @@ public:
                   const std::string& a_mod,
                   const std::string& a_fun,
                   const list<Alloc>& args,
-                  const epid<Alloc>* gleader = NULL) {
+                  const epid<Alloc>* /*gleader*/ = NULL) {
         m_node.send_rpc(self(), a_node, atom(a_mod), atom(a_fun), args);
     }
 
@@ -308,7 +308,7 @@ public:
                   const char*        a_mod,
                   const char*        a_fun,
                   const list<Alloc>& args,
-                  const epid<Alloc>* gleader = NULL) {
+                  const epid<Alloc>* /*gleader*/ = NULL) {
         m_node.send_rpc(self(), a_node, atom(a_mod), atom(a_fun), args);
     }
 

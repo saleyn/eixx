@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE( test_encode_string )
     string s(t.encode(0));
     const uint8_t expect[] = {131,107,0,3,97,98,99};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     string t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(3ul, t1.size());
     eterm et(t1);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( test_encode_atom )
     string s(a.encode(0));
     const uint8_t expect[] = {131,119,0,3,97,98,99};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     atom t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(3ul, t1.size());
     BOOST_CHECK_EQUAL("abc", eterm(t1).to_string());
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( test_encode_double )
     string s(t.encode(0));
     const uint8_t expect[] = {131,70,64,200,28,214,230,49,248,161};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     eterm t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(d, t1.to_double());
 }
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE( test_encode_emptylist )
     string s(t.encode(0));
     const uint8_t expect[] = {131,106};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     eterm t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(LIST, t1.type());
     BOOST_CHECK_EQUAL(0ul, t1.to_list().length());
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE( test_encode_list )
     const uint8_t expect[] = {131,108,0,0,0,4,ERL_ATOM_UTF8_EXT,0,3,97,98,99,
                               107,0,2,101,102,97,1,107,0,2,103,104,106};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     list t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(4ul, t1.length());
     std::string str(eterm(t1).to_string());
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE( test_encode_long )
         string s(t.encode(0));
         const uint8_t expect[] = {131,97,123};
         BOOST_CHECK(s.equal(expect));
-        int idx = 1;  // skipping the magic byte
+        uintptr_t idx = 1;  // skipping the magic byte
         eterm t1((const char*)expect, idx, sizeof(expect));
         BOOST_CHECK_EQUAL(d, t1.to_long());
     }
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE( test_encode_long )
         string s(t.encode(0));
         const uint8_t expect[] = {131,98,0,0,48,57};
         BOOST_CHECK(s.equal(expect));
-        int idx = 1;  // skipping the magic byte
+        uintptr_t idx = 1;  // skipping the magic byte
         eterm t1((const char*)expect, idx, sizeof(expect));
         BOOST_CHECK_EQUAL(d, t1.to_long());
     }
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE( test_encode_long )
         const uint8_t expect[] = {131,110,4,0,0x78,0x56,0x34,0x12};
 #endif // EIXX_SIZEOF_LONG >= 8
         BOOST_CHECK(s.equal(expect));
-        int idx = 1;  // skipping the magic byte
+        uintptr_t idx = 1;  // skipping the magic byte
         eterm t1((const char*)expect, idx, sizeof(expect));
         BOOST_CHECK_EQUAL(d, t1.to_long());
     }
@@ -171,14 +171,14 @@ BOOST_AUTO_TEST_CASE( test_encode_pid )
         const uint8_t expect[] = 
             {131,88,118,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0,0,0,0};
         BOOST_CHECK(s.equal(expect));
-        int idx = 1;  // skipping the magic byte
+        uintptr_t idx = 1;  // skipping the magic byte
         eterm pid(epid((const char*)expect, idx, sizeof(expect)));
         BOOST_CHECK_EQUAL(eterm(pid), t);
     }
     {
         const uint8_t expect[] =
             {131,88,118,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0,0,0,2,0,0,0,3};
-        int idx = 1;  // skipping the magic byte
+        uintptr_t idx = 1;  // skipping the magic byte
         epid decode_pid((const char*)expect, idx, sizeof(expect));
         epid expect_pid("test@host", 1, 2, 3);
         BOOST_CHECK_EQUAL(expect_pid, decode_pid);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( test_encode_port )
     const uint8_t expect[] =
         {131,102,ERL_ATOM_UTF8_EXT,0,9,116,101,115,116,64,104,111,115,116,0,0,0,1,0};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     eterm t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(t1, t);
 }
@@ -209,17 +209,17 @@ BOOST_AUTO_TEST_CASE( test_encode_ref )
     const uint8_t expect[] =
         {131,90,0,3,100,0,9,116,101,115,116,64,104,111,115,116,0,0,0,0,0,0,0,1,0,0,0,2,0,0,0,3};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     ref t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(eterm(t1), t);
     {
-        ref t(atom("abc@fc12"), 993, 0, 0, 2);
+        ref t2(atom("abc@fc12"), 993, 0, 0, 2);
         //std::cout << string(eterm(t).encode(0)).to_binary_string() << std::endl;
-        const uint8_t expect[] =
+        const uint8_t expect2[] =
             {131,90,0,3,118,0,8,97,98,99,64,102,99,49,50,0,0,0,2,0,0,3,225,0,0,0,0,0,0,0,0};
-        int idx = 1;  // skipping the magic byte
-        ref t1((const char*)expect, idx, sizeof(expect));
-        BOOST_CHECK_EQUAL(t1, t);
+        uintptr_t idx2 = 1;  // skipping the magic byte
+        ref t3((const char*)expect2, idx2, sizeof(expect2));
+        BOOST_CHECK_EQUAL(t2, t3);
     }
 }
 
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE( test_encode_tuple )
                               104,4,ERL_ATOM_UTF8_EXT,0,1,97,107,0,2,120,120,70,64,94,198,102,
                               102,102,102,102,97,5,107,0,2,103,104};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     tuple t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(5ul, t1.size());
     BOOST_CHECK_EQUAL("{abc,\"ef\",1,{a,\"xx\",123.1,5},\"gh\"}", eterm(t1).to_string());
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE( test_encode_trace )
     const uint8_t expect[] = 
         {131,104,5,97,1,97,2,97,3,88,118,0,8,97,98,99,64,102,99,49,50,0,0,0,96,0,0,0,0,0,0,0,3,97,4};
     BOOST_CHECK(s.equal(expect));
-    int idx = 1;  // skipping the magic byte
+    uintptr_t idx = 1;  // skipping the magic byte
     trace t1((const char*)expect, idx, sizeof(expect));
     BOOST_CHECK_EQUAL(5ul, t1.size());
     BOOST_CHECK_EQUAL(1,   t1.flags());

@@ -18,7 +18,7 @@ void usage(char* exe) {
     exit(1);
 }
 
-void on_status(otp_node& a_node, const otp_connection* a_con,
+void on_status([[maybe_unused]] otp_node& a_node, [[maybe_unused]] const otp_connection* a_con,
         report_level a_level, const std::string& s)
 {
     static const char* s_levels[] = {"INFO   ", "WARNING", "ERROR  "};
@@ -59,7 +59,7 @@ void on_connect(otp_connection* a_con, const std::string& a_error) {
 
 void on_disconnect(
     otp_node& a_node, const otp_connection& a_con,
-    atom a_remote_node, const boost::system::error_code& err)
+    atom a_remote_node, [[maybe_unused]] const boost::system::error_code& err)
 {
     std::cout << "Disconnected from remote node " << a_remote_node << std::endl;
     if (a_con.reconnect_timeout() == 0)

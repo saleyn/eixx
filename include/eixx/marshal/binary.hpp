@@ -45,7 +45,7 @@ class binary
 {
     blob<char, Alloc>* m_blob;
 
-    void decode(const char* buf, int& idx, size_t size);
+    void decode(const char* buf, uintptr_t& idx, size_t size);
 
 public:
     binary() : m_blob(nullptr) {}
@@ -89,7 +89,7 @@ public:
      * @param size is the size of \a buf buffer.
      * @throw err_decode_exception
      */
-    binary(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    binary(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     /** Get the size of the data (in bytes) */
     size_t size() const { return m_blob ? m_blob->size() : 0; }
@@ -128,12 +128,12 @@ public:
     }
 
     /** Encode binary to a flat buffer. */
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
     /** Size of binary buffer needed to hold encoded binary. */
     size_t encode_size() const { return 5 + size(); }
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=NULL) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =NULL) const {
         bool printable = size() > 1;
         for (const char* p = data(), *end = data() + size(); printable && p != end; ++p)
             if (*p < ' ' || *p > '~')

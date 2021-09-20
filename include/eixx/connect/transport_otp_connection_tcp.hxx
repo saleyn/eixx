@@ -106,8 +106,8 @@ void tcp_connection<Handler, Alloc>::handle_resolve(
     m_state     = CS_WAIT_EPMD_CONNECT;
     auto pthis  = this->shared_from_this();
     auto epnext = ++ep_iterator;
-    m_socket.async_connect(m_peer_endpoint, [pthis, epnext](auto& err) {
-        pthis->handle_epmd_connect(err, epnext);
+    m_socket.async_connect(m_peer_endpoint, [pthis, epnext](auto& a_err) {
+        pthis->handle_epmd_connect(a_err, epnext);
     });
 }
 
@@ -120,10 +120,12 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
         // The connection was successful. Send the request.
         std::string alivename = remote_alivename();
         char* w = m_buf_epmd;
-        int len = alivename.size() + 1;
-        put16be(w,len);
+        size_t sz = alivename.size();
+        BOOST_ASSERT(sz < UINT16_MAX);
+        uint16_t len = (uint16_t)sz + 1;
+        put16be(w, len);
         put8(w,EI_EPMD_PORT2_REQ);
-        strcpy(w, alivename.c_str());
+        strncpy(w, alivename.c_str(), sz);
 
         if (this->handler()->verbose() >= VERBOSE_TRACE) {
             std::stringstream ss;
@@ -149,8 +151,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_connect(
         auto pthis      = this->shared_from_this();
         auto epnext     = ++ep_iterator;
         m_socket.async_connect(m_peer_endpoint,
-                               [pthis, epnext](auto& err) {
-                                   pthis->handle_epmd_connect(err, epnext);
+                               [pthis, epnext](auto& a_err) {
+                                   pthis->handle_epmd_connect(a_err, epnext);
                                });
     } else {
         std::stringstream ss;
@@ -200,8 +202,10 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
         return;
     }
 
-    const char* s = m_buf_epmd;
-    int res = get8(s);
+    const char* l_epmd_rd = m_buf_epmd;
+    m_expect_size = 8;
+
+    int res = get8(l_epmd_rd);
 
     if (res != EI_EPMD_PORT2_RESP) { // response type
         std::stringstream ss;
@@ -213,7 +217,7 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
         return;
     }
 
-    int n = get8(s);
+    int n = get8(l_epmd_rd);
 
     if (this->handler()->verbose() >= VERBOSE_TRACE) {
         std::stringstream ss;
@@ -233,7 +237,8 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_header(
 
     m_epmd_wr = m_buf_epmd + bytes_transferred;
 
-    int need_bytes = 8 - (bytes_transferred - 2);
+    size_t got_bytes = bytes_transferred - 2;
+    size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
             boost::asio::buffer(m_epmd_wr, sizeof(m_buf_epmd)-bytes_transferred),
@@ -263,17 +268,21 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
 
     m_epmd_wr += bytes_transferred;
     #ifndef NDEBUG
-    int got_bytes = m_epmd_wr - m_buf_epmd;
+    size_t got_bytes = m_epmd_wr - m_buf_epmd;
     #endif
     BOOST_ASSERT(got_bytes >= 10);
 
-    const char* s      = m_buf_epmd + 2;
-    int port           = get16be(s);
-    int ntype          = get8(s);
-    int proto          = get8(s);
-    uint16_t dist_high = get16be(s);
-    uint16_t dist_low  = get16be(s);
-    m_dist_version     = (dist_high > EI_DIST_HIGH ? EI_DIST_HIGH : dist_high);
+    const char* l_epmd_rd = m_buf_epmd + 2;
+#if BOOST_VERSION >= 107600
+    boost::asio::ip::port_type port = get16be(l_epmd_rd);
+#else
+    uint16_t port   = get16be(l_epmd_rd);
+#endif
+    int ntype             = get8(l_epmd_rd);
+    int proto             = get8(l_epmd_rd);
+    uint16_t dist_high    = get16be(l_epmd_rd);
+    uint16_t dist_low     = get16be(l_epmd_rd);
+    m_dist_version        = (dist_high > EI_DIST_HIGH ? EI_DIST_HIGH : dist_high);
 
     if (this->handler()->verbose() >= VERBOSE_TRACE) {
         std::stringstream ss;
@@ -340,7 +349,7 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
     }
 #endif
 
-    size_t siz;
+    uint16_t siz;
     if (tag == 'n')
         siz = 2 + 1 + 2 + 4 + this->local_nodename().size();
     else /* tag == 'N' */
@@ -358,7 +367,7 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
 
     char* w = m_buf_node;
     put16be(w, siz - 2);
-    put8(w, tag);
+    put8(w, static_cast<uint8_t>(tag));
     if (tag == 'n') {
 #ifdef EI_DIST_5
         m_dist_version = EI_DIST_5;
@@ -367,7 +376,7 @@ void tcp_connection<Handler, Alloc>::handle_connect(const boost::system::error_c
         m_dist_version = EI_DIST_LOW;
         put16be(w, EI_DIST_LOW); /* spec demands ver==5 */
 #endif
-        put32be(w, flags);
+        put32be(w, flags & 0xffffffff /* FlagsLow */);
     } else { /* tag == 'N' */
         put64be(w, flags);
         put32be(w, this->local_creation());
@@ -428,7 +437,7 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
     m_node_rd = m_buf_node;
     m_expect_size = get16be(m_node_rd);
 
-    if (m_expect_size > (size_t)MAXNODELEN + 8 || m_expect_size > (size_t)((m_buf_node+1) - m_node_rd)) {
+    if (m_expect_size > static_cast<size_t>(MAXNODELEN + 8) || m_expect_size > static_cast<size_t>((m_buf_node+1) - m_node_rd)) {
         std::stringstream ss;
         ss << "<- RECV_STATUS (error) in status length from node '" 
            << this->remote_nodename() << "': " << m_expect_size;
@@ -440,11 +449,11 @@ void tcp_connection<Handler, Alloc>::handle_read_status_header(
 
     m_node_wr = m_buf_node + bytes_transferred;
 
-    int need_bytes = m_expect_size - (m_node_wr - m_node_rd);
-    // int need_bytes = 5 - (bytes_transferred - 2);
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
+    size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
-            boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
+            boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1) - m_node_wr)),
             boost::asio::transfer_at_least(need_bytes),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_status_body, shared_from_this(),
                 std::placeholders::_1,
@@ -470,7 +479,7 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
     }
 
     m_node_wr += bytes_transferred;
-    int got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     BOOST_ASSERT(got_bytes >= 3);
 
     if (!this->local_nodename().empty()) {
@@ -528,7 +537,7 @@ void tcp_connection<Handler, Alloc>::handle_read_status_body(
     if (got_bytes >= 2)
         handle_read_challenge_header(boost::system::error_code(), 0);
     else
-        boost::asio::async_read(m_socket, boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
+        boost::asio::async_read(m_socket, boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1) - m_node_wr)),
             boost::asio::transfer_at_least(2),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_header, shared_from_this(),
                 std::placeholders::_1,
@@ -552,13 +561,14 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
 
     m_node_wr += bytes_transferred;
     m_expect_size = get16be(m_node_rd);
+
 #ifdef EI_DIST_5
     unsigned short l_size = (m_dist_version == EI_DIST_5) ? 11 : 19;
 #else
     unsigned short l_size = 11;
 #endif
 
-    if (m_expect_size > (size_t)MAXNODELEN + l_size || m_expect_size > (size_t)((m_buf_node+1) - m_node_rd)) {
+    if (m_expect_size > static_cast<size_t>(MAXNODELEN + l_size) || m_expect_size > static_cast<size_t>((m_buf_node+1) - m_node_rd)) {
         std::stringstream ss;
         ss << "<- RECV_CHALLENGE (error) in challenge length from node '" 
            << this->remote_nodename() << "': " << m_expect_size;
@@ -568,10 +578,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_header(
         return;
     }
 
-    int need_bytes = m_expect_size - (m_node_wr - m_node_rd);
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
+    size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
-            boost::asio::buffer(m_node_wr, (m_buf_node+1) - m_node_wr),
+            boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1) - m_node_wr)),
             boost::asio::transfer_at_least(need_bytes),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_body, shared_from_this(),
                 std::placeholders::_1,
@@ -598,11 +609,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
 
     m_node_wr += bytes_transferred;
     #ifndef NDEBUG
-    int got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     #endif
-    BOOST_ASSERT(got_bytes >= (int)m_expect_size);
+    BOOST_ASSERT(got_bytes >= m_expect_size);
 
-    char tag = get8(m_node_rd);
+    const char tag = static_cast<char>(get8(m_node_rd));
     if (tag != 'n' && tag != 'N') {
         std::stringstream ss;
         ss << "<- RECV_CHALLENGE (error) incorrect tag, "
@@ -614,7 +625,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         return;
     }
 
-    int      nodename_len;
+    size_t   nodename_len;
     uint16_t dist_version = m_dist_version;
 
     // See: https://github.com/erlang/otp/blob/OTP-24.0.5/lib/erl_interface/src/connect/ei_connect.c#L2478
@@ -634,7 +645,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     
         m_remote_flags     = get32be(m_node_rd);
         m_remote_challenge = get32be(m_node_rd);
-        nodename_len       = m_node_wr - m_node_rd;
+        nodename_len       = static_cast<uintptr_t>(m_node_wr - m_node_rd);
 #ifndef EI_DIST_6
     }
 #else
@@ -645,7 +656,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
         m_node_rd          += 4; /* ignore peer 'creation' */
         nodename_len       = get16be(m_node_rd);
 
-        if (int(nodename_len) > m_node_wr - m_node_rd) {
+        if (nodename_len > static_cast<uintptr_t>(m_node_wr - m_node_rd)) {
             std::stringstream ss;
             ss << "<- RECV_CHALLENGE 'N' (error) nodename too long from node '" 
                << this->remote_nodename() << "': " << nodename_len;
@@ -705,7 +716,7 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_body(
     gen_digest(m_remote_challenge, this->m_cookie.c_str(), our_digest);
 
     char* w = m_buf_node;
-    int siz = 0;
+    size_t siz = 0;
 
     // send complement (if dist_version upgraded in-flight)
     if (m_dist_version > dist_version) {
@@ -788,10 +799,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_header(
 
     m_node_wr = m_buf_node + bytes_transferred;
 
-    int need_bytes = m_expect_size - (m_node_wr - m_node_rd);
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
+    size_t need_bytes = m_expect_size > got_bytes ? m_expect_size - got_bytes : 0;
     if (need_bytes > 0) {
         boost::asio::async_read(m_socket, 
-            boost::asio::buffer(m_node_wr, (m_buf_node+1)-m_node_wr),
+            boost::asio::buffer(m_node_wr, static_cast<size_t>((m_buf_node+1)-m_node_wr)),
             boost::asio::transfer_at_least(need_bytes),
             std::bind(&tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body,
                 shared_from_this(),
@@ -819,11 +831,11 @@ void tcp_connection<Handler, Alloc>::handle_read_challenge_ack_body(
 
     m_node_wr += bytes_transferred;
     #ifndef NDEBUG
-    size_t got_bytes = m_node_wr - m_node_rd;
+    size_t got_bytes = static_cast<uintptr_t>(m_node_wr - m_node_rd);
     #endif
     BOOST_ASSERT(got_bytes >= m_expect_size);
 
-    char tag = get8(m_node_rd);
+    const char tag = static_cast<char>(get8(m_node_rd));
     if (this->handler()->verbose() >= VERBOSE_TRACE) {
         std::stringstream ss;
         ss << "<- RECV_CHALLENGE_ACK received (tag=" << tag << "): " 
@@ -880,7 +892,7 @@ uint32_t tcp_connection<Handler, Alloc>::gen_challenge(void)
         struct timeval tv; 
         clock_t cpu; 
         pid_t pid; 
-        u_long hid; 
+        long hid; 
         uid_t uid; 
         gid_t gid; 
         struct utsname name; 
@@ -899,7 +911,7 @@ uint32_t tcp_connection<Handler, Alloc>::gen_challenge(void)
 
 template <class Handler, class Alloc>
 uint32_t tcp_connection<Handler, Alloc>::
-md_32(char* string, int length)
+md_32(char* string, size_t length)
 {
     BOOST_STATIC_ASSERT(MD5_DIGEST_LENGTH == 16);
     union {

@@ -180,7 +180,7 @@ private:
 
     uint32_t gen_challenge(void);
     void     gen_digest(unsigned challenge, const char cookie[], uint8_t digest[16]);
-    uint32_t md_32(char* string, int length);
+    uint32_t md_32(char* string, size_t length);
 };
 
 } // namespace connect

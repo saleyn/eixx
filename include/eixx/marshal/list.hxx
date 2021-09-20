@@ -63,20 +63,18 @@ void list<Alloc>::init(const eterm<Alloc>* items, size_t N, const Alloc& alloc) 
 }
 
 template <class Alloc>
-list<Alloc>::list(const cons_t* a_head, int a_len, const Alloc& alloc)
+list<Alloc>::list(const cons_t* a_head, size_t a_len, const Alloc& alloc)
     : base_t(alloc)
 {
-    unsigned int alloc_size;
+    size_t alloc_size;
 
-    if (a_len >= 0) {
+    if (a_len > 0) {
         alloc_size = a_len;
-    } else if (a_len == -1) {
-        a_len = 0;
+    } else {
         for (const cons_t* p = a_head; p; p = p->next)
             a_len++;
         alloc_size = a_len;
-    } else
-        throw err_bad_argument("List of negative length!");
+    }
 
     // If this is an empty list - no allocation is needed
     if (alloc_size == 0) {
@@ -103,13 +101,15 @@ list<Alloc>::list(const cons_t* a_head, int a_len, const Alloc& alloc)
 }
 
 template <class Alloc>
-list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
+list<Alloc>::list(const char *buf, uintptr_t& idx, size_t size, const Alloc& a_alloc)
     : base_t(a_alloc)
 {
-    int arity;
-    if (ei_decode_list_header(buf, &idx, &arity) < 0)
+    BOOST_ASSERT(idx <= INT_MAX);
+    int n;
+    if (ei_decode_list_header(buf, (int*)&idx, &n) < 0)
         err_decode_exception("Error decoding list header", idx);
 
+    size_t arity = static_cast<size_t>(n);
     // If this is an empty list - no allocation is needed
     if (arity == 0) {
         m_blob = empty_list();
@@ -141,7 +141,7 @@ list<Alloc>::list(const char *buf, int& idx, size_t size, const Alloc& a_alloc)
 }
 
 template <class Alloc>
-void list<Alloc>::encode(char* buf, int& idx, size_t size) const
+void list<Alloc>::encode(char* buf, uintptr_t& idx, size_t size) const
 {
     BOOST_ASSERT(initialized());
     char* s = buf + idx;
@@ -150,7 +150,11 @@ void list<Alloc>::encode(char* buf, int& idx, size_t size) const
     } else {
         put8(s,ERL_LIST_EXT);
         const header_t* l_header = header();
-        put32be(s,l_header->size);
+        auto sz = l_header->size;
+        if (sz > UINT32_MAX)
+            throw err_encode_exception("LIST_EXT length exceeds maximum");
+        uint32_t len = (uint32_t)sz;
+        put32be(s, len);
         idx += 5;
         for(const cons_t* p = l_header->head; p; p = p->next) {
             visit_eterm_encoder visitor(buf, idx, size);
@@ -168,8 +172,8 @@ list<Alloc> list<Alloc>::tail(size_t idx) const
 {
     const header_t* l_header = header();
     const cons_t* p = l_header->head;
-    int len = (int)l_header->size - (int)idx - 1;
-    if (len < 0)
+    size_t len = l_header->size - idx - 1;
+    if (idx >= l_header->size)
         throw err_bad_argument("List too short");
     for (size_t i=0; i <= idx; i++)
         p = p->next;

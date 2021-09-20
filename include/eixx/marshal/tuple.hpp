@@ -55,7 +55,7 @@ class tuple {
     }
     size_t get_init_size() const {
         BOOST_ASSERT(m_blob);
-        return m_blob->data()[m_blob->size()-1].to_long()-1;
+        return static_cast<size_t>(m_blob->data()[m_blob->size()-1].to_long()-1);
     }
 
     void release() { release(m_blob); m_blob = nullptr; }
@@ -106,7 +106,7 @@ public:
         a.m_blob = nullptr;
     }
 
-    template <int N>
+    template <size_t N>
     tuple(const eterm<Alloc> (&items)[N], const Alloc& alloc = Alloc())
         : tuple(items, N, alloc) {}
 
@@ -124,7 +124,7 @@ public:
     /**
      * Decode the tuple from a binary buffer.
      */
-    tuple(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    tuple(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ~tuple() {
         release();
@@ -176,13 +176,13 @@ public:
         return true;
     }
 
-    const eterm<Alloc>& operator[] (int idx) const {
-        BOOST_ASSERT(m_blob && (size_t)idx < size());
+    const eterm<Alloc>& operator[] (size_t idx) const {
+        BOOST_ASSERT(m_blob && idx < size());
         return m_blob->data()[idx];
     }
 
-    eterm<Alloc>& operator[] (int idx) {
-        BOOST_ASSERT(m_blob && (size_t)idx < size());
+    eterm<Alloc>& operator[] (size_t idx) {
+        BOOST_ASSERT(m_blob && idx < size());
         return m_blob->data()[idx];
     }
 
@@ -213,7 +213,7 @@ public:
         return result;
     }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
     bool subst(eterm<Alloc>& out, const varbind<Alloc>* binding) const;
 

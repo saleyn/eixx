@@ -52,11 +52,11 @@ class ref {
 
     struct ref_blob {
         atom     node;
-        uint32_t len;
+        uint16_t len;
         uint32_t ids[COUNT];
         uint32_t creation;
 
-        ref_blob(const atom& a_node, const uint32_t* a_ids, size_t n, uint32_t a_cre)
+        ref_blob(const atom& a_node, const uint32_t* a_ids, uint16_t n, uint32_t a_cre)
             : node(a_node)
             , len(n)
             , creation(a_cre)
@@ -70,20 +70,20 @@ class ref {
             while(i < COUNT)
                 ids[i++] = 0;
         }
-        template <int N>
-        ref_blob(const atom& node, uint32_t (&ids)[N], uint32_t creation)
-            : ref_blob(node, ids, N, creation)
+        template <uint16_t N>
+        ref_blob(const atom& a_node, uint32_t (&a_ids)[N], uint32_t a_cre)
+            : ref_blob(a_node, a_ids, N, a_cre)
         {}
 
         ref_blob(const atom& a_node, std::initializer_list<uint32_t> a_ids, uint32_t a_cre)
-            : ref_blob(node, &*a_ids.begin(), a_ids.size(), creation)
+            : ref_blob(a_node, &*a_ids.begin(), a_ids.size(), a_cre)
         {}
     };
 
     blob<ref_blob, Alloc>* m_blob;
 
     // Must only be called from constructor!
-    void init(const atom& a_node, const uint32_t* a_ids, size_t n, uint32_t a_cre,
+    void init(const atom& a_node, const uint32_t* a_ids, uint16_t n, uint32_t a_cre,
               const Alloc& alloc)
     {
         detail::check_node_length(a_node.size());
@@ -124,13 +124,13 @@ public:
      * 2 bits will be used.
      * @throw err_bad_argument if node is empty or greater than MAX_NODE_LENGTH
      */
-    ref(const atom& node, const uint32_t* a_ids, size_t n, uint32_t creation,
+    ref(const atom& node, const uint32_t* a_ids, uint16_t n, uint32_t creation,
         const Alloc& a_alloc = Alloc())
     {
         init(node, a_ids, n, creation, a_alloc);
     }
 
-    template <int N>
+    template <uint16_t N>
     ref(const atom& node, uint32_t (&ids)[N], uint32_t creation,
         const Alloc& a_alloc = Alloc())
         : ref(node, ids, N, creation, a_alloc)
@@ -144,10 +144,13 @@ public:
     {}
 
     // For internal use
-    ref(const atom& node, std::initializer_list<uint32_t> a_ids, uint8_t creation,
+    ref(const atom& node, std::initializer_list<uint32_t> a_ids, uint32_t creation,
         const Alloc& a_alloc = Alloc())
-        : ref(node, &*a_ids.begin(), a_ids.size(), creation, a_alloc)
-    {}
+        : ref(node, &*a_ids.begin(), (uint16_t)a_ids.size(), creation, a_alloc)
+    {
+        if (a_ids.size() > UINT16_MAX)
+            throw err_bad_argument("Ref too long");
+    }
 
     /**
      * Construct the object by decoding it from a binary
@@ -157,7 +160,7 @@ public:
      * @param size is the size of the \a buf buffer.
      * @param a_alloc is the allocator to use.
      */
-    ref(const char* buf, int& idx, size_t size, const Alloc& a_alloc = Alloc());
+    ref(const char* buf, uintptr_t& idx, size_t size, const Alloc& a_alloc = Alloc());
 
     ref(const ref& rhs) : m_blob(rhs.m_blob) { if (m_blob) m_blob->inc_rc(); }
     ref(ref&& rhs) : m_blob(rhs.m_blob) { rhs.m_blob = nullptr; }
@@ -205,7 +208,7 @@ public:
      * Get the id array from the REF.
      * @return the id array number from the REF.
      */
-    const size_t len() const { return m_blob ? m_blob->data()->len : 0; }
+    uint16_t len() const { return m_blob ? m_blob->data()->len : 0; }
 
     /**
      * Get the creation number from the REF.
@@ -224,7 +227,7 @@ public:
         int n = node().compare(rhs.node());
         if (n != 0)             return n < 0;
         auto e = std::min(len(), rhs.len());
-        for (size_t i=0; i < e; ++i) {
+        for (uint32_t i=0; i < e; ++i) {
             auto i1 = id(i);
             auto i2 = rhs.id(i);
             if (i1 > i2) return false;
@@ -238,7 +241,7 @@ public:
     }
 
     size_t encode_size() const {
-        return 1+2+(3+node().size()) + len()*4 +
+        return (size_t)1+2+(3+node().size()) + len()*4 +
             #ifdef ERL_NEWER_REFERENCE_EXT
                 4;
             #else
@@ -246,9 +249,9 @@ public:
             #endif
     }
 
-    void encode(char* buf, int& idx, size_t size) const;
+    void encode(char* buf, uintptr_t& idx, size_t size) const;
 
-    std::ostream& dump(std::ostream& out, const varbind<Alloc>* binding=nullptr) const {
+    std::ostream& dump(std::ostream& out, const varbind<Alloc>* =nullptr) const {
         return out << *this;
     }
 };
@@ -264,7 +267,7 @@ namespace std {
     template <class Alloc>
     ostream& operator<< (ostream& out, const eixx::marshal::ref<Alloc>& a) {
         out << "#Ref<" << a.node();
-        for (int i=0, e=a.len(); i != e; ++i)
+        for (uint32_t i=0, e=a.len(); i != e; ++i)
             out << '.' << a.id(i);
         if (a.creation() > 0 && a.display_creation())
             out << ',' << a.creation();

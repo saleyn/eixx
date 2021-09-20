@@ -207,7 +207,7 @@ protected:
     size_t available_queue()    const { return m_available_queue; }
 
     char*  rd_ptr()                 { return m_rd_ptr; }
-    size_t rd_length()              { return m_rd_end - m_rd_ptr; }
+    size_t rd_length()              { return static_cast<uintptr_t>(m_rd_end - m_rd_ptr); }
     size_t rd_capacity()            { return m_rd_buf.capacity() - rd_length(); }
     /// Verboseness
     verbose_type verbose()    const { return m_handler->verbose(); }
@@ -261,7 +261,7 @@ protected:
     /// and \a a_msg are invalid.
     /// @return Control Message
     /// @throws err_decode_exception
-    int transport_msg_decode(const char *mbuf, int len, transport_msg<Alloc>& a_tm);
+    int transport_msg_decode(const char *mbuf, size_t len, transport_msg<Alloc>& a_tm);
 
     void process_message(const char* a_buf, size_t a_size);
 

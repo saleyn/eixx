@@ -90,7 +90,7 @@ public:
      * is the same as calling eterm_pattern_matcher() and iteratively
      * adding patterns using push_back() calls.
      */
-    template <int N>
+    template <size_t N>
     eterm_pattern_matcher(
         const struct init_struct (&a_patterns)[N], pattern_functor_t a_fun,
         const Alloc& a_alloc = Alloc())
@@ -228,7 +228,7 @@ public:
     explicit eterm_pattern_action(const eterm<Alloc>& a_pattern)
         : m_pattern(a_pattern), m_opaque(0)
     {
-      auto fun = [](auto& pattern, auto& vars, long opaque) { return true; };
+      auto fun = [](auto& /*pattern*/, auto& /*vars*/, long /*opaque*/) { return true; };
       m_fun = fun;
     }
 
