@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( test_atomable )
 	util::atom_table t(10);
 	BOOST_CHECK_EQUAL(0, t.lookup(std::string()));
 	BOOST_CHECK_EQUAL(0, t.lookup(""));
-	uint32_t n = t.lookup("abc");
+	auto n = t.lookup("abc");
 	BOOST_CHECK(0 < n);
 	BOOST_CHECK(0 < t.lookup("aaaaa"));
 	BOOST_CHECK_EQUAL(n, t.lookup("abc"));
@@ -77,13 +77,16 @@ BOOST_AUTO_TEST_CASE( test_atom )
         BOOST_CHECK_EQUAL("temp2", am_temp2);
     }
     {
-        auto n = util::atom_table().try_lookup("temp3");
-        BOOST_CHECK_EQUAL(-1, n);
+        auto p = util::atom_table().try_lookup("temp3");
+        BOOST_CHECK_EQUAL(false, p.first);
+        BOOST_CHECK_EQUAL(1, p.second);
         auto s = std::string(MAXATOMLEN+1, 'X');
-        n = util::atom_table().try_lookup(s);
-        BOOST_CHECK_EQUAL(-2, n);
-        n = util::atom_table().try_lookup("");
-        BOOST_CHECK_EQUAL(0, n);
+        p = util::atom_table().try_lookup(s);
+        BOOST_CHECK_EQUAL(false, p.first);
+        BOOST_CHECK_EQUAL(2, p.second);
+        p = util::atom_table().try_lookup("");
+        BOOST_CHECK_EQUAL(true, p.first);
+        BOOST_CHECK_EQUAL(0, p.second);
 
         BOOST_CHECK_THROW(atom("temp3", true), err_atom_not_found);
         auto a = atom("temp3", false);

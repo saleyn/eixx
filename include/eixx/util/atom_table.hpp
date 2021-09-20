@@ -72,7 +72,7 @@ namespace util {
             typename HashMap::const_local_iterator
                 lit = m_index.begin(bucket), lend = m_index.end(bucket);
             while(lit != lend && strcmp(a_atom, lit->first) != 0) ++lit;
-            return lit == lend ? (size_t)-1 : lit->second;
+            return lit == lend ? 0 : lit->second;
         }
     public:
         /// Returns the default atom table maximum size. The value can be
@@ -85,8 +85,8 @@ namespace util {
                 std::stringstream ss(p);
                 ss >> n;
             }
-            // Hash function only supports up to UINT32_MAX
-            if (n > UINT32_MAX+1) n = UINT32_MAX+1;
+            // Reserve capacity up to UINT32_MAX
+            if (n > UINT32_MAX) n = UINT32_MAX;
             return n > 0 ? n : s_default_max_atoms;
         }
 
@@ -121,16 +121,20 @@ namespace util {
         /// Try to lookup an atom in the atom table
         /// @return -1 if the atom by name is not found, -2 if the atom is invalid,
         ///         or a value >= 0, if an existing atom is found.
-        size_t try_lookup(const char* a_name, size_t n) { return try_lookup(String(a_name, n)); }
-        size_t try_lookup(const char* a_name)           { return try_lookup(String(a_name)); }
-        size_t try_lookup(const String& a_name)
+        std::pair<bool, size_t> try_lookup(const char* a_name, size_t n) { return try_lookup(String(a_name, n)); }
+        std::pair<bool, size_t> try_lookup(const char* a_name)           { return try_lookup(String(a_name)); }
+        std::pair<bool, size_t> try_lookup(const String& a_name)
         {
             if (a_name.size() == 0)
-                return 0;
+                return {true, 0};
             if (a_name.size() > MAXATOMLEN_UTF8 || utf8_length(a_name) > MAXATOMLEN)
-                return (size_t)-2;
+                return {false, 2};
             size_t bucket = m_index.bucket(a_name.c_str());
-            return find_value(bucket, a_name.c_str());
+            size_t n      = find_value(bucket, a_name.c_str());
+            if (n > 0)
+                return {true, n};
+            else
+                return {false, 1};
         }
 
         /// Lookup an atom in the atom table by name. If the atom is not
@@ -138,28 +142,29 @@ namespace util {
         /// atom in the atom table.
         /// @throw std::runtime_error if atom table is full.
         /// @throw err_bad_argument if atom size is longer than MAXATOMLEN
-        uint32_t lookup(const char* a_name, size_t n) { return lookup(String(a_name, n)); }
-        uint32_t lookup(const char* a_name)           { return lookup(String(a_name)); }
-        uint32_t lookup(const String& a_name)
+        size_t lookup(const char* a_name, size_t n) { return lookup(String(a_name, n)); }
+        size_t lookup(const char* a_name)           { return lookup(String(a_name)); }
+        size_t lookup(const String& a_name)
         {
-            size_t n = try_lookup(a_name);
-            if  (n <= UINT32_MAX) return (uint32_t)n;
-            if  (n == (size_t)-2) throw  err_bad_argument("Atom size is too long!");
+            std::pair<bool, size_t> p = try_lookup(a_name);
+            size_t n = p.second;
+            if  (p.first) return n;
+            if  (!p.first && n == 2) throw  err_bad_argument("Atom size is too long!");
 
             lock_guard<Mutex> guard(m_lock);
             if (!std::is_same<Mutex, eid::null_mutex>::value) {
                 size_t bucket = m_index.bucket(a_name.c_str());
                 n = find_value(bucket, a_name.c_str());
-                if (n <= UINT32_MAX)
-                    return (uint32_t)n;
+                if (n > 0)
+                    return n;
             }
 
             n = m_atoms.size();
-            if (n > UINT32_MAX || (n+1) == m_atoms.capacity())
+            if (n == m_atoms.capacity())
                 throw std::runtime_error("Atom hash table is full!");
             m_atoms.push_back(a_name);
             m_index[m_atoms.back().c_str()] = n;
-            return (uint32_t)n;
+            return n;
         }
     private:
         Vector  m_atoms;

@@ -70,7 +70,7 @@ list<Alloc>::list(const cons_t* a_head, size_t a_len, const Alloc& alloc)
 
     if (a_len > 0) {
         alloc_size = a_len;
-    } else if (a_len == 0) {
+    } else {
         for (const cons_t* p = a_head; p; p = p->next)
             a_len++;
         alloc_size = a_len;

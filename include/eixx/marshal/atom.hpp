@@ -90,23 +90,24 @@ public:
     /// @throw std::runtime_error if atom table is full.
     /// @throw err_bad_argument if atom length is longer than MAXATOMLEN
     atom(const char* s)
-        : m_index(atom_table().lookup(std::string(s))) {}
+        : m_index((uint32_t)atom_table().lookup(std::string(s))) {}
 
     /// @copydoc atom::atom
     template <size_t N>
     atom(const char (&s)[N])
-        : m_index(atom_table().lookup(std::string(s, N))) {}
+        : m_index((uint32_t)atom_table().lookup(std::string(s, N))) {}
 
     /// @copydoc atom::atom
     explicit atom(const std::string& s)
-        : m_index(atom_table().lookup(s)) {}
+        : m_index((uint32_t)atom_table().lookup(s)) {}
 
     /// Try to create an atom without throwing exceptions
     /// NOTE: if the atom name is invalid or it doesn't exist and \a existing
     ///       is true, then an empty atom is returned.
     static atom create(const std::string& s, bool existing) {
-        auto   idx = atom_table().try_lookup(s);
-        return idx <= UINT32_MAX && existing ? atom((uint32_t)idx) : atom();
+        auto p = atom_table().try_lookup(s);
+        BOOST_ASSERT(p.second <= UINT32_MAX);
+        return p.first && existing ? atom((uint32_t)p.second) : atom();
     }
     /// @copydoc atom::create
     static atom create(const char* s, bool existing) {
@@ -140,12 +141,15 @@ public:
     atom(const std::string& s, bool existing)
     {
         if (!existing) {
-            m_index = atom_table().lookup(s);
+            auto idx = atom_table().lookup(s);
+            BOOST_ASSERT(idx <= UINT32_MAX);
+            m_index = (uint32_t)idx;
             return;
         }
-        auto idx = atom_table().try_lookup(s);
-        if (idx <= UINT32_MAX)
-            m_index = (uint32_t)idx;
+        auto p = atom_table().try_lookup(s);
+        BOOST_ASSERT(p.second <= UINT32_MAX);
+        if (p.first)
+            m_index = (uint32_t)p.second;
         else
             throw err_atom_not_found(s);
     }
@@ -153,7 +157,7 @@ public:
     /// @copydoc atom::atom
     template<typename Alloc>
     explicit atom(const string<Alloc>& s)
-        : m_index(atom_table().lookup(std::string(s.c_str(), s.size())))
+        : m_index((uint32_t)atom_table().lookup(std::string(s.c_str(), s.size())))
     {}
 
     /// @copydoc atom::atom
@@ -162,7 +166,7 @@ public:
     atom(const char* s, long   n) : atom(s, static_cast<size_t>(n)) {}
     /// @copydoc atom::atom
     atom(const char* s, size_t n)
-        : m_index(atom_table().lookup(std::string(s, n)))
+        : m_index((uint32_t)atom_table().lookup(std::string(s, n)))
     {}
 
     /// Copy atom from another atom.  This is a constant time 
@@ -179,7 +183,7 @@ public:
         long len = get_len(s, tag);
         if (len < 0)
             throw err_decode_exception("Error decoding atom", idx);
-        m_index = atom_table().lookup(std::string(s, static_cast<size_t>(len)));
+        m_index = (uint32_t)atom_table().lookup(std::string(s, static_cast<size_t>(len)));
         idx += static_cast<uintptr_t>(s - s0) + static_cast<size_t>(len);
         BOOST_ASSERT((size_t)idx <= a_size);
     }
@@ -194,7 +198,7 @@ public:
     uint32_t            index()     const { return m_index; }
 
     void operator=  (const atom& s)               { m_index = s.m_index; }
-    void operator=  (const std::string& s)        { m_index = atom_table().lookup(s); }
+    void operator=  (const std::string& s)        { auto idx = atom_table().lookup(s); BOOST_ASSERT(idx <= UINT32_MAX); m_index = (uint32_t)idx; }
     bool operator== (const char* rhs)       const { return strcmp(c_str(), rhs) == 0; }
     bool operator== (const atom& rhs)       const { return m_index == rhs.m_index; }
     bool operator!= (const char* rhs)       const { return !(*this == rhs); }
