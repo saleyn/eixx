@@ -255,7 +255,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
         }
     }
 
-    long need_bytes = m_packet_size + s_header_size - rd_length();
+    auto need_bytes = m_packet_size + s_header_size - rd_length();
 
     /*
     if (unlikely(verbose() >= VERBOSE_WIRE))
@@ -297,7 +297,7 @@ handle_read(const boost::system::error_code& err, size_t bytes_transferred)
                 to_binary_string(m_rd_ptr, m_packet_size));
         }
         m_rd_ptr     += m_packet_size;
-        m_got_header  = rd_length() >= (long)s_header_size;
+        m_got_header  = rd_length() >= long(s_header_size);
         if (m_got_header) {
             m_packet_size = cast_be<uint32_t>(m_rd_ptr);
             need_bytes    = m_packet_size + s_header_size - rd_length();

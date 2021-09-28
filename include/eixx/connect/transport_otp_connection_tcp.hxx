@@ -268,7 +268,7 @@ void tcp_connection<Handler, Alloc>::handle_epmd_read_body(
 
     m_epmd_wr += bytes_transferred;
     #ifndef NDEBUG
-    size_t got_bytes = m_epmd_wr - m_buf_epmd;
+    auto got_bytes = m_epmd_wr - m_buf_epmd;
     #endif
     BOOST_ASSERT(got_bytes >= 10);
 

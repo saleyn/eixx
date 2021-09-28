@@ -104,7 +104,7 @@ create_pid()
     #else
     uint32_t n;
     while (true) {
-        n = m_pid_count.fetch_add(1, std::memory_order_relaxed);
+        n = uint32_t(m_pid_count.fetch_add(1, std::memory_order_relaxed));
         if (n < 0x0fffffff /* 28 bits */) break;
 
         if (m_pid_count.exchange(1, std::memory_order_acquire) == 1) {
@@ -147,9 +147,8 @@ create_ref()
     decltype(m_refid1) mo;
 
     while (true) {
-        auto mo = m_refid1.load(std::memory_order_consume);
-
-        n = m_refid0.fetch_add(1, std::memory_order_relaxed);
+        mo = m_refid1.load(std::memory_order_consume);
+        n  = m_refid0.fetch_add(1, std::memory_order_relaxed);
         if (n) break;
 
         auto mn = mo+1;

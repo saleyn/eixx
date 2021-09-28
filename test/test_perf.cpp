@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
         atom a("test");
         int k = 0;
         for (int j=0; j < iterations; j++)
-            { atom t("test"); if (t==a) k++; size += eterm(t).encode_size(); }
+            { atom t1("test"); if (t1==a) k++; size += eterm(t1).encode_size(); }
         t.sample("Atom2", true, size);
     }
     static const char* ss="This is a test string. This is a test string. This is a test string."; 
@@ -88,8 +88,8 @@ int main(int argc, char* argv[]) {
     {
         binary b(ss, sizeof(ss));
         for (int j=0; j < iterations; j++) { 
-            eterm t(b);
-            size += t.encode_size();
+            eterm t1(b);
+            size += t1.encode_size();
         }
         t.sample("Binary2", true, size);
     }
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     eterm l[] = {
         eterm(10), eterm("atom_value"), eterm(true) };
     for (int j=0; j < iterations; j++)
-        { tuple t(l); size += eterm(t).encode_size(); }
+        { tuple t1(l); size += eterm(t1).encode_size(); }
     t.sample("Tuple1", true, size);
     {
         tuple tup(l);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
         t.sample("Tuple2", true, size);
     }
     for (int j=0; j < iterations; j++)
-        { list t(l); size += eterm(t).encode_size(); }
+        { list t1(l); size += eterm(t1).encode_size(); }
     t.sample("List1", true, size);
     {
         list ll(l);
