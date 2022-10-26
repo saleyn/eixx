@@ -47,8 +47,8 @@ inline eterm_type type_string_to_type(const char* s, size_t n) {
 
      switch (s[0]) {
          case 'i':
-             if (strncmp(p,"nt",m) == 0)         r = LONG;
-             if (strncmp(p,"nteger",m) == 0)     r = LONG;
+             if      (strncmp(p,"nt",m)==0)      r = LONG;
+             else if (strncmp(p,"nteger",m)==0)  r = LONG;
              break;
          case 'd':
              if (strncmp(p,"ouble",m) == 0)      r = DOUBLE;
@@ -76,8 +76,8 @@ inline eterm_type type_string_to_type(const char* s, size_t n) {
              else if (strncmp(p,"ort",m) == 0)   r = PORT;
              break;
          case 'r':
-             if      (strncmp(p,"ef",m) == 0)       r = REF;
-             else if (strncmp(p,"eference",m) == 0) r = REF;
+             if      (strncmp(p,"ef",m) == 0)    r = REF;
+             else if (strncmp(p,"eference",m)==0)r = REF;
              break;
          case 'v':
              if (strncmp(p,"ar",m) == 0)         r = VAR;
