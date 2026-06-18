@@ -1,6 +1,8 @@
+![Banner](https://github.com/saleyn/eixx/blob/master/assets/eixx-banner.png?raw=true)
+
 ## eixx - Erlang C++ Interface Library ##
 
-This library provides a set of classes for convenient marshaling
+`eixx` library provides a set of classes for convenient marshaling
 of Erlang terms between processes as well as connecting to other
 distributed Erlang nodes from a C++ application.
 
